@@ -1,0 +1,45 @@
+{
+  "Metadata": {
+    "title": "Medilog — Smart Medical Records Platform",
+    "description": "A centralized digital platform that helps doctors organize and review their patients' medical records."
+  },
+  "Navigation": {
+    "brand": "Medilog",
+    "tagline": "Smart Medical Records",
+    "languageLabel": "Language"
+  },
+  "LocaleSwitcher": {
+    "label": "Change language",
+    "ar": "العربية",
+    "en": "English"
+  },
+  "Home": {
+    "badge": "Project foundation ready",
+    "title": "One medical record. The complete patient history.",
+    "description": "Medilog is a doctor-centric digital medical platform that organizes patient data, visits, diagnoses, prescriptions, and lab results in one place, with a clear chronological medical timeline.",
+    "directionLabel": "Interface direction",
+    "rtl": "Right to left (RTL)",
+    "ltr": "Left to right (LTR)",
+    "localeLabel": "Current language",
+    "stackTitle": "Technical foundation",
+    "stackDescription": "The frontend is prepared with the architecture and libraries below. No business features are implemented yet.",
+    "foundationTitle": "What is configured",
+    "items": {
+      "next": "Next.js with TypeScript, App Router, and Tailwind CSS",
+      "i18n": "Arabic and English support with Arabic as the default locale",
+      "rtl": "RTL direction for Arabic and LTR for English",
+      "font": "Cairo font applied across the entire application",
+      "data": "React Query and Zustand for data and state management",
+      "ui": "Framer Motion, React Icons, and React Toastify"
+    },
+    "note": "This is a technical verification page only. Medical business modules will be built in the next phases."
+  },
+  "Common": {
+    "enabled": "Enabled"
+  },
+  "NotFound": {
+    "title": "Page not found",
+    "description": "The page you are looking for could not be found.",
+    "backHome": "Back to home"
+  }
+}
