@@ -1,45 +1,97 @@
 {
   "Metadata": {
     "title": "Medilog — Smart Medical Records Platform",
-    "description": "A centralized digital platform that helps doctors organize and review their patients' medical records."
+    "description": "Medilog is a smart medical records platform for managing patient files, appointments, visits, and prescriptions securely.",
+    "keywords": ["medical records", "clinic management", "patient records", "doctor software", "medical appointments", "healthcare platform", "Medilog"]
   },
   "Navigation": {
     "brand": "Medilog",
-    "tagline": "Smart Medical Records",
-    "languageLabel": "Language"
+    "tagline": "Smart medical records",
+    "features": "Features",
+    "howItWorks": "How it works",
+    "security": "Security",
+    "contact": "Contact",
+    "login": "Sign in",
+    "lightMode": "Light mode",
+    "darkMode": "Dark mode",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
   },
-  "LocaleSwitcher": {
-    "label": "Change language",
-    "ar": "العربية",
-    "en": "English"
-  },
+  "LocaleSwitcher": {"label": "Change language", "ar": "العربية", "en": "English"},
   "Home": {
-    "badge": "Project foundation ready",
-    "title": "One medical record. The complete patient history.",
-    "description": "Medilog is a doctor-centric digital medical platform that organizes patient data, visits, diagnoses, prescriptions, and lab results in one place, with a clear chronological medical timeline.",
-    "directionLabel": "Interface direction",
-    "rtl": "Right to left (RTL)",
-    "ltr": "Left to right (LTR)",
-    "localeLabel": "Current language",
-    "stackTitle": "Technical foundation",
-    "stackDescription": "The frontend is prepared with the architecture and libraries below. No business features are implemented yet.",
-    "foundationTitle": "What is configured",
-    "items": {
-      "next": "Next.js with TypeScript, App Router, and Tailwind CSS",
-      "i18n": "Arabic and English support with Arabic as the default locale",
-      "rtl": "RTL direction for Arabic and LTR for English",
-      "font": "Cairo font applied across the entire application",
-      "data": "React Query and Zustand for data and state management",
-      "ui": "Framer Motion, React Icons, and React Toastify"
+    "badge": "Smarter care starts here",
+    "title": "Everything about your patient, in one place.",
+    "description": "Medilog is a smart medical platform that helps doctors and clinics manage records, appointments, visits, and prescriptions with ease and confidence.",
+    "primaryCta": "Start your journey",
+    "secondaryCta": "Explore the platform",
+    "proof": "Trusted by modern doctors and clinics",
+    "dashboard": "Clinic dashboard",
+    "welcome": "Welcome back,",
+    "doctorName": "Dr. Ahmed Mohamed",
+    "patients": "Patients",
+    "appointments": "Today's visits",
+    "activity": "Clinic activity",
+    "weeklyVisits": "Weekly visits",
+    "tickerLabel": "Platform benefits",
+    "ticker": {"one": "Complete medical records", "two": "Organized appointments", "three": "Secure data", "four": "Simpler collaboration", "five": "Sharper decisions", "six": "A smarter clinic"},
+    "featuresEyebrow": "Everything your clinic needs",
+    "featuresTitle": "Simple tools, meaningful impact",
+    "featuresDescription": "Medilog gives you a clearer view and better control over every part of the patient journey.",
+    "learnMore": "Learn more",
+    "featuresList": [
+      {"title": "Organized records", "description": "Keep medical history, diagnoses, and prescriptions in one clear profile."},
+      {"title": "Effortless scheduling", "description": "Organize your calendar and keep a quick view of every patient's visit."},
+      {"title": "Data-led decisions", "description": "Track your clinic activity and uncover insights that help you grow."},
+      {"title": "One connected team", "description": "Give your team the right tools for a smoother care experience."}
+    ],
+    "stats": {
+      "patientsCount": {"value": "+12K", "label": "organized patient files"},
+      "visitsCount": {"value": "+48K", "label": "visits recorded"},
+      "timeSaved": {"value": "35%", "label": "less paperwork time"},
+      "availability": {"value": "24/7", "label": "secure access to your data"}
     },
-    "note": "This is a technical verification page only. Medical business modules will be built in the next phases."
+    "workflowEyebrow": "How the platform works",
+    "workflowTitle": "The patient journey, made clearer",
+    "workflowDescription": "From the first appointment to follow-up, every step is organized so you can focus on what matters.",
+    "workflow": [
+      {"title": "Add patient details", "description": "Create an organized medical profile in seconds."},
+      {"title": "Record the visit", "description": "Document diagnoses, prescriptions, and notes in one place."},
+      {"title": "Track progress", "description": "Return to a clear timeline and make better decisions."}
+    ],
+    "securityEyebrow": "Privacy that care deserves",
+    "securityTitle": "Your patients' data is always protected",
+    "securityDescription": "Privacy and security are at the heart of the experience, so you can work with confidence.",
+    "securityPoints": ["Clear access for every role", "Protection for sensitive medical data", "A timeline that's easy to review"],
+    "protected": "Data protected",
+    "storyEyebrow": "Real experiences, even when starting small",
+    "storyTitle": "Made for the busy clinic day",
+    "storyDescription": "Every detail in Medilog is designed to make your day calmer and give you more time to focus on patients.",
+    "testimonials": [
+      {"quote": "I can see the patient's full history before the visit starts, without searching through scattered files.", "name": "Dr. Sarah Khaled", "role": "Internal medicine doctor"},
+      {"quote": "Organizing appointments and daily follow-ups saved our team hours of calls and coordination.", "name": "Mona Ali", "role": "Clinic manager"},
+      {"quote": "The interface is clear and fast, and sensitive information stays visible only to the right person.", "name": "Dr. Omar Hassan", "role": "Dentist"}
+    ],
+    "ctaEyebrow": "Ready for the next step?",
+    "ctaTitle": "Build a smarter clinic today",
+    "ctaDescription": "Organize your day, understand your data, and deliver better care with Medilog."
   },
-  "Common": {
-    "enabled": "Enabled"
+  "Footer": {
+    "brand": "Medilog",
+    "description": "A smart platform for organizing medical records and managing the patient journey with confidence.",
+    "platform": "Platform",
+    "account": "Account",
+    "resources": "Resources",
+    "features": "Features",
+    "howItWorks": "How it works",
+    "security": "Security",
+    "login": "Sign in",
+    "register": "Create account",
+    "support": "Support",
+    "doctors": "For doctors",
+    "patients": "For patients",
+    "privacy": "Privacy",
+    "copyright": "© 2025 Medilog. All rights reserved.",
+    "project": "Graduation project"
   },
-  "NotFound": {
-    "title": "Page not found",
-    "description": "The page you are looking for could not be found.",
-    "backHome": "Back to home"
-  }
+  "NotFound": {"title": "Page not found", "description": "The page you are looking for could not be found.", "backHome": "Back to home"}
 }

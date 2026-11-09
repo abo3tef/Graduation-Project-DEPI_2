@@ -35,7 +35,26 @@ export async function generateMetadata({
 
   return {
     title: t('title'),
-    description: t('description')
+    description: t('description'),
+    keywords: t.raw('keywords') as string[],
+    authors: [{name: 'Medilog'}],
+    creator: 'Medilog',
+    publisher: 'Medilog',
+    alternates: {
+      canonical: `/${locale}`
+    },
+    openGraph: {
+      title: t('title'),
+      description: t('description'),
+      type: 'website',
+      locale: locale === 'ar' ? 'ar_EG' : 'en_US',
+      siteName: 'Medilog'
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: t('title'),
+      description: t('description')
+    }
   };
 }
 
