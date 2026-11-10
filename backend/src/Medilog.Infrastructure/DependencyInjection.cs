@@ -14,17 +14,24 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        // The database provider has not been selected yet. The BRD does not
-        // require a specific database, so no provider package is installed.
-        //
-        // Once the team chooses a provider, install its EF Core package and
-        // configure it below, for example:
-        //
-        //   options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
-        //   options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"));
+        var connectionString = configuration.GetConnectionString("DefaultConnection");
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            connectionString = Environment.GetEnvironmentVariable("MEDILOG_CONNECTION_STRING");
+        }
+
         services.AddDbContext<MedilogDbContext>(options =>
         {
-            // Provider configuration goes here.
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                throw new InvalidOperationException(
+                    "No MySQL connection string is configured. Set " +
+                    "'ConnectionStrings:DefaultConnection' with User Secrets or the " +
+                    "MEDILOG_CONNECTION_STRING environment variable.");
+            }
+
+            options.UseMySQL(connectionString);
         });
 
         return services;
