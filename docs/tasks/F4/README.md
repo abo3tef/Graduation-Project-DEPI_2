@@ -12,7 +12,7 @@ Scope source: `AGENTS.md` §2 Feature 4; `STATE.md` §2 and §6.
 | Cycle | Title | Layers | Depends on | Status |
 |---|---|---|---|---|
 | **F4-C1** | Medical domain model & EF Core configurations (`MedicalVisit`, `Diagnosis`, `Medication`) | Domain, Infrastructure | — | **Done** — merged with `main` (2026-11-10) |
-| **F4-C2** | Create/update a medical visit with diagnoses (use case + DTOs + validators + endpoints + doctor scoping) | Application, WebAPI | F4-C1, Q-02 (doctor–patient access), Q-07 (auth), P0 contracts | Not started |
+| **F4-C2** | Create/update a medical visit with diagnoses (use case + DTOs + validators + endpoints + doctor scoping) | Application, WebAPI | F4-C1, Q-02 (doctor–patient access), Q-07 (auth), P0 contracts | **In progress** — C2a (Application slice) built 2026-11-10; C2b (endpoints) blocked on Q-07/Q-02 |
 | **F4-C3** | Add/update prescribed medications on a visit (use case + endpoints) | Application, WebAPI | F4-C1, F4-C2 | Not started |
 | **F4-C4** | Doctor medical entry/edit screens (visit, diagnosis, medication forms) | Frontend (`features/medical-records`) | F4-C2, F4-C3, Q-06 (frontend libraries) | Not started |
 
@@ -44,5 +44,13 @@ now follow that foundation:
 
 ## Next action
 
-`F4-C1` is closed. `F4-C2` cannot start until **Q-02 (doctor–patient access)** and **Q-07
-(authentication)** are resolved; a `plan F4-C2` draft may be prepared in parallel.
+`F4-C1` is closed and `F4-C2` is **approved for slice C2a only** (`docs/tasks/F4/F4-C2.md`).
+
+- **C2a (Application slice) — built 2026-11-10** with the decisions D-08…D-14 recorded in the task
+  file. `dotnet build` 0 warnings / 0 errors, `dotnet test` 19 passed, no pending model changes.
+  Execution report: `docs/reports/F4-C2.md`.
+- **C2b (endpoints) — not started.** It stays blocked until **Q-07 (authentication)** and
+  **Q-02 (doctor–patient access)** are answered and the API convention in `F4-C2.md` §5 is
+  accepted by the FS owner/Tech Lead.
+- Remaining technical follow-up: service-level tests T-5…T-12 need an EF test provider decision
+  (InMemory / SQLite in-memory / hand-rolled doubles).

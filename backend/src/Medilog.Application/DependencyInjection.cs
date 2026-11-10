@@ -1,5 +1,6 @@
 using System.Reflection;
 using FluentValidation;
+using Medilog.Application.Features.MedicalRecords;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Medilog.Application;
@@ -11,6 +12,9 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
+        // Use cases (decision D-08): plain application services, no MediatR.
+        services.AddScoped<IMedicalVisitService, MedicalVisitService>();
+
         // FluentValidation (AGENTS.md §3.2): every validator in this assembly is
         // registered centrally, close to the use case it validates.
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
