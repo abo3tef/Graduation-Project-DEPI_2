@@ -4,46 +4,58 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Medilog.Infrastructure.Persistence.Configurations;
 
-/// <summary>
-/// EF Core configuration for <see cref="Medication"/>.
-/// </summary>
-public sealed class MedicationConfiguration : IEntityTypeConfiguration<Medication>
+internal sealed class MedicationConfiguration : BaseEntityConfiguration<Medication>
 {
-    public void Configure(EntityTypeBuilder<Medication> builder)
+    public override void Configure(EntityTypeBuilder<Medication> builder)
     {
-        builder.ToTable("Medications");
+        base.Configure(builder);
 
-        builder.HasKey(medication => medication.Id);
+        builder.ToTable("medications");
 
-        builder.Property(medication => medication.MedicalVisitId).IsRequired();
-        builder.Property(medication => medication.PatientId).IsRequired();
-        builder.Property(medication => medication.MedicationName)
-            .IsRequired()
-            .HasMaxLength(200);
-        builder.Property(medication => medication.Dosage).HasMaxLength(100);
-        builder.Property(medication => medication.Frequency).HasMaxLength(100);
-        builder.Property(medication => medication.Instructions).HasMaxLength(500);
+        builder.Property(entity => entity.VisitId)
+            .HasColumnName("visit_id")
+            .HasColumnType("char(36)")
+            .IsRequired();
 
-        // Audit values are supplied by the application, never by the store: CreatedAtUtc is set
-        // when the entity is created and the F4-C2 audit interceptor makes both values
-        // authoritative on save (F4-C1 review finding #1).
-        builder.Property(medication => medication.CreatedAtUtc).ValueGeneratedNever();
-        builder.Property(medication => medication.UpdatedAtUtc).ValueGeneratedNever();
+        builder.Property(entity => entity.PatientId)
+            .HasColumnName("patient_id")
+            .HasColumnType("char(36)")
+            .IsRequired();
 
-        builder.HasIndex(medication => medication.MedicalVisitId);
-        builder.HasIndex(medication => medication.PatientId);
-        builder.HasIndex(medication => medication.MedicationName);
+        builder.Property(entity => entity.MedicationName)
+            .HasColumnName("medication_name")
+            .HasMaxLength(ColumnLengths.Name)
+            .IsRequired();
 
-        // Medical history must never be cascade-deleted (AGENTS.md §4.3).
-        builder.HasOne<MedicalVisit>()
-            .WithMany()
-            .HasForeignKey(medication => medication.MedicalVisitId)
-            .OnDelete(DeleteBehavior.Restrict);
+        builder.Property(entity => entity.Dosage)
+            .HasColumnName("dosage")
+            .HasMaxLength(ColumnLengths.ShortLabel)
+            .IsRequired();
 
-        // PatientId has no foreign key until the patient aggregate exists (F4-C1 decision D-02).
-        //
-        // DurationInDays >= 1 is enforced in the entity/application flow for now; the check
-        // constraint needs the provider identifier syntax and is added once the provider is
-        // chosen (F4-C1 decision D-01).
+        builder.Property(entity => entity.Frequency)
+            .HasColumnName("frequency")
+            .HasMaxLength(ColumnLengths.ShortLabel)
+            .IsRequired();
+
+        builder.Property(entity => entity.Duration)
+            .HasColumnName("duration")
+            .HasMaxLength(ColumnLengths.ShortLabel);
+
+        builder.Property(entity => entity.Instructions)
+            .HasColumnName("instructions")
+            .HasColumnType("text");
+
+        builder.HasOne(entity => entity.Visit)
+            .WithMany(visit => visit.Medications)
+            .HasForeignKey(entity => new { entity.VisitId, entity.PatientId })
+            .HasPrincipalKey(visit => new { visit.Id, visit.PatientId })
+            .OnDelete(DeleteBehavior.Restrict)
+            .HasConstraintName("fk_medications_visit");
+
+        builder.HasOne(entity => entity.Patient)
+            .WithMany(patient => patient.Medications)
+            .HasForeignKey(entity => entity.PatientId)
+            .OnDelete(DeleteBehavior.Restrict)
+            .HasConstraintName("fk_medications_patient");
     }
 }

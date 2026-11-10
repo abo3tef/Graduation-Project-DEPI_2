@@ -1,43 +1,54 @@
 using Medilog.Domain.Entities;
+using Medilog.Infrastructure.Persistence.Converters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Medilog.Infrastructure.Persistence.Configurations;
 
-/// <summary>
-/// EF Core configuration for <see cref="Diagnosis"/>.
-/// </summary>
-public sealed class DiagnosisConfiguration : IEntityTypeConfiguration<Diagnosis>
+internal sealed class DiagnosisConfiguration : BaseEntityConfiguration<Diagnosis>
 {
-    public void Configure(EntityTypeBuilder<Diagnosis> builder)
+    public override void Configure(EntityTypeBuilder<Diagnosis> builder)
     {
-        builder.ToTable("Diagnoses");
+        base.Configure(builder);
 
-        builder.HasKey(diagnosis => diagnosis.Id);
+        builder.ToTable("diagnoses");
 
-        builder.Property(diagnosis => diagnosis.MedicalVisitId).IsRequired();
-        builder.Property(diagnosis => diagnosis.PatientId).IsRequired();
-        builder.Property(diagnosis => diagnosis.DiagnosisName)
-            .IsRequired()
-            .HasMaxLength(300);
-        builder.Property(diagnosis => diagnosis.Description).HasMaxLength(2000);
-        builder.Property(diagnosis => diagnosis.DiagnosisDateUtc).IsRequired();
+        builder.Property(entity => entity.VisitId)
+            .HasColumnName("visit_id")
+            .HasColumnType("char(36)")
+            .IsRequired();
 
-        // Audit values are supplied by the application, never by the store: CreatedAtUtc is set
-        // when the entity is created and the F4-C2 audit interceptor makes both values
-        // authoritative on save (F4-C1 review finding #1).
-        builder.Property(diagnosis => diagnosis.CreatedAtUtc).ValueGeneratedNever();
-        builder.Property(diagnosis => diagnosis.UpdatedAtUtc).ValueGeneratedNever();
+        builder.Property(entity => entity.PatientId)
+            .HasColumnName("patient_id")
+            .HasColumnType("char(36)")
+            .IsRequired();
 
-        builder.HasIndex(diagnosis => diagnosis.MedicalVisitId);
-        builder.HasIndex(diagnosis => new { diagnosis.PatientId, diagnosis.DiagnosisDateUtc });
+        builder.Property(entity => entity.DiagnosisName)
+            .HasColumnName("diagnosis_name")
+            .HasMaxLength(ColumnLengths.Name)
+            .IsRequired();
 
-        // Medical history must never be cascade-deleted (AGENTS.md §4.3).
-        builder.HasOne<MedicalVisit>()
-            .WithMany()
-            .HasForeignKey(diagnosis => diagnosis.MedicalVisitId)
-            .OnDelete(DeleteBehavior.Restrict);
+        builder.Property(entity => entity.Description)
+            .HasColumnName("description")
+            .HasColumnType("text");
 
-        // PatientId has no foreign key until the patient aggregate exists (F4-C1 decision D-02).
+        builder.Property(entity => entity.DiagnosisDate)
+            .HasColumnName("diagnosis_date")
+            .HasColumnType("date")
+            .HasConversion(ValueConverters.DateOnlyConverter)
+            .IsRequired();
+
+        builder.HasOne(entity => entity.Visit)
+            .WithMany(visit => visit.Diagnoses)
+            .HasForeignKey(entity => new { entity.VisitId, entity.PatientId })
+            .HasPrincipalKey(visit => new { visit.Id, visit.PatientId })
+            .OnDelete(DeleteBehavior.Restrict)
+            .HasConstraintName("fk_diagnoses_visit");
+
+        builder.HasOne(entity => entity.Patient)
+            .WithMany(patient => patient.Diagnoses)
+            .HasForeignKey(entity => entity.PatientId)
+            .OnDelete(DeleteBehavior.Restrict)
+            .HasConstraintName("fk_diagnoses_patient");
     }
 }

@@ -11,6 +11,11 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
+// Consistent, client-readable error responses (AGENTS.md §3.2, §4.4).
+// Uses the framework-standard RFC 7807 ProblemDetails shape; the final shared
+// error envelope is still pending decision Q-04 in STATE.md.
+builder.Services.AddProblemDetails();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("Frontend", policy =>
@@ -29,6 +34,8 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // HTTP request pipeline
+app.UseExceptionHandler();
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();

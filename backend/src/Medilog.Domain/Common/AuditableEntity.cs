@@ -4,9 +4,7 @@ namespace Medilog.Domain.Common;
 /// Base type for entities that keep track of when they were created and last updated.
 /// Timestamp persistence is implemented by the Infrastructure layer.
 /// </summary>
-public abstract class AuditableEntity : BaseEntity
+public abstract class AuditableEntity : CreatedEntity
 {
-    public DateTimeOffset CreatedAtUtc { get; set; }
-
     public DateTimeOffset? UpdatedAtUtc { get; set; }
 }

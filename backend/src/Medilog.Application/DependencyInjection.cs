@@ -1,16 +1,25 @@
+using System.Reflection;
+using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Medilog.Application;
 
 /// <summary>
-/// Registers Application-layer services. Use cases, handlers and
-/// application abstractions are wired here as they are implemented.
+/// Registers Application-layer services, validators, and mapping profiles.
 /// </summary>
 public static class DependencyInjection
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
-        // Application services are registered here.
+        // FluentValidation (AGENTS.md §3.2): every validator in this assembly is
+        // registered centrally, close to the use case it validates.
+        services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+
+        // AutoMapper (AGENTS.md §3.3): profiles in this assembly are discovered
+        // centrally. The commercial license key is supplied through the
+        // AUTOMAPPER_LICENSE_KEY environment variable and is never committed.
+        services.AddAutoMapper(configuration => { }, Assembly.GetExecutingAssembly());
+
         return services;
     }
 }

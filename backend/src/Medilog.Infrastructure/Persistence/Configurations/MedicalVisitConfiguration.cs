@@ -1,36 +1,78 @@
 using Medilog.Domain.Entities;
+using Medilog.Infrastructure.Persistence.Converters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Medilog.Infrastructure.Persistence.Configurations;
 
-/// <summary>
-/// EF Core configuration for <see cref="MedicalVisit"/>.
-/// </summary>
-public sealed class MedicalVisitConfiguration : IEntityTypeConfiguration<MedicalVisit>
+internal sealed class MedicalVisitConfiguration : BaseEntityConfiguration<MedicalVisit>
 {
-    public void Configure(EntityTypeBuilder<MedicalVisit> builder)
+    public override void Configure(EntityTypeBuilder<MedicalVisit> builder)
     {
-        builder.ToTable("MedicalVisits");
+        base.Configure(builder);
 
-        builder.HasKey(visit => visit.Id);
+        builder.ToTable("medical_visits");
 
-        builder.Property(visit => visit.PatientId).IsRequired();
-        builder.Property(visit => visit.DoctorId).IsRequired();
-        builder.Property(visit => visit.VisitDateUtc).IsRequired();
-        builder.Property(visit => visit.ChiefComplaint).HasMaxLength(1000);
-        builder.Property(visit => visit.ClinicalNotes).HasMaxLength(4000);
+        builder.HasAlternateKey(entity => new { entity.Id, entity.PatientId })
+            .HasName("ak_medical_visits_id_patient_id");
 
-        // Audit values are supplied by the application, never by the store: CreatedAtUtc is set
-        // when the entity is created and the F4-C2 audit interceptor makes both values
-        // authoritative on save (F4-C1 review finding #1).
-        builder.Property(visit => visit.CreatedAtUtc).ValueGeneratedNever();
-        builder.Property(visit => visit.UpdatedAtUtc).ValueGeneratedNever();
+        builder.Property(entity => entity.PatientId)
+            .HasColumnName("patient_id")
+            .HasColumnType("char(36)")
+            .IsRequired();
 
-        // The patient and doctor aggregates are owned by other features. Until they exist,
-        // the identifiers are stored as plain indexed columns and no foreign-key constraint is
-        // configured (F4-C1 decision D-02, option C).
-        builder.HasIndex(visit => new { visit.DoctorId, visit.VisitDateUtc });
-        builder.HasIndex(visit => new { visit.PatientId, visit.VisitDateUtc });
+        builder.Property(entity => entity.DoctorId)
+            .HasColumnName("doctor_id")
+            .HasColumnType("char(36)")
+            .IsRequired();
+
+        builder.Property(entity => entity.AppointmentId)
+            .HasColumnName("appointment_id")
+            .HasColumnType("char(36)");
+
+        builder.Property(entity => entity.VisitDate)
+            .HasColumnName("visit_date")
+            .HasColumnType("datetime(6)")
+            .HasConversion(ValueConverters.UtcDateTimeOffsetConverter)
+            .IsRequired();
+
+        builder.Property(entity => entity.ChiefComplaint)
+            .HasColumnName("chief_complaint")
+            .HasColumnType("text");
+
+        builder.Property(entity => entity.Symptoms)
+            .HasColumnName("symptoms")
+            .HasColumnType("text");
+
+        builder.Property(entity => entity.ClinicalNotes)
+            .HasColumnName("clinical_notes")
+            .HasColumnType("text");
+
+        builder.HasOne(entity => entity.Patient)
+            .WithMany(patient => patient.MedicalVisits)
+            .HasForeignKey(entity => entity.PatientId)
+            .OnDelete(DeleteBehavior.Restrict)
+            .HasConstraintName("fk_medical_visits_patient");
+
+        builder.HasOne(entity => entity.Doctor)
+            .WithMany(doctor => doctor.MedicalVisits)
+            .HasForeignKey(entity => entity.DoctorId)
+            .OnDelete(DeleteBehavior.Restrict)
+            .HasConstraintName("fk_medical_visits_doctor");
+
+        builder.HasOne(entity => entity.Appointment)
+            .WithOne()
+            .HasForeignKey<MedicalVisit>(entity => new { entity.AppointmentId, entity.PatientId, entity.DoctorId })
+            .HasPrincipalKey<Appointment>(appointment => new { appointment.Id, appointment.PatientId, appointment.DoctorId })
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.Restrict)
+            .HasConstraintName("fk_medical_visits_appointment");
+
+        builder.HasIndex(entity => entity.AppointmentId)
+            .IsUnique()
+            .HasDatabaseName("uq_medical_visits_appointment_id");
+
+        builder.HasIndex(entity => new { entity.PatientId, entity.VisitDate })
+            .HasDatabaseName("ix_medical_visits_patient_id_visit_date");
     }
 }

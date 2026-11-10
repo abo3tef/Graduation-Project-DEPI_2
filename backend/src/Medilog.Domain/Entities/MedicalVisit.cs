@@ -3,40 +3,44 @@ using Medilog.Domain.Common;
 namespace Medilog.Domain.Entities;
 
 /// <summary>
-/// A medical visit recorded by a doctor for a patient.
+/// A single consultation and the parent of diagnoses, medications,
+/// vital signs, and notes.
 /// </summary>
-/// <remarks>
-/// <para>
-/// The patient and the doctor are referenced by identifier only. Those aggregates are owned by
-/// other features, so no navigation properties or foreign keys are declared here
-/// (F4-C1 decision D-02).
-/// </para>
-/// <para>
-/// <see cref="AuditableEntity.CreatedAtUtc"/> is initialised on construction so an insert can
-/// never carry a default <see cref="DateTimeOffset"/> value. The audit interceptor planned for
-/// F4-C2 becomes authoritative on save and maintains
-/// <see cref="AuditableEntity.UpdatedAtUtc"/>.
-/// </para>
-/// </remarks>
-public class MedicalVisit : AuditableEntity
+public sealed class MedicalVisit : BaseEntity
 {
-    public MedicalVisit()
-    {
-        CreatedAtUtc = DateTimeOffset.UtcNow;
-    }
-
-    /// <summary>Identifier of the patient this visit belongs to.</summary>
     public Guid PatientId { get; set; }
 
-    /// <summary>Identifier of the doctor who recorded the visit.</summary>
+    public Patient Patient { get; set; } = null!;
+
     public Guid DoctorId { get; set; }
 
-    /// <summary>Date and time of the visit, stored in UTC.</summary>
-    public DateTimeOffset VisitDateUtc { get; set; }
+    public Doctor Doctor { get; set; } = null!;
 
-    /// <summary>The patient's reported reason for the visit, if provided.</summary>
+    /// <summary>
+    /// Optional link to the appointment that produced this visit.
+    /// </summary>
+    public Guid? AppointmentId { get; set; }
+
+    public Appointment? Appointment { get; set; }
+
+    /// <summary>
+    /// The consultation instant. Persisted as a normalized UTC value.
+    /// </summary>
+    public DateTimeOffset VisitDate { get; set; }
+
     public string? ChiefComplaint { get; set; }
 
-    /// <summary>Free-text clinical notes recorded during the visit, if any.</summary>
+    public string? Symptoms { get; set; }
+
     public string? ClinicalNotes { get; set; }
+
+    public ICollection<Diagnosis> Diagnoses { get; set; } = new List<Diagnosis>();
+
+    public ICollection<Medication> Medications { get; set; } = new List<Medication>();
+
+    public ICollection<VitalSigns> VitalSigns { get; set; } = new List<VitalSigns>();
+
+    public ICollection<MedicalNote> MedicalNotes { get; set; } = new List<MedicalNote>();
+
+    public ICollection<LaboratoryResult> LaboratoryResults { get; set; } = new List<LaboratoryResult>();
 }
