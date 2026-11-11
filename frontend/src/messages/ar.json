@@ -104,5 +104,105 @@
     "copyright": "© 2025 Medilog. جميع الحقوق محفوظة.",
     "project": "مشروع تخرج"
   },
+  "Payments": {
+    "title": "المدفوعات",
+    "subtitle": "تسجيل دفعات المرضى ومتابعة حالة التحصيل.",
+    "prototypeNotice": "نسخة تجريبية: البيانات المعروضة وهمية ولا يتم حفظها بعد تحديث الصفحة.",
+    "actions": {
+      "record": "تسجيل دفعة",
+      "cancel": "إلغاء",
+      "save": "حفظ",
+      "saving": "جارٍ الحفظ...",
+      "retry": "إعادة المحاولة",
+      "clearFilters": "مسح الفلاتر",
+      "close": "إغلاق",
+      "changeStatus": "تغيير الحالة"
+    },
+    "filters": {
+      "label": "تصفية المدفوعات",
+      "searchLabel": "بحث",
+      "searchPlaceholder": "ابحث باسم المريض أو رقم الدفعة",
+      "statusLabel": "حالة الدفع",
+      "methodLabel": "طريقة الدفع",
+      "all": "الكل"
+    },
+    "table": {
+      "caption": "قائمة المدفوعات",
+      "patient": "المريض",
+      "appointment": "تاريخ الموعد",
+      "amount": "المبلغ",
+      "method": "طريقة الدفع",
+      "status": "الحالة",
+      "paidAt": "تاريخ التسجيل",
+      "actions": "إجراءات"
+    },
+    "results": {
+      "count": "{count, plural, =0 {لا توجد نتائج} one {نتيجة واحدة} two {نتيجتان} few {# نتائج} many {# نتيجة} other {# نتيجة}}"
+    },
+    "pagination": {
+      "label": "التنقل بين الصفحات",
+      "previous": "السابق",
+      "next": "التالي",
+      "pageOf": "الصفحة {page} من {totalPages}"
+    },
+    "states": {
+      "loading": "جارٍ تحميل المدفوعات...",
+      "emptyTitle": "لا توجد مدفوعات بعد",
+      "emptyDescription": "ابدأ بتسجيل أول دفعة لتظهر هنا.",
+      "noResultsTitle": "لا توجد نتائج مطابقة",
+      "noResultsDescription": "جرّب تغيير كلمات البحث أو مسح الفلاتر.",
+      "errorTitle": "تعذّر تحميل المدفوعات"
+    },
+    "status": {
+      "pending": "قيد التحصيل",
+      "partial": "مدفوعة جزئياً",
+      "paid": "مدفوعة"
+    },
+    "method": {
+      "cash": "نقداً",
+      "card": "بطاقة"
+    },
+    "form": {
+      "title": "تسجيل دفعة",
+      "description": "اختر الموعد وأدخل بيانات الدفعة.",
+      "appointmentLabel": "الموعد",
+      "appointmentPlaceholder": "اختر موعداً",
+      "appointmentLoading": "جارٍ تحميل المواعيد...",
+      "noAppointments": "لا توجد مواعيد متاحة للدفع حالياً.",
+      "amountLabel": "المبلغ",
+      "amountPlaceholder": "0.00",
+      "methodLabel": "طريقة الدفع",
+      "notesLabel": "ملاحظات (اختياري)",
+      "notesPlaceholder": "أضف ملاحظة عن الدفعة",
+      "notesCounter": "{count} / {max}",
+      "submit": "تسجيل الدفعة",
+      "errors": {
+        "appointmentRequired": "اختر الموعد.",
+        "amountRequired": "أدخل المبلغ.",
+        "amountInvalid": "أدخل مبلغاً صحيحاً.",
+        "amountOutOfRange": "يجب أن يكون المبلغ بين {min} و{max}.",
+        "methodRequired": "اختر طريقة الدفع.",
+        "notesTooLong": "الملاحظات تتجاوز الحد المسموح ({max} حرف)."
+      }
+    },
+    "statusDialog": {
+      "title": "تحديث حالة الدفع",
+      "description": "اختر الحالة الجديدة لدفعة {patient}.",
+      "label": "الحالة الجديدة",
+      "submit": "تحديث"
+    },
+    "toast": {
+      "created": "تم تسجيل الدفعة بنجاح.",
+      "statusUpdated": "تم تحديث حالة الدفع."
+    },
+    "errors": {
+      "NETWORK": "تعذّر الاتصال. تحقق من الاتصال وحاول مرة أخرى.",
+      "INVALID_INPUT": "بعض البيانات غير صالحة. راجعها وحاول مرة أخرى.",
+      "APPOINTMENT_NOT_FOUND": "الموعد المحدد غير موجود.",
+      "APPOINTMENT_ALREADY_PAID": "تم تسجيل دفعة لهذا الموعد من قبل.",
+      "PAYMENT_NOT_FOUND": "الدفعة المطلوبة غير موجودة.",
+      "unknown": "حدث خطأ غير متوقع. حاول مرة أخرى."
+    }
+  },
   "NotFound": {"title": "الصفحة غير موجودة", "description": "تعذر العثور على الصفحة المطلوبة.", "backHome": "العودة إلى الرئيسية"}
 }

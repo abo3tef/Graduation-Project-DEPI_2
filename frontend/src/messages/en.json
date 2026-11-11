@@ -93,5 +93,105 @@
     "copyright": "© 2025 Medilog. All rights reserved.",
     "project": "Graduation project"
   },
+  "Payments": {
+    "title": "Payments",
+    "subtitle": "Record patient payments and track collection status.",
+    "prototypeNotice": "Prototype: the data shown is fake and is not saved after you refresh the page.",
+    "actions": {
+      "record": "Record payment",
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving...",
+      "retry": "Try again",
+      "clearFilters": "Clear filters",
+      "close": "Close",
+      "changeStatus": "Change status"
+    },
+    "filters": {
+      "label": "Filter payments",
+      "searchLabel": "Search",
+      "searchPlaceholder": "Search by patient name or payment ID",
+      "statusLabel": "Payment status",
+      "methodLabel": "Payment method",
+      "all": "All"
+    },
+    "table": {
+      "caption": "Payments list",
+      "patient": "Patient",
+      "appointment": "Appointment date",
+      "amount": "Amount",
+      "method": "Method",
+      "status": "Status",
+      "paidAt": "Recorded on",
+      "actions": "Actions"
+    },
+    "results": {
+      "count": "{count, plural, =0 {No results} one {1 result} other {# results}}"
+    },
+    "pagination": {
+      "label": "Pagination",
+      "previous": "Previous",
+      "next": "Next",
+      "pageOf": "Page {page} of {totalPages}"
+    },
+    "states": {
+      "loading": "Loading payments...",
+      "emptyTitle": "No payments yet",
+      "emptyDescription": "Record the first payment and it will show up here.",
+      "noResultsTitle": "No matching results",
+      "noResultsDescription": "Try different search terms or clear the filters.",
+      "errorTitle": "Could not load payments"
+    },
+    "status": {
+      "pending": "Pending",
+      "partial": "Partially paid",
+      "paid": "Paid"
+    },
+    "method": {
+      "cash": "Cash",
+      "card": "Card"
+    },
+    "form": {
+      "title": "Record payment",
+      "description": "Choose the appointment and enter the payment details.",
+      "appointmentLabel": "Appointment",
+      "appointmentPlaceholder": "Select an appointment",
+      "appointmentLoading": "Loading appointments...",
+      "noAppointments": "There are no appointments available for payment right now.",
+      "amountLabel": "Amount",
+      "amountPlaceholder": "0.00",
+      "methodLabel": "Payment method",
+      "notesLabel": "Notes (optional)",
+      "notesPlaceholder": "Add a note about this payment",
+      "notesCounter": "{count} / {max}",
+      "submit": "Record payment",
+      "errors": {
+        "appointmentRequired": "Select an appointment.",
+        "amountRequired": "Enter the amount.",
+        "amountInvalid": "Enter a valid amount.",
+        "amountOutOfRange": "The amount must be between {min} and {max}.",
+        "methodRequired": "Select a payment method.",
+        "notesTooLong": "Notes exceed the allowed length ({max} characters)."
+      }
+    },
+    "statusDialog": {
+      "title": "Update payment status",
+      "description": "Choose the new status for the payment of {patient}.",
+      "label": "New status",
+      "submit": "Update"
+    },
+    "toast": {
+      "created": "Payment recorded successfully.",
+      "statusUpdated": "Payment status updated."
+    },
+    "errors": {
+      "NETWORK": "Could not connect. Check your connection and try again.",
+      "INVALID_INPUT": "Some of the data is not valid. Review it and try again.",
+      "APPOINTMENT_NOT_FOUND": "The selected appointment does not exist.",
+      "APPOINTMENT_ALREADY_PAID": "A payment has already been recorded for this appointment.",
+      "PAYMENT_NOT_FOUND": "The requested payment does not exist.",
+      "unknown": "An unexpected error occurred. Please try again."
+    }
+  },
   "NotFound": {"title": "Page not found", "description": "The page you are looking for could not be found.", "backHome": "Back to home"}
 }
