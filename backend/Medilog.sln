@@ -17,6 +17,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{0AB3BF05
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Medilog.Application.Tests", "tests\Medilog.Application.Tests\Medilog.Application.Tests.csproj", "{33335886-415D-4668-A603-259BEEEDD55F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Medilog.WebAPI.Tests", "tests\Medilog.WebAPI.Tests\Medilog.WebAPI.Tests.csproj", "{4401402C-21D5-4A2E-B490-E2365CE49DF1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -87,6 +89,18 @@ Global
 		{33335886-415D-4668-A603-259BEEEDD55F}.Release|x64.Build.0 = Release|Any CPU
 		{33335886-415D-4668-A603-259BEEEDD55F}.Release|x86.ActiveCfg = Release|Any CPU
 		{33335886-415D-4668-A603-259BEEEDD55F}.Release|x86.Build.0 = Release|Any CPU
+		{4401402C-21D5-4A2E-B490-E2365CE49DF1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4401402C-21D5-4A2E-B490-E2365CE49DF1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4401402C-21D5-4A2E-B490-E2365CE49DF1}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{4401402C-21D5-4A2E-B490-E2365CE49DF1}.Debug|x64.Build.0 = Debug|Any CPU
+		{4401402C-21D5-4A2E-B490-E2365CE49DF1}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{4401402C-21D5-4A2E-B490-E2365CE49DF1}.Debug|x86.Build.0 = Debug|Any CPU
+		{4401402C-21D5-4A2E-B490-E2365CE49DF1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4401402C-21D5-4A2E-B490-E2365CE49DF1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4401402C-21D5-4A2E-B490-E2365CE49DF1}.Release|x64.ActiveCfg = Release|Any CPU
+		{4401402C-21D5-4A2E-B490-E2365CE49DF1}.Release|x64.Build.0 = Release|Any CPU
+		{4401402C-21D5-4A2E-B490-E2365CE49DF1}.Release|x86.ActiveCfg = Release|Any CPU
+		{4401402C-21D5-4A2E-B490-E2365CE49DF1}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -97,5 +111,6 @@ Global
 		{5DCD3D81-A5D7-4F91-9082-7073805839F7} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{2390172C-8BC4-4BC7-B883-C2CD347C0C4B} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{33335886-415D-4668-A603-259BEEEDD55F} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+		{4401402C-21D5-4A2E-B490-E2365CE49DF1} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 EndGlobal

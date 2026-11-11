@@ -1,3 +1,4 @@
+using Medilog.Application.Common.Abstractions;
 using Medilog.Infrastructure.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -33,6 +34,11 @@ public static class DependencyInjection
 
             options.UseMySQL(connectionString);
         });
+
+        // The Application layer depends on the abstraction, not on the concrete context (D-09).
+        // This wiring is what makes IMedicalVisitService resolvable from an HTTP request (D-21).
+        services.AddScoped<IApplicationDbContext>(provider =>
+            provider.GetRequiredService<MedilogDbContext>());
 
         return services;
     }
