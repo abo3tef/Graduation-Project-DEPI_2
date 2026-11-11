@@ -93,5 +93,41 @@
     "copyright": "© 2025 Medilog. All rights reserved.",
     "project": "Graduation project"
   },
+  "MedicalRecords": {
+    "meta": {
+      "title": "Medical records",
+      "description": "Record a visit, its diagnoses and its prescribed medications for your patients.",
+      "shortLabel": "Doctor workspace"
+    },
+    "common": {
+      "backHome": "Back to home"
+    },
+    "workspace": {
+      "eyebrow": "Doctor workspace",
+      "title": "Medical records",
+      "description": "Open a visit to review its clinical content and keep it up to date.",
+      "openVisitTitle": "Open an existing visit",
+      "openVisitHint": "Paste the identifier of the visit you want to review.",
+      "visitIdLabel": "Visit ID",
+      "visitIdPlaceholder": "00000000-0000-0000-0000-000000000000",
+      "invalidVisitId": "Enter a valid visit identifier.",
+      "tokenRequired": "Add a development token before opening a visit.",
+      "openVisit": "Open visit"
+    },
+    "token": {
+      "title": "Development token",
+      "description": "Paste a JWT created with the 'dotnet user-jwts' command. It is kept in this browser tab only, is never logged, and this panel is hidden in production builds.",
+      "label": "Bearer token",
+      "placeholder": "eyJhbGciOi...",
+      "save": "Save token",
+      "clear": "Clear token",
+      "saved": "Token saved for this tab.",
+      "cleared": "Token cleared.",
+      "statusSet": "Token set",
+      "statusMissing": "No token",
+      "statusChecking": "Checking…",
+      "storageFailed": "This browser blocked storage, so the token could not be saved."
+    }
+  },
   "NotFound": {"title": "Page not found", "description": "The page you are looking for could not be found.", "backHome": "Back to home"}
 }

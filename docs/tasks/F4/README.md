@@ -14,7 +14,7 @@ Scope source: `AGENTS.md` §2 Feature 4; `STATE.md` §2 and §6.
 | **F4-C1** | Medical domain model & EF Core configurations (`MedicalVisit`, `Diagnosis`, `Medication`) | Domain, Infrastructure | — | **Done** — merged with `main` (2026-11-10) |
 | **F4-C2** | Create/update a medical visit with diagnoses (use case + DTOs + validators + endpoints + doctor scoping) | Application, WebAPI | F4-C1, Q-02 (doctor–patient access), Q-07 (auth), P0 contracts | **In review** — C2a Done; C2b built, verified (build 0/0, 50 tests) and pushed as `64693ea` |
 | **F4-C3** | Add/update/delete prescribed medication lines on a visit (use case + endpoints + tests) | Application, WebAPI | F4-C1, F4-C2 | **In review** — implemented 2026-11-11; build 0/0, 82 tests, no model drift; D-23 needs Tech Lead ratification |
-| **F4-C4** | Doctor medical entry/edit screens (visit, diagnosis, medication forms) | Frontend (`features/medical-records`) | F4-C2, F4-C3, Q-06 (frontend libraries) | Not started |
+| **F4-C4** | Doctor medical entry/edit screens (visit, diagnosis, medication forms) | Frontend (`features/medical-records`) | F4-C2, F4-C3, Q-06 (frontend libraries) | **In progress** — approved 2026-11-11 (D-27…D-31, Q-11 deferred); C4a built and verified, C4b/C4c pending |
 
 ## Why this order
 
@@ -50,4 +50,10 @@ now follow that foundation:
 - **C3 is built and verified** (`docs/tasks/F4/F4-C3.md`) with decisions D-23 (hard delete), D-24
   (`Medications` in the visit response) and D-25 (extend `IMedicalVisitService`). It is
   `In review`; the Tech Lead must ratify D-23 before merge.
-- **C4** (frontend medical entry/edit screens) still depends on C3 and Q-06.
+- **C4** (frontend medical entry/edit screens) is **approved and in progress**: D-27 native-`fetch`
+  client, D-28 development token bridge, D-29 TanStack Query + React-state forms, D-30 three
+  routes, D-31 id bridge + `Header` link. Q-11 (frontend test framework) is **deferred**, and
+  `frontend/src` is the agreed source of truth. C4a (API client, token bridge, workspace) is built
+  and verified; C4b (visit create/detail/edit) and C4c (diagnoses/medications) remain.
+- Frontend reality check: the app root is **`frontend/src`**, not `Front_End/` as `AGENTS.md` §6.1
+  still states. C4 follows the real layout and records the documentation conflict.
