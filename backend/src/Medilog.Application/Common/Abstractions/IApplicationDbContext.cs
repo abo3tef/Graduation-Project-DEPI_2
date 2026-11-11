@@ -17,6 +17,8 @@ public interface IApplicationDbContext
 
     DbSet<Diagnosis> Diagnoses { get; }
 
+    DbSet<Medication> Medications { get; }
+
     DbSet<Patient> Patients { get; }
 
     DbSet<Doctor> Doctors { get; }

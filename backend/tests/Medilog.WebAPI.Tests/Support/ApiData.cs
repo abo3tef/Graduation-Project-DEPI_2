@@ -60,6 +60,22 @@ internal static class ApiData
         DiagnosisDate = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-1),
     };
 
+    public static Medication Medication(
+        Guid id,
+        Guid visitId,
+        Guid patientId,
+        string name = "Amoxicillin") => new()
+        {
+            Id = id,
+            VisitId = visitId,
+            PatientId = patientId,
+            MedicationName = name,
+            Dosage = "500 mg",
+            Frequency = "Every 8 hours",
+            Duration = "7 days",
+            Instructions = "Take after food",
+        };
+
     public static CreateMedicalVisitRequest CreateVisit(
         Guid patientId,
         Guid? appointmentId = null) => new(
@@ -85,4 +101,18 @@ internal static class ApiData
         "Tension headache",
         "Pressure-like pain",
         DateOnly.FromDateTime(DateTime.UtcNow));
+
+    public static CreateMedicationRequest CreateMedication() => new(
+        "Amoxicillin",
+        "500 mg",
+        "Every 8 hours",
+        "7 days",
+        "Take after food");
+
+    public static UpdateMedicationRequest UpdateMedication() => new(
+        "Azithromycin",
+        "250 mg",
+        "Once daily",
+        "5 days",
+        "Take before food");
 }

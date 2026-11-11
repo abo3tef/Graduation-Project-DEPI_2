@@ -39,7 +39,9 @@ internal sealed class MedicalVisitServiceFixture : IDisposable
             new CreateMedicalVisitRequestValidator(),
             new UpdateMedicalVisitRequestValidator(),
             new CreateDiagnosisRequestValidator(),
-            new UpdateDiagnosisRequestValidator());
+            new UpdateDiagnosisRequestValidator(),
+            new CreateMedicationRequestValidator(),
+            new UpdateMedicationRequestValidator());
     }
 
     public MedilogDbContext DbContext { get; }
@@ -121,4 +123,19 @@ internal static class TestData
         Description = $"{name} description",
         DiagnosisDate = date,
     };
+
+    public static Medication Medication(
+        MedicalVisit visit,
+        string name = "Amoxicillin",
+        string dosage = "500 mg",
+        string frequency = "Every 8 hours") => new()
+        {
+            VisitId = visit.Id,
+            PatientId = visit.PatientId,
+            MedicationName = name,
+            Dosage = dosage,
+            Frequency = frequency,
+            Duration = "7 days",
+            Instructions = "Take after food",
+        };
 }

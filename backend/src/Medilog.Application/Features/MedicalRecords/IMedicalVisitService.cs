@@ -3,7 +3,8 @@ using Medilog.Application.Features.MedicalRecords.Contracts;
 namespace Medilog.Application.Features.MedicalRecords;
 
 /// <summary>
-/// Use cases for recording and updating medical visits and their diagnoses.
+/// Use cases for recording and updating medical visits, their diagnoses and prescribed
+/// medication lines.
 /// </summary>
 /// <remarks>
 /// Plain application service (decision D-08): MediatR is not adopted. Every method validates its
@@ -33,5 +34,21 @@ public interface IMedicalVisitService
         Guid visitId,
         Guid diagnosisId,
         UpdateDiagnosisRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<MedicationResponse> AddMedicationAsync(
+        Guid visitId,
+        CreateMedicationRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<MedicationResponse> UpdateMedicationAsync(
+        Guid visitId,
+        Guid medicationId,
+        UpdateMedicationRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task DeleteMedicationAsync(
+        Guid visitId,
+        Guid medicationId,
         CancellationToken cancellationToken = default);
 }

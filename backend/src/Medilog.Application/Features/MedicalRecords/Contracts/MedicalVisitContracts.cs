@@ -44,4 +44,5 @@ public sealed record MedicalVisitResponse(
     string? ChiefComplaint,
     string? Symptoms,
     string? ClinicalNotes,
-    IReadOnlyList<DiagnosisResponse> Diagnoses);
+    IReadOnlyList<DiagnosisResponse> Diagnoses,
+    IReadOnlyList<MedicationResponse> Medications);

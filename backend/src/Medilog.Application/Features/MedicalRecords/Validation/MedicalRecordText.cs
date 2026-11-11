@@ -20,6 +20,23 @@ public static class MedicalRecordText
 
     public const int DiagnosisDescriptionMaxLength = 4000;
 
+    /// <summary>Matches the persisted <c>medication_name</c> column length.</summary>
+    public const int MedicationNameMaxLength = 200;
+
+    /// <summary>Matches the persisted <c>dosage</c> column length.</summary>
+    public const int MedicationDosageMaxLength = 100;
+
+    /// <summary>Matches the persisted <c>frequency</c> column length.</summary>
+    public const int MedicationFrequencyMaxLength = 100;
+
+    /// <summary>Matches the persisted <c>duration</c> column length.</summary>
+    public const int MedicationDurationMaxLength = 100;
+
+    /// <summary>
+    /// Request-level guard for the unbounded <c>instructions</c> text column (decision D-26).
+    /// </summary>
+    public const int MedicationInstructionsMaxLength = 4000;
+
     /// <summary>Tolerance applied when rejecting timestamps that lie in the future.</summary>
     public static readonly TimeSpan FutureTolerance = TimeSpan.FromMinutes(5);
 

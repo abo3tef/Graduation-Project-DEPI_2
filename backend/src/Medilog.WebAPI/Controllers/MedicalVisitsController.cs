@@ -7,7 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace Medilog.WebAPI.Controllers;
 
 /// <summary>
-/// HTTP surface for recording and updating medical visits and their diagnoses.
+/// HTTP surface for recording and updating medical visits, their diagnoses and prescribed
+/// medication lines.
 /// </summary>
 /// <remarks>
 /// Every action is a thin adapter over <see cref="IMedicalVisitService"/>: no validation, query or
@@ -121,5 +122,62 @@ public sealed class MedicalVisitsController : ControllerBase
             cancellationToken);
 
         return Ok(response);
+    }
+
+    /// <summary>Adds a prescribed medication line to an existing visit.</summary>
+    [HttpPost("{visitId:guid}/medications")]
+    [ProducesResponseType(typeof(MedicationResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<MedicationResponse>> AddMedicationAsync(
+        Guid visitId,
+        [FromBody] CreateMedicationRequest request,
+        CancellationToken cancellationToken)
+    {
+        var response = await _medicalVisitService.AddMedicationAsync(visitId, request, cancellationToken);
+
+        // There is no GET medication route, so Location points at the parent visit that contains
+        // the medication (D-20, D-24).
+        return CreatedAtRoute(GetVisitRouteName, new { visitId }, response);
+    }
+
+    /// <summary>Updates the mutable fields of a medication that belongs to the visit.</summary>
+    [HttpPut("{visitId:guid}/medications/{medicationId:guid}")]
+    [ProducesResponseType(typeof(MedicationResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<MedicationResponse>> UpdateMedicationAsync(
+        Guid visitId,
+        Guid medicationId,
+        [FromBody] UpdateMedicationRequest request,
+        CancellationToken cancellationToken)
+    {
+        var response = await _medicalVisitService.UpdateMedicationAsync(
+            visitId,
+            medicationId,
+            request,
+            cancellationToken);
+
+        return Ok(response);
+    }
+
+    /// <summary>Deletes a medication line that was entered by mistake (D-23).</summary>
+    [HttpDelete("{visitId:guid}/medications/{medicationId:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteMedicationAsync(
+        Guid visitId,
+        Guid medicationId,
+        CancellationToken cancellationToken)
+    {
+        await _medicalVisitService.DeleteMedicationAsync(visitId, medicationId, cancellationToken);
+
+        return NoContent();
     }
 }

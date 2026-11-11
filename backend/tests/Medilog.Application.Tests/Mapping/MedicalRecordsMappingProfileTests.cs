@@ -25,6 +25,84 @@ public sealed class MedicalRecordsMappingProfileTests
     }
 
     [Fact]
+    public void Visit_is_mapped_with_medications_ordered_by_name_then_id()
+    {
+        var visit = new MedicalVisit
+        {
+            PatientId = Guid.NewGuid(),
+            DoctorId = Guid.NewGuid(),
+            VisitDate = DateTimeOffset.UtcNow,
+        };
+
+        var zed = new Medication
+        {
+            VisitId = visit.Id,
+            PatientId = visit.PatientId,
+            MedicationName = "Zed",
+            Dosage = "1 tablet",
+            Frequency = "Once daily",
+        };
+
+        var alphaOne = new Medication
+        {
+            VisitId = visit.Id,
+            PatientId = visit.PatientId,
+            MedicationName = "Alpha",
+            Dosage = "1 tablet",
+            Frequency = "Once daily",
+        };
+
+        var alphaTwo = new Medication
+        {
+            VisitId = visit.Id,
+            PatientId = visit.PatientId,
+            MedicationName = "Alpha",
+            Dosage = "2 tablets",
+            Frequency = "Twice daily",
+        };
+
+        visit.Medications.Add(zed);
+        visit.Medications.Add(alphaTwo);
+        visit.Medications.Add(alphaOne);
+
+        var response = Mapper.Map<MedicalVisitResponse>(visit);
+
+        var expected = new[] { alphaOne, alphaTwo }
+            .OrderBy(medication => medication.Id)
+            .Select(medication => medication.Id)
+            .Append(zed.Id);
+
+        Assert.Equal(expected, response.Medications.Select(medication => medication.Id));
+        Assert.Equal(
+            "2 tablets",
+            response.Medications.Single(medication => medication.Id == alphaTwo.Id).Dosage);
+    }
+
+    [Fact]
+    public void Medication_create_request_cannot_set_identifiers_or_navigation_properties()
+    {
+        var request = new CreateMedicationRequest(
+            "  Amoxicillin  ",
+            " 500 mg ",
+            " Every 8 hours ",
+            "   ",
+            "   ");
+
+        var medication = Mapper.Map<Medication>(request);
+
+        Assert.NotEqual(Guid.Empty, medication.Id);
+        Assert.Equal(Guid.Empty, medication.VisitId);
+        Assert.Equal(Guid.Empty, medication.PatientId);
+        Assert.Null(medication.Visit);
+        Assert.Null(medication.Patient);
+        Assert.Equal("Amoxicillin", medication.MedicationName);
+        Assert.Equal("500 mg", medication.Dosage);
+        Assert.Equal("Every 8 hours", medication.Frequency);
+        Assert.Null(medication.Duration);
+        Assert.Null(medication.Instructions);
+    }
+
+    [Fact]
     public void Visit_is_mapped_with_diagnoses_ordered_by_date_then_id()
     {
         var visit = new MedicalVisit

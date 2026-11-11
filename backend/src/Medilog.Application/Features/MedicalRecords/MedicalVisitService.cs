@@ -28,6 +28,7 @@ public sealed class MedicalVisitService : IMedicalVisitService
 {
     private const string VisitNotFoundMessage = "The medical visit was not found.";
     private const string DiagnosisNotFoundMessage = "The diagnosis was not found.";
+    private const string MedicationNotFoundMessage = "The medication was not found.";
 
     private readonly IApplicationDbContext _dbContext;
     private readonly ICurrentUser _currentUser;
@@ -36,6 +37,8 @@ public sealed class MedicalVisitService : IMedicalVisitService
     private readonly IValidator<UpdateMedicalVisitRequest> _updateVisitValidator;
     private readonly IValidator<CreateDiagnosisRequest> _createDiagnosisValidator;
     private readonly IValidator<UpdateDiagnosisRequest> _updateDiagnosisValidator;
+    private readonly IValidator<CreateMedicationRequest> _createMedicationValidator;
+    private readonly IValidator<UpdateMedicationRequest> _updateMedicationValidator;
 
     public MedicalVisitService(
         IApplicationDbContext dbContext,
@@ -44,7 +47,9 @@ public sealed class MedicalVisitService : IMedicalVisitService
         IValidator<CreateMedicalVisitRequest> createVisitValidator,
         IValidator<UpdateMedicalVisitRequest> updateVisitValidator,
         IValidator<CreateDiagnosisRequest> createDiagnosisValidator,
-        IValidator<UpdateDiagnosisRequest> updateDiagnosisValidator)
+        IValidator<UpdateDiagnosisRequest> updateDiagnosisValidator,
+        IValidator<CreateMedicationRequest> createMedicationValidator,
+        IValidator<UpdateMedicationRequest> updateMedicationValidator)
     {
         _dbContext = dbContext;
         _currentUser = currentUser;
@@ -53,6 +58,8 @@ public sealed class MedicalVisitService : IMedicalVisitService
         _updateVisitValidator = updateVisitValidator;
         _createDiagnosisValidator = createDiagnosisValidator;
         _updateDiagnosisValidator = updateDiagnosisValidator;
+        _createMedicationValidator = createMedicationValidator;
+        _updateMedicationValidator = updateMedicationValidator;
     }
 
     public async Task<MedicalVisitResponse> CreateVisitAsync(
@@ -97,6 +104,7 @@ public sealed class MedicalVisitService : IMedicalVisitService
         var visit = await _dbContext.MedicalVisits
             .AsNoTracking()
             .Include(candidate => candidate.Diagnoses)
+            .Include(candidate => candidate.Medications)
             .FirstOrDefaultAsync(
                 candidate => candidate.Id == visitId && candidate.DoctorId == doctorId,
                 cancellationToken)
@@ -116,6 +124,7 @@ public sealed class MedicalVisitService : IMedicalVisitService
 
         var visit = await _dbContext.MedicalVisits
             .Include(candidate => candidate.Diagnoses)
+            .Include(candidate => candidate.Medications)
             .FirstOrDefaultAsync(
                 candidate => candidate.Id == visitId && candidate.DoctorId == doctorId,
                 cancellationToken)
@@ -178,6 +187,78 @@ public sealed class MedicalVisitService : IMedicalVisitService
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         return _mapper.Map<DiagnosisResponse>(diagnosis);
+    }
+
+    public async Task<MedicationResponse> AddMedicationAsync(
+        Guid visitId,
+        CreateMedicationRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        await _createMedicationValidator.ValidateAndThrowAsync(request, cancellationToken);
+
+        var doctorId = RequireActingDoctorId();
+
+        var visit = await _dbContext.MedicalVisits
+            .FirstOrDefaultAsync(
+                candidate => candidate.Id == visitId && candidate.DoctorId == doctorId,
+                cancellationToken)
+            ?? throw new NotFoundException(VisitNotFoundMessage);
+
+        var medication = _mapper.Map<Medication>(request);
+
+        medication.VisitId = visit.Id;
+        medication.PatientId = visit.PatientId;
+
+        _dbContext.Medications.Add(medication);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        return _mapper.Map<MedicationResponse>(medication);
+    }
+
+    public async Task<MedicationResponse> UpdateMedicationAsync(
+        Guid visitId,
+        Guid medicationId,
+        UpdateMedicationRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        await _updateMedicationValidator.ValidateAndThrowAsync(request, cancellationToken);
+
+        var doctorId = RequireActingDoctorId();
+
+        var medication = await _dbContext.Medications
+            .Include(candidate => candidate.Visit)
+            .FirstOrDefaultAsync(
+                candidate => candidate.Id == medicationId
+                    && candidate.VisitId == visitId
+                    && candidate.Visit.DoctorId == doctorId,
+                cancellationToken)
+            ?? throw new NotFoundException(MedicationNotFoundMessage);
+
+        _mapper.Map(request, medication);
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        return _mapper.Map<MedicationResponse>(medication);
+    }
+
+    public async Task DeleteMedicationAsync(
+        Guid visitId,
+        Guid medicationId,
+        CancellationToken cancellationToken = default)
+    {
+        var doctorId = RequireActingDoctorId();
+
+        var medication = await _dbContext.Medications
+            .Include(candidate => candidate.Visit)
+            .FirstOrDefaultAsync(
+                candidate => candidate.Id == medicationId
+                    && candidate.VisitId == visitId
+                    && candidate.Visit.DoctorId == doctorId,
+                cancellationToken)
+            ?? throw new NotFoundException(MedicationNotFoundMessage);
+
+        _dbContext.Medications.Remove(medication);
+        await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
     private async Task EnsureAppointmentCanBeLinkedAsync(

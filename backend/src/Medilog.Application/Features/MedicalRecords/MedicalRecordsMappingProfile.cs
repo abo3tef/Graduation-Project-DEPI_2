@@ -74,7 +74,13 @@ public sealed class MedicalRecordsMappingProfile : Profile
                 options => options.MapFrom(
                     source => source.Diagnoses
                         .OrderBy(diagnosis => diagnosis.DiagnosisDate)
-                        .ThenBy(diagnosis => diagnosis.Id)));
+                        .ThenBy(diagnosis => diagnosis.Id)))
+            .ForCtorParam(
+                nameof(MedicalVisitResponse.Medications),
+                options => options.MapFrom(
+                    source => source.Medications
+                        .OrderBy(medication => medication.MedicationName)
+                        .ThenBy(medication => medication.Id)));
 
         CreateMap<Diagnosis, DiagnosisResponse>();
 
@@ -103,5 +109,51 @@ public sealed class MedicalRecordsMappingProfile : Profile
             .ForMember(
                 destination => destination.Description,
                 options => options.MapFrom(source => MedicalRecordText.Normalize(source.Description)));
+
+        CreateMap<Medication, MedicationResponse>();
+
+        CreateMap<CreateMedicationRequest, Medication>()
+            .ForMember(destination => destination.Id, options => options.Ignore())
+            .ForMember(destination => destination.VisitId, options => options.Ignore())
+            .ForMember(destination => destination.PatientId, options => options.Ignore())
+            .ForMember(destination => destination.Visit, options => options.Ignore())
+            .ForMember(destination => destination.Patient, options => options.Ignore())
+            .ForMember(
+                destination => destination.MedicationName,
+                options => options.MapFrom(source => source.MedicationName.Trim()))
+            .ForMember(
+                destination => destination.Dosage,
+                options => options.MapFrom(source => source.Dosage.Trim()))
+            .ForMember(
+                destination => destination.Frequency,
+                options => options.MapFrom(source => source.Frequency.Trim()))
+            .ForMember(
+                destination => destination.Duration,
+                options => options.MapFrom(source => MedicalRecordText.Normalize(source.Duration)))
+            .ForMember(
+                destination => destination.Instructions,
+                options => options.MapFrom(source => MedicalRecordText.Normalize(source.Instructions)));
+
+        CreateMap<UpdateMedicationRequest, Medication>()
+            .ForMember(destination => destination.Id, options => options.Ignore())
+            .ForMember(destination => destination.VisitId, options => options.Ignore())
+            .ForMember(destination => destination.PatientId, options => options.Ignore())
+            .ForMember(destination => destination.Visit, options => options.Ignore())
+            .ForMember(destination => destination.Patient, options => options.Ignore())
+            .ForMember(
+                destination => destination.MedicationName,
+                options => options.MapFrom(source => source.MedicationName.Trim()))
+            .ForMember(
+                destination => destination.Dosage,
+                options => options.MapFrom(source => source.Dosage.Trim()))
+            .ForMember(
+                destination => destination.Frequency,
+                options => options.MapFrom(source => source.Frequency.Trim()))
+            .ForMember(
+                destination => destination.Duration,
+                options => options.MapFrom(source => MedicalRecordText.Normalize(source.Duration)))
+            .ForMember(
+                destination => destination.Instructions,
+                options => options.MapFrom(source => MedicalRecordText.Normalize(source.Instructions)));
     }
 }
