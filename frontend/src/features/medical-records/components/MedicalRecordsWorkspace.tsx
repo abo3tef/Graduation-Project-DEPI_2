@@ -1,9 +1,9 @@
 'use client';
 
 import {useState, type FormEvent} from 'react';
-import {FiArrowRight, FiClipboard} from 'react-icons/fi';
+import {FiArrowRight, FiClipboard, FiPlusCircle} from 'react-icons/fi';
 import {useTranslations} from 'next-intl';
-import {useRouter} from '@/i18n/navigation';
+import {Link, useRouter} from '@/i18n/navigation';
 import {DevTokenPanel} from './DevTokenPanel';
 import {useDevToken} from '../use-dev-token';
 import {isGuid} from '../validation';
@@ -47,6 +47,13 @@ export function MedicalRecordsWorkspace() {
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
           {t('description')}
         </p>
+        <Link
+          href="/medical-records/visits/new"
+          className="mt-4 inline-flex w-fit items-center gap-2 rounded-xl bg-brand px-4 py-2 text-sm font-bold text-[#06211f] transition-opacity hover:opacity-90"
+        >
+          <FiPlusCircle aria-hidden className="size-4" />
+          {t('createVisit')}
+        </Link>
       </header>
 
       <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">

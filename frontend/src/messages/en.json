@@ -11,6 +11,7 @@
     "howItWorks": "How it works",
     "security": "Security",
     "contact": "Contact",
+    "medicalRecords": "Medical records",
     "login": "Sign in",
     "lightMode": "Light mode",
     "darkMode": "Dark mode",
@@ -100,7 +101,10 @@
       "shortLabel": "Doctor workspace"
     },
     "common": {
-      "backHome": "Back to home"
+      "backHome": "Back to home",
+      "backToWorkspace": "Back to medical records",
+      "retry": "Try again",
+      "cancel": "Cancel"
     },
     "workspace": {
       "eyebrow": "Doctor workspace",
@@ -112,7 +116,8 @@
       "visitIdPlaceholder": "00000000-0000-0000-0000-000000000000",
       "invalidVisitId": "Enter a valid visit identifier.",
       "tokenRequired": "Add a development token before opening a visit.",
-      "openVisit": "Open visit"
+      "openVisit": "Open visit",
+      "createVisit": "Record a new visit"
     },
     "token": {
       "title": "Development token",
@@ -127,6 +132,79 @@
       "statusMissing": "No token",
       "statusChecking": "Checking…",
       "storageFailed": "This browser blocked storage, so the token could not be saved."
+    },
+    "visit": {
+      "eyebrow": "Medical visit",
+      "title": "Visit details",
+      "visitDate": "Visit date",
+      "patientId": "Patient ID",
+      "appointmentId": "Appointment ID",
+      "chiefComplaint": "Chief complaint",
+      "symptoms": "Symptoms",
+      "clinicalNotes": "Clinical notes",
+      "notProvided": "Not recorded",
+      "notLinked": "No linked appointment",
+      "editAction": "Edit visit",
+      "readOnlyNote": "The patient and the appointment link cannot be changed after the visit is created."
+    },
+    "visitForm": {
+      "eyebrow": "Medical visit",
+      "createTitle": "Record a new visit",
+      "createDescription": "Document the consultation for a patient in your workspace. The patient identifier is required.",
+      "patientId": "Patient ID",
+      "patientIdHint": "The patient must belong to your workspace.",
+      "appointmentId": "Appointment ID (optional)",
+      "appointmentIdHint": "Leave empty when the visit is not linked to an appointment.",
+      "visitDate": "Visit date and time",
+      "chiefComplaint": "Chief complaint",
+      "symptoms": "Symptoms",
+      "clinicalNotes": "Clinical notes",
+      "submitCreate": "Save visit",
+      "submitEdit": "Save changes",
+      "submitting": "Saving…",
+      "validationSummary": "Please review the highlighted fields.",
+      "readOnlyNote": "The patient and the appointment link stay unchanged."
+    },
+    "states": {
+      "loading": "Loading visit…",
+      "refreshing": "Refreshing…",
+      "retry": "Try again",
+      "tokenTitle": "A token is required",
+      "tokenDescription": "Open this record after adding a development token in the medical-records workspace.",
+      "tokenRequiredNotice": "Add a development token to save this visit.",
+      "unauthorizedTitle": "Your session is not valid",
+      "unauthorizedDescription": "The token is missing or expired. Add a valid development token and try again.",
+      "forbiddenTitle": "Access denied",
+      "forbiddenDescription": "You do not have access to this patient record.",
+      "notFoundTitle": "Visit not found",
+      "notFoundDescription": "This visit does not exist or is outside your workspace.",
+      "networkTitle": "The server is unreachable",
+      "networkDescription": "Check the API address and your connection, then try again.",
+      "serverTitle": "Something went wrong",
+      "serverDescription": "The server could not complete the request. Please try again."
+    },
+    "errors": {
+      "unauthorized": "Your session is not valid. Add a valid development token and try again.",
+      "forbidden": "You do not have access to this patient record.",
+      "notFound": "This visit does not exist or is outside your workspace.",
+      "conflict": "This appointment is already linked to another visit.",
+      "validation": "Please review the highlighted fields.",
+      "network": "The server is unreachable. Check your connection and try again.",
+      "server": "Something went wrong. Please try again."
+    },
+    "validation": {
+      "patientIdRequired": "Enter the patient identifier.",
+      "patientIdInvalid": "Enter a valid patient identifier.",
+      "appointmentIdInvalid": "Enter a valid appointment identifier.",
+      "visitDateRequired": "Enter the visit date and time.",
+      "visitDateInvalid": "Enter a valid visit date and time.",
+      "visitDateFuture": "The visit date cannot be in the future.",
+      "maxLength": "This field must be at most {max} characters."
+    },
+    "notifications": {
+      "created": "The visit was saved.",
+      "updated": "The visit was updated.",
+      "saveFailed": "The visit could not be saved."
     }
   },
   "NotFound": {"title": "Page not found", "description": "The page you are looking for could not be found.", "backHome": "Back to home"}
