@@ -2,7 +2,15 @@
   "Metadata": {
     "title": "Medilog — Smart Medical Records Platform",
     "description": "Medilog is a smart medical records platform for managing patient files, appointments, visits, and prescriptions securely.",
-    "keywords": ["medical records", "clinic management", "patient records", "doctor software", "medical appointments", "healthcare platform", "Medilog"]
+    "keywords": [
+      "medical records",
+      "clinic management",
+      "patient records",
+      "doctor software",
+      "medical appointments",
+      "healthcare platform",
+      "Medilog"
+    ]
   },
   "Navigation": {
     "brand": "Medilog",
@@ -18,7 +26,11 @@
     "openMenu": "Open menu",
     "closeMenu": "Close menu"
   },
-  "LocaleSwitcher": {"label": "Change language", "ar": "العربية", "en": "English"},
+  "LocaleSwitcher": {
+    "label": "Change language",
+    "ar": "العربية",
+    "en": "English"
+  },
   "Home": {
     "badge": "Smarter care starts here",
     "title": "Everything about your patient, in one place.",
@@ -34,43 +46,99 @@
     "activity": "Clinic activity",
     "weeklyVisits": "Weekly visits",
     "tickerLabel": "Platform benefits",
-    "ticker": {"one": "Complete medical records", "two": "Organized appointments", "three": "Secure data", "four": "Simpler collaboration", "five": "Sharper decisions", "six": "A smarter clinic"},
+    "ticker": {
+      "one": "Complete medical records",
+      "two": "Organized appointments",
+      "three": "Secure data",
+      "four": "Simpler collaboration",
+      "five": "Sharper decisions",
+      "six": "A smarter clinic"
+    },
     "featuresEyebrow": "Everything your clinic needs",
     "featuresTitle": "Simple tools, meaningful impact",
     "featuresDescription": "Medilog gives you a clearer view and better control over every part of the patient journey.",
     "learnMore": "Learn more",
     "featuresList": [
-      {"title": "Organized records", "description": "Keep medical history, diagnoses, and prescriptions in one clear profile."},
-      {"title": "Effortless scheduling", "description": "Organize your calendar and keep a quick view of every patient's visit."},
-      {"title": "Data-led decisions", "description": "Track your clinic activity and uncover insights that help you grow."},
-      {"title": "One connected team", "description": "Give your team the right tools for a smoother care experience."}
+      {
+        "title": "Organized records",
+        "description": "Keep medical history, diagnoses, and prescriptions in one clear profile."
+      },
+      {
+        "title": "Effortless scheduling",
+        "description": "Organize your calendar and keep a quick view of every patient's visit."
+      },
+      {
+        "title": "Data-led decisions",
+        "description": "Track your clinic activity and uncover insights that help you grow."
+      },
+      {
+        "title": "One connected team",
+        "description": "Give your team the right tools for a smoother care experience."
+      }
     ],
     "stats": {
-      "patientsCount": {"value": "+12K", "label": "organized patient files"},
-      "visitsCount": {"value": "+48K", "label": "visits recorded"},
-      "timeSaved": {"value": "35%", "label": "less paperwork time"},
-      "availability": {"value": "24/7", "label": "secure access to your data"}
+      "patientsCount": {
+        "value": "+12K",
+        "label": "organized patient files"
+      },
+      "visitsCount": {
+        "value": "+48K",
+        "label": "visits recorded"
+      },
+      "timeSaved": {
+        "value": "35%",
+        "label": "less paperwork time"
+      },
+      "availability": {
+        "value": "24/7",
+        "label": "secure access to your data"
+      }
     },
     "workflowEyebrow": "How the platform works",
     "workflowTitle": "The patient journey, made clearer",
     "workflowDescription": "From the first appointment to follow-up, every step is organized so you can focus on what matters.",
     "workflow": [
-      {"title": "Add patient details", "description": "Create an organized medical profile in seconds."},
-      {"title": "Record the visit", "description": "Document diagnoses, prescriptions, and notes in one place."},
-      {"title": "Track progress", "description": "Return to a clear timeline and make better decisions."}
+      {
+        "title": "Add patient details",
+        "description": "Create an organized medical profile in seconds."
+      },
+      {
+        "title": "Record the visit",
+        "description": "Document diagnoses, prescriptions, and notes in one place."
+      },
+      {
+        "title": "Track progress",
+        "description": "Return to a clear timeline and make better decisions."
+      }
     ],
     "securityEyebrow": "Privacy that care deserves",
     "securityTitle": "Your patients' data is always protected",
     "securityDescription": "Privacy and security are at the heart of the experience, so you can work with confidence.",
-    "securityPoints": ["Clear access for every role", "Protection for sensitive medical data", "A timeline that's easy to review"],
+    "securityPoints": [
+      "Clear access for every role",
+      "Protection for sensitive medical data",
+      "A timeline that's easy to review"
+    ],
     "protected": "Data protected",
     "storyEyebrow": "Real experiences, even when starting small",
     "storyTitle": "Made for the busy clinic day",
     "storyDescription": "Every detail in Medilog is designed to make your day calmer and give you more time to focus on patients.",
     "testimonials": [
-      {"quote": "I can see the patient's full history before the visit starts, without searching through scattered files.", "name": "Dr. Sarah Khaled", "role": "Internal medicine doctor"},
-      {"quote": "Organizing appointments and daily follow-ups saved our team hours of calls and coordination.", "name": "Mona Ali", "role": "Clinic manager"},
-      {"quote": "The interface is clear and fast, and sensitive information stays visible only to the right person.", "name": "Dr. Omar Hassan", "role": "Dentist"}
+      {
+        "quote": "I can see the patient's full history before the visit starts, without searching through scattered files.",
+        "name": "Dr. Sarah Khaled",
+        "role": "Internal medicine doctor"
+      },
+      {
+        "quote": "Organizing appointments and daily follow-ups saved our team hours of calls and coordination.",
+        "name": "Mona Ali",
+        "role": "Clinic manager"
+      },
+      {
+        "quote": "The interface is clear and fast, and sensitive information stays visible only to the right person.",
+        "name": "Dr. Omar Hassan",
+        "role": "Dentist"
+      }
     ],
     "ctaEyebrow": "Ready for the next step?",
     "ctaTitle": "Build a smarter clinic today",
@@ -263,5 +331,109 @@
       "medicationDeleteFailed": "The medication could not be deleted."
     }
   },
-  "NotFound": {"title": "Page not found", "description": "The page you are looking for could not be found.", "backHome": "Back to home"}
+  "NotFound": {
+    "title": "Page not found",
+    "description": "The page you are looking for could not be found.",
+    "backHome": "Back to home"
+  },
+  "Payments": {
+    "title": "Payments",
+    "subtitle": "Record patient payments and track collection status.",
+    "prototypeNotice": "Prototype: the data shown is fake and is not saved after you refresh the page.",
+    "actions": {
+      "record": "Record payment",
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving...",
+      "retry": "Try again",
+      "clearFilters": "Clear filters",
+      "close": "Close",
+      "changeStatus": "Change status"
+    },
+    "filters": {
+      "label": "Filter payments",
+      "searchLabel": "Search",
+      "searchPlaceholder": "Search by patient name or payment ID",
+      "statusLabel": "Payment status",
+      "methodLabel": "Payment method",
+      "all": "All"
+    },
+    "table": {
+      "caption": "Payments list",
+      "patient": "Patient",
+      "appointment": "Appointment date",
+      "amount": "Amount",
+      "method": "Method",
+      "status": "Status",
+      "paidAt": "Recorded on",
+      "actions": "Actions"
+    },
+    "results": {
+      "count": "{count, plural, =0 {No results} one {1 result} other {# results}}"
+    },
+    "pagination": {
+      "label": "Pagination",
+      "previous": "Previous",
+      "next": "Next",
+      "pageOf": "Page {page} of {totalPages}"
+    },
+    "states": {
+      "loading": "Loading payments...",
+      "emptyTitle": "No payments yet",
+      "emptyDescription": "Record the first payment and it will show up here.",
+      "noResultsTitle": "No matching results",
+      "noResultsDescription": "Try different search terms or clear the filters.",
+      "errorTitle": "Could not load payments"
+    },
+    "status": {
+      "pending": "Pending",
+      "partial": "Partially paid",
+      "paid": "Paid"
+    },
+    "method": {
+      "cash": "Cash",
+      "card": "Card"
+    },
+    "form": {
+      "title": "Record payment",
+      "description": "Choose the appointment and enter the payment details.",
+      "appointmentLabel": "Appointment",
+      "appointmentPlaceholder": "Select an appointment",
+      "appointmentLoading": "Loading appointments...",
+      "noAppointments": "There are no appointments available for payment right now.",
+      "amountLabel": "Amount",
+      "amountPlaceholder": "0.00",
+      "methodLabel": "Payment method",
+      "notesLabel": "Notes (optional)",
+      "notesPlaceholder": "Add a note about this payment",
+      "notesCounter": "{count} / {max}",
+      "submit": "Record payment",
+      "errors": {
+        "appointmentRequired": "Select an appointment.",
+        "amountRequired": "Enter the amount.",
+        "amountInvalid": "Enter a valid amount.",
+        "amountOutOfRange": "The amount must be between {min} and {max}.",
+        "methodRequired": "Select a payment method.",
+        "notesTooLong": "Notes exceed the allowed length ({max} characters)."
+      }
+    },
+    "statusDialog": {
+      "title": "Update payment status",
+      "description": "Choose the new status for the payment of {patient}.",
+      "label": "New status",
+      "submit": "Update"
+    },
+    "toast": {
+      "created": "Payment recorded successfully.",
+      "statusUpdated": "Payment status updated."
+    },
+    "errors": {
+      "NETWORK": "Could not connect. Check your connection and try again.",
+      "INVALID_INPUT": "Some of the data is not valid. Review it and try again.",
+      "APPOINTMENT_NOT_FOUND": "The selected appointment does not exist.",
+      "APPOINTMENT_ALREADY_PAID": "A payment has already been recorded for this appointment.",
+      "PAYMENT_NOT_FOUND": "The requested payment does not exist.",
+      "unknown": "An unexpected error occurred. Please try again."
+    }
+  }
 }
