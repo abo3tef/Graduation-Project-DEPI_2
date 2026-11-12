@@ -53,7 +53,7 @@ Status values: `Not started` · `Draft` · `Ready` · `Approved` · `In progress
 
 | Feature | Cycles | Status | Blocker |
 |---------|--------|--------|---------|
-| F1 | F1-C1 Domain & EF Core (`docs/tasks/F1/F1-C1.md`) — **Done**; F1-C2 Application Service & Business Rules (`docs/tasks/F1/F1-C2.md`) — **Done**; F1-C3 WebAPI Controllers & Security (`docs/tasks/F1/F1-C3.md`) — Draft; further cycles to be generated | In progress (F1-C3 plan) | Q-07 (authentication) for F1-C3; Q-04: temporary `PagedResult<T>` to be aligned with the shared contract |
+| F1 | F1-C1 Domain & EF Core (`docs/tasks/F1/F1-C1.md`) — **Done**; F1-C2 Application Service & Business Rules (`docs/tasks/F1/F1-C2.md`) — **Done**; F1-C3 WebAPI Controllers & Security (`docs/tasks/F1/F1-C3.md`) — **Done**; F1-C4 Frontend Screens (`docs/tasks/F1/F1-C4.md`) — Draft; further cycles to be generated | In progress (F1-C4 plan) | Q-07 (authentication) deferred by Tech Lead — API uses a temporary dev-only header identity; Q-04: temporary paging contract to be aligned with the shared one; F1-C4 needs doctor/patient lookup endpoints |
 | F2 | _to be generated_ | Blocked | Q-01 (payment model) |
 | F3 | _to be generated_ | Not started | Q-02, Q-03 |
 | F4 | _to be generated_ | Not started | Q-02, Q-08 |
@@ -64,7 +64,7 @@ Status values: `Not started` · `Draft` · `Ready` · `Approved` · `In progress
 
 | Member | Active Cycle | Branch | Status | Last update |
 |--------|--------------|--------|--------|-------------|
-| Member 1 (Menna) | F1-C3 (F1-C1, F1-C2 Done) | `feature/menna-appointments` | Plan (Draft, awaiting approval) | 2026-11-12 |
+| Member 1 (Menna) | F1-C4 (F1-C1, F1-C2, F1-C3 Done) | `feature/menna-appointments` | Plan (Draft, awaiting approval) | 2026-11-12 |
 | Member 2 | — | — | — | — |
 | Member 3 | — | — | — | — |
 | Member 4 | — | — | — | — |
@@ -95,6 +95,7 @@ Status values: `Not started` · `Draft` · `Ready` · `Approved` · `In progress
 | 2026-11-08 | Workflow `plan → build → review → done` with `ElwakeelManage` and `ElwakeelBuild` | Instructor / AGENTS.md §8 |
 | 2026-11-12 | F1 (Q-09, Tech Lead via Menna): Cancelled and No-Show free their slot; `doctor_secretaries` assignment enforced; `EndTime` required in Domain/Application/API with no default duration and no schema change; past bookings rejected; clinic timezone `Africa/Cairo` in `Clinic:TimeZone`; `CancellationReason` mandatory on cancel, max 500; no test project for now | `docs/tasks/F1/F1-C1.md` §0 |
 | 2026-11-12 | F1-C2 (Tech Lead via Menna): Application-owned `IAppointmentStore` port implemented in Infrastructure (Application stays EF-free); `ICurrentUser` (UserId, Role); typed Application exceptions (NotFound/Forbidden/Conflict/validation) alongside `DomainException`; temporary lightweight `PagedResult<T>` + list query in Application until Q-04 is decided (scoped to F1 only, not the shared contract); xUnit project `backend/tests/Medilog.Application.Tests` added to `Medilog.sln` (supersedes the C1 "no test project" decision); Completed = doctor only, No-Show/Confirmed = doctor or assigned secretary; patient must belong to the booking doctor; legacy null `end_time` treated as a point at start with a warning log; per-doctor `FOR UPDATE` transaction; out-of-scope ids → NotFound; inactive doctors not bookable; secretaries may filter all statuses | `docs/tasks/F1/F1-C2.md` §0 |
+| 2026-11-12 | F1-C3 (Tech Lead Abdullah via Menna): **no authentication, JWT packages, `UseAuthentication()` or `[Authorize]` until Q-07 is implemented by its owner**; temporary `HeaderCurrentUser` reads `X-User-Id` / `X-User-Role` (missing/invalid → 403) and is enabled only when `Auth:AllowHeaderIdentity` = true (Development); routes `POST/GET /api/appointments`, `GET /{id}`, `PUT /{id}/schedule`, `POST /{id}/cancel`, `PUT /{id}/status`; `IExceptionHandler` + ProblemDetails (404/403/409/400/500); string enums, `yyyy-MM-dd`, `HH:mm:ss`; new `Medilog.WebAPI.Tests` using `WebApplicationFactory`; contract doc `backend/docs/api/appointments.md` | `docs/tasks/F1/F1-C3.md` §0 |
 
 ### Pending approval (blocks work — do NOT assume)
 | ID | Question | Affects | Needed from | Status |
@@ -135,6 +136,7 @@ Index of one report per AI-assisted Cycle (store under `docs/reports/<CycleId>.m
 |-------|-------------|------|--------|--------|
 | F1-C1 | Menna | 2026-11-12 | Done — build 0 warnings/0 errors; EF model in sync; no tests (no test project by decision) | `docs/reports/F1-C1.md` |
 | F1-C2 | Menna | 2026-11-12 | Done — build 0 warnings/0 errors; 94 tests pass; EF model in sync; real-MySQL lock verification still open | `docs/reports/F1-C2.md` |
+| F1-C3 | Menna | 2026-11-12 | Done — build 0 warnings/0 errors; 94 + 43 tests pass; EF model in sync; no authentication (temporary dev-only header identity, gated by `Auth:AllowHeaderIdentity`); real-MySQL verification still open | `docs/reports/F1-C3.md` |
 
 ## 11. Next Step
 
