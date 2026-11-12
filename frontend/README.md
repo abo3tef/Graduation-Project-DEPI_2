@@ -97,3 +97,32 @@ Add a new language by updating `src/i18n/routing.ts` and adding
 - Feature-specific API calls belong in `features/<feature>/services`; the shared HTTP
   client belongs in `services/api`.
 - Do not call `react-toastify` directly from feature code; use `@/lib/utils/toast`.
+- The shared HTTP client is `src/lib/api` (fetch-based; one `ApiError` type; one place that
+  attaches the caller's identity). Features call it from their `services/`.
+
+## Appointments (F1) — running against the API
+
+The secretary appointment screens live in `src/features/appointments` and are served at
+`/ar/appointments` and `/en/appointments` (`/appointments/new` to book). They use the API
+documented in `backend/docs/api/appointments.md`.
+
+```bash
+cp .env.example .env.local     # then check NEXT_PUBLIC_API_BASE_URL
+npm run dev                    # http://localhost:3000
+```
+
+1. Start the API in Development with a MySQL connection string (`dotnet run` in
+   `backend/src/Medilog.WebAPI`) and load the synthetic data in
+   `backend/docs/dev/seed-dev-data.sql`.
+2. `NEXT_PUBLIC_API_BASE_URL` must be the exact URL the API serves. The backend `http` profile
+   serves `http://localhost:5208`; the `https` profile redirects `5208` to `7206`, and a browser
+   CORS preflight fails on a redirect.
+3. **Temporary development identity (STATE.md Q-07):** real sign-in does not exist yet, so the API
+   reads `X-User-Id` / `X-User-Role` headers. They are sent by `src/lib/api` from one provider
+   (`src/features/auth/dev-identity`), only when `NEXT_PUBLIC_DEV_IDENTITY=true` in a
+   **non-production** build; production builds never send them. Use the "Acting as" button in the
+   top bar to enter an id and role (ids of the seed data are listed at the top of the SQL file).
+   When authentication is delivered, only the provider and `useActingIdentity` change.
+
+Quality gates: `npm run lint`, `npm run typecheck`, `npm test` (Vitest + Testing Library, jsdom),
+`npm run build`.

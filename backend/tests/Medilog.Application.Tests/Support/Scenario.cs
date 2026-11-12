@@ -1,5 +1,6 @@
 using Medilog.Application.Common;
 using Medilog.Application.Features.Appointments;
+using Medilog.Application.Features.Appointments.Lookups;
 using Medilog.Application.Features.Appointments.Requests;
 using Medilog.Application.Features.Appointments.Responses;
 using Medilog.Application.Features.Appointments.Validators;
@@ -41,6 +42,7 @@ internal sealed class Scenario
             new CancelAppointmentRequestValidator(),
             new UpdateAppointmentStatusRequestValidator(),
             new ListAppointmentsQueryValidator(),
+            new PatientLookupQueryValidator(),
             NullLogger<AppointmentService>.Instance);
     }
 

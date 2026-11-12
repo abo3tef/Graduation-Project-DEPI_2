@@ -86,17 +86,17 @@ public sealed class Appointment : CreatedEntity
     {
         if (patientId == Guid.Empty)
         {
-            throw new DomainException("An appointment must belong to a patient.");
+            throw new DomainException("An appointment must belong to a patient.", DomainErrorCodes.MissingReference);
         }
 
         if (doctorId == Guid.Empty)
         {
-            throw new DomainException("An appointment must belong to a doctor.");
+            throw new DomainException("An appointment must belong to a doctor.", DomainErrorCodes.MissingReference);
         }
 
         if (createdBy == Guid.Empty)
         {
-            throw new DomainException("The appointment creator must be identified.");
+            throw new DomainException("The appointment creator must be identified.", DomainErrorCodes.MissingReference);
         }
 
         EnsureValidInterval(startTime, endTime);
@@ -149,13 +149,14 @@ public sealed class Appointment : CreatedEntity
 
         if (string.IsNullOrEmpty(reason))
         {
-            throw new DomainException("A cancellation reason is required.");
+            throw new DomainException("A cancellation reason is required.", DomainErrorCodes.CancellationReasonRequired);
         }
 
         if (reason.Length > CancellationReasonMaxLength)
         {
             throw new DomainException(
-                $"The cancellation reason must not exceed {CancellationReasonMaxLength} characters.");
+                $"The cancellation reason must not exceed {CancellationReasonMaxLength} characters.",
+                DomainErrorCodes.CancellationReasonTooLong);
         }
 
         Status = AppointmentStatus.Cancelled;
@@ -173,7 +174,7 @@ public sealed class Appointment : CreatedEntity
     {
         if (newStatus == AppointmentStatus.Cancelled)
         {
-            throw new DomainException("Use the cancel operation to cancel an appointment.");
+            throw new DomainException("Use the cancel operation to cancel an appointment.", DomainErrorCodes.UseCancelOperation);
         }
 
         var allowed = Status switch
@@ -188,7 +189,9 @@ public sealed class Appointment : CreatedEntity
 
         if (!allowed)
         {
-            throw new DomainException($"An appointment cannot change from {Status} to {newStatus}.");
+            throw new DomainException(
+                $"An appointment cannot change from {Status} to {newStatus}.",
+                DomainErrorCodes.InvalidStatusTransition);
         }
 
         Status = newStatus;
@@ -227,7 +230,9 @@ public sealed class Appointment : CreatedEntity
 
         if (EndTime is null || endTime is null)
         {
-            throw new DomainException("An appointment without an end time cannot be checked for overlap.");
+            throw new DomainException(
+                "An appointment without an end time cannot be checked for overlap.",
+                DomainErrorCodes.EndTimeRequired);
         }
 
         return startTime < EndTime.Value && endTime.Value > StartTime;
@@ -237,7 +242,7 @@ public sealed class Appointment : CreatedEntity
     {
         if (!IsOpen)
         {
-            throw new DomainException($"A {Status} appointment cannot be {action}.");
+            throw new DomainException($"A {Status} appointment cannot be {action}.", DomainErrorCodes.NotOpen);
         }
     }
 
@@ -245,12 +250,14 @@ public sealed class Appointment : CreatedEntity
     {
         if (endTime is null)
         {
-            throw new DomainException("The appointment end time is required.");
+            throw new DomainException("The appointment end time is required.", DomainErrorCodes.EndTimeRequired);
         }
 
         if (endTime.Value <= startTime)
         {
-            throw new DomainException("The appointment end time must be later than its start time.");
+            throw new DomainException(
+                "The appointment end time must be later than its start time.",
+                DomainErrorCodes.InvalidInterval);
         }
     }
 
@@ -258,7 +265,7 @@ public sealed class Appointment : CreatedEntity
     {
         if (date.ToDateTime(startTime) < clinicLocalNow)
         {
-            throw new DomainException("An appointment cannot be booked in the past.");
+            throw new DomainException("An appointment cannot be booked in the past.", DomainErrorCodes.InThePast);
         }
     }
 }

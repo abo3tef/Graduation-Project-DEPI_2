@@ -1,4 +1,5 @@
 using Medilog.Application.Common.Paging;
+using Medilog.Application.Features.Appointments.Lookups;
 using Medilog.Application.Features.Appointments.Requests;
 using Medilog.Application.Features.Appointments.Responses;
 
@@ -32,5 +33,13 @@ public interface IAppointmentService
 
     Task<PagedResult<AppointmentResponse>> ListAsync(
         ListAppointmentsQuery query,
+        CancellationToken cancellationToken);
+
+    /// <summary>Active doctors the caller may book: the doctor themself, or a secretary's assigned doctors.</summary>
+    Task<IReadOnlyList<DoctorLookupResponse>> GetDoctorLookupsAsync(CancellationToken cancellationToken);
+
+    /// <summary>Patients of one doctor in the caller's scope (id, name, phone only).</summary>
+    Task<IReadOnlyList<PatientLookupResponse>> SearchPatientsAsync(
+        PatientLookupQuery query,
         CancellationToken cancellationToken);
 }

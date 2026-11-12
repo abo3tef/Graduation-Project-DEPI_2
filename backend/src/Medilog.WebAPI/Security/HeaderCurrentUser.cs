@@ -53,7 +53,7 @@ internal sealed class HeaderCurrentUser : ICurrentUser
 
         if (!_enabled || headers is null)
         {
-            throw new ForbiddenException("The current user could not be identified.");
+            throw new ForbiddenException("The current user could not be identified.", ErrorCodes.IdentityInvalid);
         }
 
         var rawId = headers[UserIdHeader].ToString();
@@ -61,7 +61,7 @@ internal sealed class HeaderCurrentUser : ICurrentUser
 
         if (!Guid.TryParseExact(rawId, "D", out var userId) || userId == Guid.Empty)
         {
-            throw new ForbiddenException("The current user could not be identified.");
+            throw new ForbiddenException("The current user could not be identified.", ErrorCodes.IdentityInvalid);
         }
 
         // Exact, case-sensitive names only: numeric values ("1") or other casing are rejected.
@@ -73,7 +73,7 @@ internal sealed class HeaderCurrentUser : ICurrentUser
         };
 
         return role is null
-            ? throw new ForbiddenException("The current user could not be identified.")
+            ? throw new ForbiddenException("The current user could not be identified.", ErrorCodes.IdentityInvalid)
             : (userId, role.Value);
     }
 }

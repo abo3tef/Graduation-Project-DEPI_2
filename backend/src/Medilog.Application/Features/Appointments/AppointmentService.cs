@@ -2,6 +2,7 @@ using FluentValidation;
 using Medilog.Application.Common;
 using Medilog.Application.Common.Exceptions;
 using Medilog.Application.Common.Paging;
+using Medilog.Application.Features.Appointments.Lookups;
 using Medilog.Application.Features.Appointments.Requests;
 using Medilog.Application.Features.Appointments.Responses;
 using Medilog.Application.Interfaces;
@@ -22,6 +23,7 @@ public sealed class AppointmentService : IAppointmentService
     private readonly IValidator<CancelAppointmentRequest> _cancelValidator;
     private readonly IValidator<UpdateAppointmentStatusRequest> _statusValidator;
     private readonly IValidator<ListAppointmentsQuery> _listValidator;
+    private readonly IValidator<PatientLookupQuery> _patientLookupValidator;
     private readonly ILogger<AppointmentService> _logger;
 
     public AppointmentService(
@@ -33,6 +35,7 @@ public sealed class AppointmentService : IAppointmentService
         IValidator<CancelAppointmentRequest> cancelValidator,
         IValidator<UpdateAppointmentStatusRequest> statusValidator,
         IValidator<ListAppointmentsQuery> listValidator,
+        IValidator<PatientLookupQuery> patientLookupValidator,
         ILogger<AppointmentService> logger)
     {
         _store = store;
@@ -43,6 +46,7 @@ public sealed class AppointmentService : IAppointmentService
         _cancelValidator = cancelValidator;
         _statusValidator = statusValidator;
         _listValidator = listValidator;
+        _patientLookupValidator = patientLookupValidator;
         _logger = logger;
     }
 
@@ -56,15 +60,15 @@ public sealed class AppointmentService : IAppointmentService
         // Doctors book for themselves; secretaries only for assigned doctors.
         if (!await CanAccessDoctorAsync(request.DoctorId, cancellationToken))
         {
-            throw new NotFoundException("The doctor was not found.");
+            throw new NotFoundException("The doctor was not found.", ErrorCodes.DoctorNotFound);
         }
 
         var doctor = await _store.GetDoctorAsync(request.DoctorId, cancellationToken)
-            ?? throw new NotFoundException("The doctor was not found.");
+            ?? throw new NotFoundException("The doctor was not found.", ErrorCodes.DoctorNotFound);
 
         if (!doctor.IsActive)
         {
-            throw new ConflictException("The doctor is not available for booking.");
+            throw new ConflictException("The doctor is not available for booking.", ErrorCodes.DoctorUnavailable);
         }
 
         var patient = await _store.GetPatientAsync(request.PatientId, cancellationToken);
@@ -73,7 +77,7 @@ public sealed class AppointmentService : IAppointmentService
         // reported as not found so another doctor's patients are not revealed.
         if (patient is null || patient.DoctorId != doctor.Id)
         {
-            throw new NotFoundException("The patient was not found.");
+            throw new NotFoundException("The patient was not found.", ErrorCodes.PatientNotFound);
         }
 
         var date = request.AppointmentDate!.Value;
@@ -161,7 +165,9 @@ public sealed class AppointmentService : IAppointmentService
                 // be set by a secretary assigned to the doctor.
                 if (newStatus == AppointmentStatus.Completed && _currentUser.Role != UserRole.Doctor)
                 {
-                    throw new ForbiddenException("Only the doctor can mark an appointment as completed.");
+                    throw new ForbiddenException(
+                        "Only the doctor can mark an appointment as completed.",
+                        ErrorCodes.CompleteRequiresDoctor);
                 }
 
                 appointment.UpdateStatus(newStatus);
@@ -178,7 +184,7 @@ public sealed class AppointmentService : IAppointmentService
 
         if (details is null || !await CanAccessDoctorAsync(details.DoctorId, cancellationToken))
         {
-            throw new NotFoundException("The appointment was not found.");
+            throw new NotFoundException("The appointment was not found.", ErrorCodes.AppointmentNotFound);
         }
 
         return details;
@@ -221,6 +227,38 @@ public sealed class AppointmentService : IAppointmentService
         return await _store.ListAsync(criteria, cancellationToken);
     }
 
+    public async Task<IReadOnlyList<DoctorLookupResponse>> GetDoctorLookupsAsync(CancellationToken cancellationToken)
+    {
+        var actor = await RequireActorAsync(cancellationToken);
+
+        IReadOnlyCollection<Guid> doctorIds = _currentUser.Role == UserRole.Doctor
+            ? [actor.Id]
+            : await _store.GetAssignedDoctorIdsAsync(actor.Id, cancellationToken);
+
+        return doctorIds.Count == 0
+            ? []
+            : await _store.GetActiveDoctorLookupsAsync(doctorIds, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<PatientLookupResponse>> SearchPatientsAsync(
+        PatientLookupQuery query,
+        CancellationToken cancellationToken)
+    {
+        await ValidateAsync(_patientLookupValidator, query, cancellationToken);
+        await RequireActorAsync(cancellationToken);
+
+        // Patients are only searched inside a doctor the caller may act for;
+        // anything else looks like a missing doctor.
+        if (!await CanAccessDoctorAsync(query.DoctorId, cancellationToken))
+        {
+            throw new NotFoundException("The doctor was not found.", ErrorCodes.DoctorNotFound);
+        }
+
+        var search = string.IsNullOrWhiteSpace(query.Search) ? null : query.Search.Trim();
+
+        return await _store.SearchPatientsAsync(query.DoctorId, search, query.Limit, cancellationToken);
+    }
+
     /// <summary>
     /// Runs a state change under the per-doctor lock: scope check on a non-tracked
     /// read, lock, fresh tracked read inside the lock, change, save, commit.
@@ -236,14 +274,14 @@ public sealed class AppointmentService : IAppointmentService
 
         if (doctorId is null || !await CanAccessDoctorAsync(doctorId.Value, cancellationToken))
         {
-            throw new NotFoundException("The appointment was not found.");
+            throw new NotFoundException("The appointment was not found.", ErrorCodes.AppointmentNotFound);
         }
 
         await using (var transaction = await _store.BeginDoctorTransactionAsync(doctorId.Value, cancellationToken))
         {
             // Read inside the lock so the decision uses the latest committed state.
             var appointment = await _store.GetAppointmentAsync(appointmentId, cancellationToken)
-                ?? throw new NotFoundException("The appointment was not found.");
+                ?? throw new NotFoundException("The appointment was not found.", ErrorCodes.AppointmentNotFound);
 
             await modify(appointment, cancellationToken);
 
@@ -258,14 +296,14 @@ public sealed class AppointmentService : IAppointmentService
     {
         if (!Enum.IsDefined(_currentUser.Role) || _currentUser.UserId == Guid.Empty)
         {
-            throw new ForbiddenException("The current user cannot manage appointments.");
+            throw new ForbiddenException("The current user cannot manage appointments.", ErrorCodes.IdentityInvalid);
         }
 
         var actor = await _store.GetActorAsync(_currentUser.Role, _currentUser.UserId, cancellationToken);
 
         if (actor is null || !actor.IsActive)
         {
-            throw new ForbiddenException("The current user cannot manage appointments.");
+            throw new ForbiddenException("The current user cannot manage appointments.", ErrorCodes.IdentityInvalid);
         }
 
         return actor;
@@ -317,7 +355,9 @@ public sealed class AppointmentService : IAppointmentService
 
             if (overlaps)
             {
-                throw new ConflictException("The doctor already has an appointment that overlaps the requested time.");
+                throw new ConflictException(
+                    "The doctor already has an appointment that overlaps the requested time.",
+                    ErrorCodes.AppointmentOverlap);
             }
         }
     }
@@ -328,21 +368,23 @@ public sealed class AppointmentService : IAppointmentService
         {
             throw new RequestValidationException(
                 nameof(BookAppointmentRequest.StartTime),
-                "The start time does not exist in the clinic time zone on that date.");
+                "The start time does not exist in the clinic time zone on that date.",
+                ErrorCodes.TimeNotInTimeZone);
         }
 
         if (_clock.IsNonExistentLocalTime(date.ToDateTime(end)))
         {
             throw new RequestValidationException(
                 nameof(BookAppointmentRequest.EndTime),
-                "The end time does not exist in the clinic time zone on that date.");
+                "The end time does not exist in the clinic time zone on that date.",
+                ErrorCodes.TimeNotInTimeZone);
         }
     }
 
     private async Task<AppointmentResponse> GetDetailsOrThrowAsync(Guid appointmentId, CancellationToken cancellationToken)
     {
         return await _store.GetDetailsAsync(appointmentId, cancellationToken)
-            ?? throw new NotFoundException("The appointment was not found.");
+            ?? throw new NotFoundException("The appointment was not found.", ErrorCodes.AppointmentNotFound);
     }
 
     private static async Task ValidateAsync<T>(IValidator<T> validator, T instance, CancellationToken cancellationToken)
@@ -354,13 +396,18 @@ public sealed class AppointmentService : IAppointmentService
             return;
         }
 
-        var errors = result.Errors
-            .GroupBy(failure => failure.PropertyName)
-            .ToDictionary(
-                group => group.Key,
-                group => group.Select(failure => failure.ErrorMessage).Distinct().ToArray());
+        var grouped = result.Errors.GroupBy(failure => failure.PropertyName).ToArray();
 
-        throw new RequestValidationException(errors);
+        var errors = grouped.ToDictionary(
+            group => group.Key,
+            group => group.Select(failure => failure.ErrorMessage).ToArray());
+
+        // Validator codes (e.g. NotEmptyValidator) let clients localize each message.
+        var errorCodes = grouped.ToDictionary(
+            group => group.Key,
+            group => group.Select(failure => failure.ErrorCode).ToArray());
+
+        throw new RequestValidationException(errors, errorCodes);
     }
 
     /// <summary>The database column is <c>time(0)</c>, so times are whole seconds.</summary>

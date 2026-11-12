@@ -1,5 +1,6 @@
 using Medilog.Application.Common;
 using Medilog.Application.Common.Paging;
+using Medilog.Application.Features.Appointments.Lookups;
 using Medilog.Application.Features.Appointments.Responses;
 using Medilog.Domain.Entities;
 
@@ -63,6 +64,21 @@ public interface IAppointmentStore
 
     Task<PagedResult<AppointmentResponse>> ListAsync(
         AppointmentListCriteria criteria,
+        CancellationToken cancellationToken);
+
+    /// <summary>Active doctors among the given ids, ordered by name (administrative fields only).</summary>
+    Task<IReadOnlyList<DoctorLookupResponse>> GetActiveDoctorLookupsAsync(
+        IReadOnlyCollection<Guid> doctorIds,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Patients of one doctor whose name or phone contains the text, ordered by name,
+    /// at most <paramref name="limit"/> rows (administrative fields only).
+    /// </summary>
+    Task<IReadOnlyList<PatientLookupResponse>> SearchPatientsAsync(
+        Guid doctorId,
+        string? search,
+        int limit,
         CancellationToken cancellationToken);
 
     Task AddAsync(Appointment appointment, CancellationToken cancellationToken);

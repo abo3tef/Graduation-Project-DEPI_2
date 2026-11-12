@@ -1,5 +1,6 @@
 using Medilog.Application.Common;
 using Medilog.Application.Common.Paging;
+using Medilog.Application.Features.Appointments.Lookups;
 using Medilog.Application.Features.Appointments.Responses;
 using Medilog.Application.Interfaces;
 using Medilog.Domain.Entities;
@@ -148,6 +149,45 @@ internal sealed class FakeAppointmentStore : IAppointmentStore
             .Select(ToResponse).ToList();
 
         return Task.FromResult(new PagedResult<AppointmentResponse>(items, criteria.PageNumber, criteria.PageSize, all.Count));
+    }
+
+    public List<(string Kind, Guid? DoctorId, string? Search, int Limit)> LookupCalls { get; } = [];
+
+    public Task<IReadOnlyList<DoctorLookupResponse>> GetActiveDoctorLookupsAsync(
+        IReadOnlyCollection<Guid> doctorIds,
+        CancellationToken cancellationToken)
+    {
+        LookupCalls.Add(("doctors", null, null, 0));
+
+        return Task.FromResult<IReadOnlyList<DoctorLookupResponse>>(Doctors
+            .Where(d => doctorIds.Contains(d.Id) && d.AccountStatus == AccountStatus.Active)
+            .OrderBy(d => d.FullName).ThenBy(d => d.Id)
+            .Select(d => new DoctorLookupResponse(d.Id, d.FullName, d.Specialization))
+            .ToList());
+    }
+
+    public Task<IReadOnlyList<PatientLookupResponse>> SearchPatientsAsync(
+        Guid doctorId,
+        string? search,
+        int limit,
+        CancellationToken cancellationToken)
+    {
+        LookupCalls.Add(("patients", doctorId, search, limit));
+
+        var query = Patients.Where(p => p.DoctorId == doctorId);
+
+        if (!string.IsNullOrEmpty(search))
+        {
+            query = query.Where(p =>
+                p.FullName.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || (p.Phone?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false));
+        }
+
+        return Task.FromResult<IReadOnlyList<PatientLookupResponse>>(query
+            .OrderBy(p => p.FullName).ThenBy(p => p.Id)
+            .Take(limit)
+            .Select(p => new PatientLookupResponse(p.Id, p.FullName, p.Phone))
+            .ToList());
     }
 
     public Task AddAsync(Appointment appointment, CancellationToken cancellationToken)

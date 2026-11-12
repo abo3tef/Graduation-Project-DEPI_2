@@ -38,6 +38,14 @@ internal sealed class ApiExceptionHandler : IExceptionHandler
 
         var problem = Map(exception);
 
+        // Stable machine-readable code so the client can localize the message.
+        problem.Extensions["code"] = CodeOf(exception);
+
+        if (exception is RequestValidationException validation)
+        {
+            problem.Extensions["errorCodes"] = ToCamelCaseKeys(validation.FieldErrorCodes);
+        }
+
         if (problem.Status == StatusCodes.Status500InternalServerError)
         {
             _logger.LogError(
@@ -76,6 +84,13 @@ internal sealed class ApiExceptionHandler : IExceptionHandler
             StatusCodes.Status500InternalServerError,
             "Internal Server Error",
             "An unexpected error occurred. Please try again later.")
+    };
+
+    private static string CodeOf(Exception exception) => exception switch
+    {
+        AppException e => e.Code,
+        DomainException e => e.Code,
+        _ => ErrorCodes.ServerError
     };
 
     // Field names are reported the way the JSON contract names them (camelCase).

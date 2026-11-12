@@ -16,6 +16,9 @@ authentication lands, the acting user is read from two request headers:
 | `X-User-Id` | The user's GUID in hyphenated form (`xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`), not the empty GUID |
 | `X-User-Role` | Exactly `Doctor` or `Secretary` (case-sensitive; numbers or other names are rejected) |
 
+Local test identities (synthetic doctors, a secretary with assignments, patients and appointments) are created by
+`backend/docs/dev/seed-dev-data.sql`.
+
 Rules:
 - The headers are honored **only when `Auth:AllowHeaderIdentity` is `true`** (set in
   `appsettings.Development.json`; `false` in `appsettings.json`). With the flag off every request is `403`.
@@ -83,6 +86,15 @@ Anything outside the caller's scope behaves exactly like a missing record (`404`
 | `POST /api/appointments/{id}/cancel` | `{ cancellationReason }` (required, non-blank, ≤ 500) | 200 `AppointmentResponse` | 400, 403, 404 |
 | `PUT /api/appointments/{id}/status` | `{ status }` = `Confirmed`, `Completed` or `NoShow` | 200 `AppointmentResponse` | 400, 403, 404 |
 
+### Lookups (read-only, for the booking and filter screens)
+
+| Verb and route | Query | Success | Errors |
+|---|---|---|---|
+| `GET /api/appointments/lookups/doctors` | – | 200 `[{ id, fullName, specialization }]` — a doctor gets themself; a secretary gets the **assigned, active** doctors, ordered by name | 403 |
+| `GET /api/appointments/lookups/patients` | `doctorId` (required), `search?` (name or phone contains, ≤ 100 chars), `limit?` (1–20, default 10) | 200 `[{ id, fullName, phone }]` — only the **patients of that doctor**, ordered by name; at most `limit` rows | 400, 403, 404 (doctor out of scope) |
+
+The lookups return **only** the fields shown: no date of birth, address, blood type, contacts or any medical data. Text matching is case- and accent-insensitive, and `%` / `_` in the search text are matched literally.
+
 Rules behind the status codes:
 - **Overlap (409):** the same doctor cannot have two appointments whose intervals overlap on the same date
   (`newStart < existingEnd && newEnd > existingStart`). Back-to-back appointments are allowed. `Cancelled` and
@@ -104,6 +116,39 @@ exception text) is ever returned.
 | 404 | Missing or out-of-scope appointment / doctor / patient | `{ title: "Not Found", status, detail }` |
 | 409 | Overlap, inactive doctor, busy schedule | `{ title: "Conflict", status, detail }` |
 | 500 | Unexpected error | `{ title: "Internal Server Error", status, detail: "An unexpected error occurred. Please try again later." , traceId }` |
+
+### Machine-readable error codes (for localization)
+
+Every problem response produced by the application carries a stable `code`; validation responses also carry `errorCodes`
+(same camelCase field keys as `errors`, holding the validator codes such as `NotNullValidator`, `NotEmptyValidator`,
+`MaximumLengthValidator`, `PredicateValidator`, `InclusiveBetweenValidator`, `EnumValidator`). Clients should translate by
+`code`/`errorCodes` and never show the English `detail` text. Codes are never renamed; new ones may be added.
+
+| `code` | Status | Meaning |
+|---|---|---|
+| `identity.invalid` | 403 | Missing/invalid identity, unknown or inactive user |
+| `appointment.complete_requires_doctor` | 403 | Only a doctor can mark Completed |
+| `doctor.not_found` | 404 | Doctor missing or outside the caller's scope |
+| `patient.not_found` | 404 | Patient missing or not that doctor's patient |
+| `appointment.not_found` | 404 | Appointment missing or outside the caller's scope |
+| `appointment.overlap` | 409 | The doctor already has an overlapping appointment |
+| `doctor.unavailable` | 409 | The doctor is inactive |
+| `schedule.busy` | 409 | The doctor's schedule is locked by another request; retry |
+| `validation.failed` | 400 | Field validation failed (see `errors` / `errorCodes`) |
+| `appointment.time_not_in_time_zone` | 400 (field `startTime`/`endTime`) | The wall-clock time does not exist (daylight-saving gap) |
+| `appointment.in_the_past` | 400 | Start is in the past (clinic time zone) |
+| `appointment.invalid_interval` | 400 | End is not later than start |
+| `appointment.end_time_required` | 400 | End time missing |
+| `appointment.not_open` | 400 | The appointment is Completed/Cancelled/NoShow and cannot change |
+| `appointment.invalid_status_transition` | 400 | Not an allowed status change |
+| `appointment.use_cancel_operation` | 400 | Use `cancel` instead of the status route |
+| `appointment.cancellation_reason_required` | 400 | Cancel reason missing |
+| `appointment.cancellation_reason_too_long` | 400 | Cancel reason over 500 characters |
+| `appointment.missing_reference` | 400 | Patient/doctor/creator missing |
+| `domain.rule_violation` | 400 | Any other domain rule |
+| `server.error` | 500 | Unexpected error (generic body) |
+
+Responses without a `code` come from the framework (malformed JSON, wrong types, unmatched route); treat a 400 without a `code` as `request.invalid`.
 
 Note: errors produced by the framework itself (malformed JSON, wrong types) use the framework's standard 400
 `ValidationProblemDetails` shape (`type`, `title`, `status`, `errors`, `traceId`), with JSON paths such as `$.status` as keys.

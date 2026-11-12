@@ -1,6 +1,7 @@
 using Medilog.Application.Common;
 using Medilog.Application.Common.Exceptions;
 using Medilog.Application.Common.Paging;
+using Medilog.Application.Features.Appointments.Lookups;
 using Medilog.Application.Features.Appointments.Responses;
 using Medilog.Application.Interfaces;
 using Medilog.Domain.Entities;
@@ -155,6 +156,47 @@ internal sealed class AppointmentStore : IAppointmentStore
         return new PagedResult<AppointmentResponse>(items, criteria.PageNumber, criteria.PageSize, totalCount);
     }
 
+    public async Task<IReadOnlyList<DoctorLookupResponse>> GetActiveDoctorLookupsAsync(
+        IReadOnlyCollection<Guid> doctorIds,
+        CancellationToken cancellationToken)
+    {
+        var ids = doctorIds.ToArray();
+
+        return await _db.Doctors
+            .AsNoTracking()
+            .Where(doctor => ids.Contains(doctor.Id) && doctor.AccountStatus == AccountStatus.Active)
+            .OrderBy(doctor => doctor.FullName)
+            .ThenBy(doctor => doctor.Id)
+            .Select(doctor => new DoctorLookupResponse(doctor.Id, doctor.FullName, doctor.Specialization))
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<PatientLookupResponse>> SearchPatientsAsync(
+        Guid doctorId,
+        string? search,
+        int limit,
+        CancellationToken cancellationToken)
+    {
+        var query = _db.Patients
+            .AsNoTracking()
+            .Where(patient => patient.DoctorId == doctorId);
+
+        if (!string.IsNullOrEmpty(search))
+        {
+            query = query.Where(patient =>
+                patient.FullName.Contains(search)
+                || (patient.Phone != null && patient.Phone.Contains(search)));
+        }
+
+        // Only the minimum administrative columns are read; the limit is applied in the database.
+        return await query
+            .OrderBy(patient => patient.FullName)
+            .ThenBy(patient => patient.Id)
+            .Take(limit)
+            .Select(patient => new PatientLookupResponse(patient.Id, patient.FullName, patient.Phone))
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task AddAsync(Appointment appointment, CancellationToken cancellationToken) =>
         await _db.Appointments.AddAsync(appointment, cancellationToken);
 
@@ -178,7 +220,7 @@ internal sealed class AppointmentStore : IAppointmentStore
         catch (Exception exception) when (IsLockFailure(exception))
         {
             await transaction.DisposeAsync();
-            throw new ConflictException("The doctor's schedule is busy. Please try again.");
+            throw new ConflictException("The doctor's schedule is busy. Please try again.", ErrorCodes.ScheduleBusy);
         }
         catch
         {

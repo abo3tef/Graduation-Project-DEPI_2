@@ -1,5 +1,6 @@
 using Medilog.Application.Common.Paging;
 using Medilog.Application.Features.Appointments;
+using Medilog.Application.Features.Appointments.Lookups;
 using Medilog.Application.Features.Appointments.Requests;
 using Medilog.Application.Features.Appointments.Responses;
 using Microsoft.AspNetCore.Mvc;
@@ -55,6 +56,25 @@ public sealed class AppointmentsController : ControllerBase
         [FromQuery] ListAppointmentsQuery query,
         CancellationToken cancellationToken) =>
         await _appointments.ListAsync(query, cancellationToken);
+
+    /// <summary>Doctors the caller can book: themself, or a secretary's assigned active doctors.</summary>
+    [HttpGet("lookups/doctors")]
+    [ProducesResponseType(typeof(IReadOnlyList<DoctorLookupResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyList<DoctorLookupResponse>>> GetDoctorLookups(
+        CancellationToken cancellationToken) =>
+        Ok(await _appointments.GetDoctorLookupsAsync(cancellationToken));
+
+    /// <summary>
+    /// Searches the patients of one doctor by name or phone. Returns only id, name and phone;
+    /// no medical data.
+    /// </summary>
+    [HttpGet("lookups/patients")]
+    [ProducesResponseType(typeof(IReadOnlyList<PatientLookupResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<IReadOnlyList<PatientLookupResponse>>> SearchPatientLookups(
+        [FromQuery] PatientLookupQuery query,
+        CancellationToken cancellationToken) =>
+        Ok(await _appointments.SearchPatientsAsync(query, cancellationToken));
 
     /// <summary>Moves an appointment to a new date and time (same patient and doctor).</summary>
     [HttpPut("{id:guid}/schedule")]
