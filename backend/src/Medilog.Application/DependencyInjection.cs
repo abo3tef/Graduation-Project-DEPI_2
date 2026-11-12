@@ -1,5 +1,6 @@
 using System.Reflection;
 using FluentValidation;
+using Medilog.Application.Features.Appointments;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Medilog.Application;
@@ -19,6 +20,9 @@ public static class DependencyInjection
         // centrally. The commercial license key is supplied through the
         // AUTOMAPPER_LICENSE_KEY environment variable and is never committed.
         services.AddAutoMapper(configuration => { }, Assembly.GetExecutingAssembly());
+
+        // Appointment use cases. Requires an ICurrentUser, which the WebAPI host provides.
+        services.AddScoped<IAppointmentService, AppointmentService>();
 
         return services;
     }

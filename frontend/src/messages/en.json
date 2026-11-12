@@ -193,5 +193,211 @@
       "unknown": "An unexpected error occurred. Please try again."
     }
   },
-  "NotFound": {"title": "Page not found", "description": "The page you are looking for could not be found.", "backHome": "Back to home"}
+  "NotFound": {"title": "Page not found", "description": "The page you are looking for could not be found.", "backHome": "Back to home"},
+  "Appointments": {
+    "meta": {
+      "listTitle": "Appointments — Medilog",
+      "newTitle": "New appointment — Medilog"
+    },
+    "nav": {
+      "label": "Appointments navigation",
+      "list": "Appointments",
+      "new": "New booking"
+    },
+    "title": "Appointments",
+    "subtitle": "Manage the bookings of your doctors.",
+    "actions": {
+      "new": "New appointment",
+      "reschedule": "Reschedule",
+      "cancel": "Cancel appointment",
+      "confirm": "Confirm",
+      "noShow": "No-show",
+      "complete": "Complete",
+      "retry": "Try again",
+      "back": "Back",
+      "close": "Close",
+      "withPatient": "{action} — {patient}"
+    },
+    "filters": {
+      "label": "Filter appointments",
+      "doctor": "Doctor",
+      "allDoctors": "All doctors",
+      "status": "Status",
+      "allStatuses": "All statuses",
+      "dateFrom": "From date",
+      "dateTo": "To date",
+      "invalidRange": "The end date must not be before the start date.",
+      "reset": "Reset filters"
+    },
+    "status": {
+      "Scheduled": "Scheduled",
+      "Confirmed": "Confirmed",
+      "Completed": "Completed",
+      "Cancelled": "Cancelled",
+      "NoShow": "No-show"
+    },
+    "table": {
+      "caption": "Appointments list",
+      "date": "Date",
+      "time": "Time",
+      "patient": "Patient",
+      "doctor": "Doctor",
+      "status": "Status",
+      "actions": "Actions",
+      "noActions": "No actions"
+    },
+    "results": {
+      "heading": "Appointment results",
+      "count": "{count, plural, =0 {No appointments} one {# appointment} other {# appointments}}"
+    },
+    "pagination": {
+      "label": "Pagination",
+      "position": "Page {page} of {total}",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "states": {
+      "loading": "Loading…",
+      "errorTitle": "Appointments could not be loaded",
+      "emptyTitle": "No appointments found",
+      "emptyHint": "Change the filters or book a new appointment.",
+      "identityTitle": "No acting user selected",
+      "identityHint": "This is a development build: use the “Acting as” button at the top to enter a user id and role (see backend/docs/dev/seed-dev-data.sql).",
+      "signInTitle": "Sign-in is not available yet",
+      "signInHint": "This screen needs a signed-in user. Sign-in will be enabled later."
+    },
+    "fields": {
+      "patient": "Patient",
+      "doctor": "Doctor",
+      "when": "When",
+      "date": "Date",
+      "startTime": "Start time",
+      "endTime": "End time",
+      "reason": "Reason for the visit"
+    },
+    "booking": {
+      "title": "New appointment",
+      "subtitle": "Choose the doctor, the patient and the time.",
+      "doctorPlaceholder": "Select a doctor",
+      "noDoctorsTitle": "No doctors available for booking",
+      "noDoctorsHint": "There are no active doctors linked to your account.",
+      "quickEnd": "Set the end time to:",
+      "minutes": "{minutes} min",
+      "reasonCounter": "{count}/{max}",
+      "submit": "Book appointment"
+    },
+    "patientSearch": {
+      "placeholder": "Search by name or phone",
+      "needsDoctor": "Select a doctor first.",
+      "minChars": "{count, plural, one {Type at least # character to search.} other {Type at least # characters to search.}}",
+      "searching": "Searching…",
+      "none": "No matching patients for this doctor.",
+      "change": "Change",
+      "results": "Matching patients"
+    },
+    "daySchedule": {
+      "title": "Doctor’s schedule for this day",
+      "pick": "Choose a doctor and a date to see the booked appointments.",
+      "loading": "Loading the schedule…",
+      "empty": "No appointments on this day.",
+      "overlapWarning": "The selected time overlaps an existing appointment.",
+      "slotFree": "Cancelled or no-show: this time is free."
+    },
+    "reschedule": {
+      "title": "Reschedule appointment",
+      "description": "Change only the date and time. To move the appointment to another doctor, cancel it and book a new one.",
+      "submit": "Save new time"
+    },
+    "cancel": {
+      "title": "Cancel appointment",
+      "description": "This appointment will be cancelled and its time will become free. This cannot be undone.",
+      "reasonLabel": "Reason for cancelling",
+      "reasonHint": "A reason is required (up to 500 characters).",
+      "counter": "{count}/{max}",
+      "keep": "Keep appointment",
+      "submit": "Cancel appointment"
+    },
+    "statusDialog": {
+      "confirm": {
+        "title": "Confirm appointment",
+        "description": "This appointment will be marked as confirmed.",
+        "submit": "Confirm"
+      },
+      "noShow": {
+        "title": "Record a no-show",
+        "description": "The patient will be recorded as absent and the time will become free. This cannot be undone.",
+        "submit": "Record no-show"
+      },
+      "complete": {
+        "title": "Complete appointment",
+        "description": "The appointment will be marked as completed. This cannot be undone.",
+        "submit": "Complete appointment"
+      }
+    },
+    "validation": {
+      "required": "This field is required.",
+      "invalidDate": "The date is not valid.",
+      "invalidTime": "The time is not valid.",
+      "endAfterStart": "The end time must be after the start time.",
+      "inPast": "The time cannot be in the past.",
+      "reasonTooLong": "The reason is longer than 1000 characters.",
+      "cancelReasonTooLong": "The cancellation reason is longer than 500 characters.",
+      "invalid": "The value is not valid.",
+      "timeNotInTimeZone": "This time does not exist in the clinic’s time zone (daylight-saving change)."
+    },
+    "toast": {
+      "booked": "Appointment booked.",
+      "rescheduled": "Appointment rescheduled.",
+      "cancelled": "Appointment cancelled.",
+      "confirmed": "Appointment confirmed.",
+      "completed": "Appointment completed.",
+      "noShow": "No-show recorded."
+    },
+    "errors": {
+      "network": "Could not reach the server. Check your connection and try again.",
+      "invalidResponse": "The server returned an unexpected response. Try again.",
+      "identity": "The current user could not be identified. Select the user and role.",
+      "completeRequiresDoctor": "Only the doctor can mark an appointment as completed.",
+      "doctorNotFound": "The doctor does not exist or you have no access to this doctor.",
+      "patientNotFound": "The patient does not exist or does not belong to this doctor.",
+      "appointmentNotFound": "The appointment does not exist or you have no access to it.",
+      "overlap": "The doctor already has an appointment that overlaps the selected time.",
+      "doctorUnavailable": "This doctor is not available for booking right now.",
+      "scheduleBusy": "The doctor’s schedule is busy with another request. Try again.",
+      "validation": "Some of the data is not valid. Review it and try again.",
+      "timeNotInTimeZone": "This time does not exist in the clinic’s time zone.",
+      "inPast": "An appointment cannot be booked in the past.",
+      "invalidInterval": "The end time must be after the start time.",
+      "endTimeRequired": "The end time is required.",
+      "notOpen": "This appointment can no longer be changed because it is completed, cancelled or a no-show.",
+      "invalidTransition": "The appointment status cannot be changed this way.",
+      "cancellationReasonRequired": "A cancellation reason is required.",
+      "cancellationReasonTooLong": "The cancellation reason is longer than 500 characters.",
+      "forbidden": "You are not allowed to do this.",
+      "notFound": "The requested item does not exist.",
+      "conflict": "The request conflicts with other data and could not be completed.",
+      "badRequest": "The data sent is not valid. Review it and try again.",
+      "server": "A server error occurred. Try again later.",
+      "unknown": "An unexpected error occurred. Try again."
+    }
+  },
+  "DevIdentity": {
+    "acting": "Acting as {role} · {id}",
+    "set": "Set user (dev)",
+    "title": "Current user (development only)",
+    "description": "Authentication is not enabled yet. Enter the user id and role to send to the API in development.",
+    "userId": "User id",
+    "role": "Role",
+    "roles": {
+      "Secretary": "Secretary",
+      "Doctor": "Doctor"
+    },
+    "save": "Save",
+    "clear": "Clear",
+    "cancel": "Cancel",
+    "errors": {
+      "invalidId": "The id must be a valid GUID with hyphens.",
+      "invalidRole": "The role is not valid."
+    }
+  }
 }

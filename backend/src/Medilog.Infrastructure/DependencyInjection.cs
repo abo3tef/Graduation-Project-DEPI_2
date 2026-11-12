@@ -1,7 +1,11 @@
+using Medilog.Application.Interfaces;
+using Medilog.Infrastructure.Persistence.Appointments;
 using Medilog.Infrastructure.Persistence.Context;
+using Medilog.Infrastructure.Time;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Medilog.Infrastructure;
 
@@ -33,6 +37,11 @@ public static class DependencyInjection
 
             options.UseMySQL(connectionString);
         });
+
+        // Appointment persistence port (Application-owned) and clinic clock.
+        services.AddScoped<IAppointmentStore, AppointmentStore>();
+        services.TryAddSingleton(TimeProvider.System);
+        services.AddSingleton<IClinicClock, ClinicClock>();
 
         return services;
     }
