@@ -20,6 +20,12 @@ public static class DependencyInjection
         // AUTOMAPPER_LICENSE_KEY environment variable and is never committed.
         services.AddAutoMapper(configuration => { }, Assembly.GetExecutingAssembly());
 
+        // NOTE (F1-C2): IAppointmentService is intentionally NOT registered yet.
+        // It needs an ICurrentUser implementation, which arrives with the
+        // authentication work (Q-07); registering it earlier would make the host
+        // fail its development-time service validation. F1-C3 registers it:
+        //   services.AddScoped<IAppointmentService, AppointmentService>();
+
         return services;
     }
 }
