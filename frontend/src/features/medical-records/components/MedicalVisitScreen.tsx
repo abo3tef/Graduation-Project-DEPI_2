@@ -10,6 +10,8 @@ import {isGuid} from '../validation';
 import {useDevToken} from '../use-dev-token';
 import {LoadingPanel, StatePanel} from './AsyncState';
 import {DevTokenPanel} from './DevTokenPanel';
+import {DiagnosisSection} from './DiagnosisSection';
+import {MedicationSection} from './MedicationSection';
 import {VisitDetails} from './VisitDetails';
 
 type MedicalVisitScreenProps = {
@@ -100,6 +102,11 @@ export function MedicalVisitScreen({visitId}: MedicalVisitScreenProps) {
         ) : null}
       </div>
       <VisitDetails visit={query.data} />
+      <DiagnosisSection visitId={query.data.id} diagnoses={query.data.diagnoses} />
+      <MedicationSection
+        visitId={query.data.id}
+        medications={query.data.medications}
+      />
     </div>
   );
 }

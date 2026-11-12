@@ -104,7 +104,8 @@
       "backHome": "Back to home",
       "backToWorkspace": "Back to medical records",
       "retry": "Try again",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "validationSummary": "Please review the highlighted fields."
     },
     "workspace": {
       "eyebrow": "Doctor workspace",
@@ -162,8 +163,48 @@
       "submitCreate": "Save visit",
       "submitEdit": "Save changes",
       "submitting": "Saving…",
-      "validationSummary": "Please review the highlighted fields.",
       "readOnlyNote": "The patient and the appointment link stay unchanged."
+    },
+    "diagnosis": {
+      "title": "Diagnoses",
+      "description": "The conditions recorded during this visit.",
+      "addAction": "Add diagnosis",
+      "editAction": "Edit",
+      "emptyTitle": "No diagnosis recorded yet",
+      "emptyDescription": "Add the first diagnosis for this visit.",
+      "nameLabel": "Diagnosis",
+      "dateLabel": "Diagnosis date",
+      "descriptionLabel": "Description",
+      "notProvided": "Not recorded",
+      "createTitle": "New diagnosis",
+      "editTitle": "Edit diagnosis",
+      "createSubmit": "Add diagnosis",
+      "editSubmit": "Save changes",
+      "saving": "Saving…"
+    },
+    "medication": {
+      "title": "Medications",
+      "description": "The prescription recorded for this visit.",
+      "addAction": "Add medication",
+      "editAction": "Edit",
+      "deleteAction": "Delete",
+      "emptyTitle": "No medication recorded yet",
+      "emptyDescription": "Add the first medication line for this visit.",
+      "nameLabel": "Medication",
+      "dosageLabel": "Dosage",
+      "frequencyLabel": "Frequency",
+      "durationLabel": "Duration",
+      "instructionsLabel": "Instructions",
+      "notProvided": "Not recorded",
+      "createTitle": "New medication",
+      "editTitle": "Edit medication",
+      "createSubmit": "Add medication",
+      "editSubmit": "Save changes",
+      "saving": "Saving…",
+      "deleteTitle": "Delete this medication?",
+      "deleteDescription": "This permanently removes the line from the prescription. It cannot be undone.",
+      "deleteConfirm": "Delete permanently",
+      "deleting": "Deleting…"
     },
     "states": {
       "loading": "Loading visit…",
@@ -199,12 +240,27 @@
       "visitDateRequired": "Enter the visit date and time.",
       "visitDateInvalid": "Enter a valid visit date and time.",
       "visitDateFuture": "The visit date cannot be in the future.",
+      "diagnosisNameRequired": "Enter the diagnosis name.",
+      "diagnosisDateRequired": "Enter the diagnosis date.",
+      "diagnosisDateInvalid": "Enter a valid diagnosis date.",
+      "diagnosisDateFuture": "The diagnosis date cannot be in the future.",
+      "medicationNameRequired": "Enter the medication name.",
+      "dosageRequired": "Enter the dosage.",
+      "frequencyRequired": "Enter how often the medication is taken.",
       "maxLength": "This field must be at most {max} characters."
     },
     "notifications": {
       "created": "The visit was saved.",
       "updated": "The visit was updated.",
-      "saveFailed": "The visit could not be saved."
+      "saveFailed": "The visit could not be saved.",
+      "diagnosisCreated": "The diagnosis was added.",
+      "diagnosisUpdated": "The diagnosis was updated.",
+      "diagnosisSaveFailed": "The diagnosis could not be saved.",
+      "medicationCreated": "The medication was added.",
+      "medicationUpdated": "The medication was updated.",
+      "medicationDeleted": "The medication was deleted.",
+      "medicationSaveFailed": "The medication could not be saved.",
+      "medicationDeleteFailed": "The medication could not be deleted."
     }
   },
   "NotFound": {"title": "Page not found", "description": "The page you are looking for could not be found.", "backHome": "Back to home"}

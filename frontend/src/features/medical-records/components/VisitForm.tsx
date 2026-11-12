@@ -3,7 +3,7 @@
 import {useEffect, useRef, useState, type FormEvent} from 'react';
 import {FiSave, FiX} from 'react-icons/fi';
 import {useTranslations} from 'next-intl';
-import {fieldErrorsOf, toMutationFailureKind, type MutationFailureKind} from '../errors';
+import {fieldErrorsOf} from '../errors';
 import {
   useCreateVisitMutation,
   useUpdateVisitMutation
@@ -23,6 +23,13 @@ import {
   type VisitFormValues
 } from '../validation';
 import {FormField} from './FormField';
+import {MutationAlert} from './MutationAlert';
+import {
+  controlClassName,
+  primaryButtonClassName,
+  secondaryButtonClassName,
+  textareaClassName
+} from './form-styles';
 
 type VisitFormProps =
   | {
@@ -38,17 +45,6 @@ type VisitFormProps =
       onCancel: () => void;
     };
 
-const controlClassName =
-  'w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground outline-none transition-colors focus:border-brand focus:ring-2 focus:ring-brand/30 aria-[invalid=true]:border-danger';
-
-const textareaClassName = `${controlClassName} min-h-24 resize-y`;
-
-const primaryButtonClassName =
-  'inline-flex items-center justify-center gap-2 rounded-xl bg-brand px-4 py-2 text-sm font-bold text-[#06211f] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50';
-
-const secondaryButtonClassName =
-  'inline-flex items-center justify-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-semibold text-muted transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50';
-
 /**
  * Shared create/edit form for a visit. React state only (D-29); client validation is UX and
  * the server `ValidationProblemDetails.errors` are mapped back onto the same fields.
@@ -59,7 +55,6 @@ export function VisitForm(props: VisitFormProps) {
 
   const t = useTranslations('MedicalRecords.visitForm');
   const validationT = useTranslations('MedicalRecords.validation');
-  const errorsT = useTranslations('MedicalRecords.errors');
   const commonT = useTranslations('MedicalRecords.common');
 
   const {token, isReady} = useDevToken();
@@ -208,33 +203,16 @@ export function VisitForm(props: VisitFormProps) {
 
   const hasClientErrors = Object.keys(errors).length > 0;
 
-  const mutationMessages = {
-    unauthorized: errorsT('unauthorized'),
-    forbidden: errorsT('forbidden'),
-    notFound: errorsT('notFound'),
-    conflict: errorsT('conflict'),
-    validation: errorsT('validation'),
-    network: errorsT('network'),
-    server: errorsT('server')
-  } satisfies Record<MutationFailureKind, string>;
-
   return (
     <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
-      {activeError ? (
-        <p
-          role="alert"
-          className="rounded-xl border border-danger/40 bg-danger/10 px-4 py-3 text-sm font-medium text-danger"
-        >
-          {mutationMessages[toMutationFailureKind(activeError)]}
-        </p>
-      ) : null}
+      <MutationAlert error={activeError} />
 
       {!activeError && hasClientErrors ? (
         <p
           role="alert"
           className="rounded-xl border border-danger/40 bg-danger/10 px-4 py-3 text-sm font-medium text-danger"
         >
-          {t('validationSummary')}
+          {commonT('validationSummary')}
         </p>
       ) : null}
 

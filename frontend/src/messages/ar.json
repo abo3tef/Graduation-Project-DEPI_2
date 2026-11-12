@@ -115,7 +115,8 @@
       "backHome": "العودة إلى الرئيسية",
       "backToWorkspace": "العودة إلى السجلات الطبية",
       "retry": "إعادة المحاولة",
-      "cancel": "إلغاء"
+      "cancel": "إلغاء",
+      "validationSummary": "راجع الحقول المميّزة بالأخطاء."
     },
     "workspace": {
       "eyebrow": "مساحة عمل الطبيب",
@@ -173,8 +174,48 @@
       "submitCreate": "حفظ الزيارة",
       "submitEdit": "حفظ التعديلات",
       "submitting": "جارٍ الحفظ…",
-      "validationSummary": "راجع الحقول المميّزة بالأخطاء.",
       "readOnlyNote": "يبقى المريض والموعد المرتبط دون تغيير."
+    },
+    "diagnosis": {
+      "title": "التشخيصات",
+      "description": "الحالات المرضية المسجلة في هذه الزيارة.",
+      "addAction": "إضافة تشخيص",
+      "editAction": "تعديل",
+      "emptyTitle": "لا يوجد تشخيص مسجّل بعد",
+      "emptyDescription": "أضف أول تشخيص لهذه الزيارة.",
+      "nameLabel": "التشخيص",
+      "dateLabel": "تاريخ التشخيص",
+      "descriptionLabel": "الوصف",
+      "notProvided": "غير مسجّل",
+      "createTitle": "تشخيص جديد",
+      "editTitle": "تعديل التشخيص",
+      "createSubmit": "إضافة التشخيص",
+      "editSubmit": "حفظ التعديلات",
+      "saving": "جارٍ الحفظ…"
+    },
+    "medication": {
+      "title": "الأدوية",
+      "description": "الروشتة المسجلة لهذه الزيارة.",
+      "addAction": "إضافة دواء",
+      "editAction": "تعديل",
+      "deleteAction": "حذف",
+      "emptyTitle": "لا يوجد دواء مسجّل بعد",
+      "emptyDescription": "أضف أول بند في الروشتة لهذه الزيارة.",
+      "nameLabel": "الدواء",
+      "dosageLabel": "الجرعة",
+      "frequencyLabel": "معدل التناول",
+      "durationLabel": "المدة",
+      "instructionsLabel": "تعليمات الاستخدام",
+      "notProvided": "غير مسجّل",
+      "createTitle": "دواء جديد",
+      "editTitle": "تعديل الدواء",
+      "createSubmit": "إضافة الدواء",
+      "editSubmit": "حفظ التعديلات",
+      "saving": "جارٍ الحفظ…",
+      "deleteTitle": "حذف هذا الدواء؟",
+      "deleteDescription": "سيُحذف البند من الروشتة نهائيًا ولا يمكن التراجع عن الحذف.",
+      "deleteConfirm": "حذف نهائي",
+      "deleting": "جارٍ الحذف…"
     },
     "states": {
       "loading": "جارٍ تحميل الزيارة…",
@@ -210,12 +251,27 @@
       "visitDateRequired": "أدخل تاريخ ووقت الزيارة.",
       "visitDateInvalid": "أدخل تاريخ ووقت زيارة صحيحين.",
       "visitDateFuture": "لا يمكن أن يكون تاريخ الزيارة في المستقبل.",
+      "diagnosisNameRequired": "أدخل اسم التشخيص.",
+      "diagnosisDateRequired": "أدخل تاريخ التشخيص.",
+      "diagnosisDateInvalid": "أدخل تاريخ تشخيص صحيحًا.",
+      "diagnosisDateFuture": "لا يمكن أن يكون تاريخ التشخيص في المستقبل.",
+      "medicationNameRequired": "أدخل اسم الدواء.",
+      "dosageRequired": "أدخل الجرعة.",
+      "frequencyRequired": "أدخل معدل تناول الدواء.",
       "maxLength": "يجب ألا يتجاوز هذا الحقل {max} حرفًا."
     },
     "notifications": {
       "created": "تم حفظ الزيارة.",
       "updated": "تم تحديث الزيارة.",
-      "saveFailed": "تعذر حفظ الزيارة."
+      "saveFailed": "تعذر حفظ الزيارة.",
+      "diagnosisCreated": "تمت إضافة التشخيص.",
+      "diagnosisUpdated": "تم تحديث التشخيص.",
+      "diagnosisSaveFailed": "تعذر حفظ التشخيص.",
+      "medicationCreated": "تمت إضافة الدواء.",
+      "medicationUpdated": "تم تحديث الدواء.",
+      "medicationDeleted": "تم حذف الدواء.",
+      "medicationSaveFailed": "تعذر حفظ الدواء.",
+      "medicationDeleteFailed": "تعذر حذف الدواء."
     }
   },
   "NotFound": {"title": "الصفحة غير موجودة", "description": "تعذر العثور على الصفحة المطلوبة.", "backHome": "العودة إلى الرئيسية"}
