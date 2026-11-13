@@ -6,8 +6,8 @@ import {
   getApiBaseUrl,
   normalizeFieldKey,
   parseProblem,
-  resetAuthHeadersProvider,
-  setAuthHeadersProvider
+  registerAuthHeadersProvider,
+  resetAuthHeadersProviders
 } from './index';
 
 function jsonResponse(status: number, body: unknown, contentType = 'application/json') {
@@ -106,7 +106,7 @@ describe('apiRequest', () => {
   });
 
   afterEach(() => {
-    resetAuthHeadersProvider();
+    resetAuthHeadersProviders();
     fetchMock.mockReset();
     vi.unstubAllEnvs();
     vi.unstubAllGlobals();
@@ -124,7 +124,7 @@ describe('apiRequest', () => {
 
   it('asks the auth-headers provider on every call and sends JSON bodies', async () => {
     let id = 'one';
-    setAuthHeadersProvider(() => ({'X-User-Id': id, 'X-User-Role': 'Secretary'}));
+    registerAuthHeadersProvider(() => ({'X-User-Id': id, 'X-User-Role': 'Secretary'}));
     fetchMock.mockImplementation(async () => jsonResponse(201, {id: 'x'}));
 
     await apiRequest('/api/appointments', {method: 'POST', body: {reason: 'r'}});
@@ -168,7 +168,7 @@ describe('apiRequest', () => {
     expect(error).toBeInstanceOf(ApiError);
     expect((error as ApiError).status).toBe(409);
     expect((error as ApiError).code).toBe('appointment.overlap');
-    expect((error as ApiError).kind).toBe('http');
+    expect((error as ApiError).kind).toBe('conflict');
   });
 
   it('turns an error response without a JSON body into an ApiError with no code', async () => {

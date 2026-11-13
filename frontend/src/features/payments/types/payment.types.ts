@@ -1,3 +1,5 @@
+import {DEFAULT_PAGE_SIZE} from '@/types/paging';
+
 export const PAYMENT_STATUSES = ['pending', 'partial', 'paid'] as const;
 export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
 
@@ -20,10 +22,6 @@ export const PAYMENT_CURRENCY = 'EGP';
 export const PAYMENT_AMOUNT_MIN = 0.01;
 export const PAYMENT_AMOUNT_MAX = 1_000_000;
 export const PAYMENT_NOTES_MAX_LENGTH = 500;
-
-
-export const DEFAULT_PAGE_SIZE = 10;
-export const MAX_PAGE_SIZE = 50;
 
 
 export type Payment = {
@@ -83,13 +81,4 @@ export const DEFAULT_PAYMENT_FILTERS: PaymentFilters = {
   method: 'all',
   page: 1,
   pageSize: DEFAULT_PAGE_SIZE
-};
-
-
-export type PagedResult<T> = {
-  readonly items: readonly T[];
-  readonly page: number;
-  readonly pageSize: number;
-  readonly totalCount: number;
-  readonly totalPages: number;
 };

@@ -1,13 +1,12 @@
 namespace Medilog.Application.Common.Paging;
 
 /// <summary>
-/// Lightweight page of results. Temporary F1 contract: it is intentionally small
-/// so it can be aligned with the shared pagination contract (STATE.md Q-04)
-/// once that is decided.
+/// Shared page envelope for every list endpoint (STATE.md Q-04). The request
+/// carries <c>pageNumber</c>; the response carries <c>page</c>.
 /// </summary>
 public sealed record PagedResult<T>(
     IReadOnlyList<T> Items,
-    int PageNumber,
+    int Page,
     int PageSize,
     int TotalCount)
 {

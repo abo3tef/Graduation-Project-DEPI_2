@@ -1,4 +1,5 @@
 using Medilog.Application.Common;
+using Medilog.Application.Common.Abstractions;
 using Medilog.Application.Common.Paging;
 using Medilog.Application.Features.Appointments.Lookups;
 using Medilog.Application.Features.Appointments.Responses;
@@ -10,9 +11,9 @@ namespace Medilog.Application.Tests.Support;
 
 internal sealed class FakeCurrentUser : ICurrentUser
 {
-    public Guid UserId { get; set; }
+    public Guid? UserId { get; set; }
 
-    public UserRole Role { get; set; }
+    public UserRole? Role { get; set; }
 }
 
 internal sealed class FakeClock : IClinicClock

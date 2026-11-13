@@ -1,3 +1,4 @@
+using Medilog.Application.Common.Abstractions;
 using Medilog.Domain.Common;
 using Medilog.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -12,7 +13,11 @@ namespace Medilog.Infrastructure.Persistence.Context;
 /// <c>IEntityTypeConfiguration&lt;TEntity&gt;</c> in
 /// <c>Persistence/Configurations</c> is applied automatically.
 /// </summary>
-public sealed class MedilogDbContext : DbContext
+/// <remarks>
+/// Implements <see cref="IApplicationDbContext"/> (decision D-09) so the Application layer can run
+/// use cases without referencing this concrete type.
+/// </remarks>
+public sealed class MedilogDbContext : DbContext, IApplicationDbContext
 {
     public MedilogDbContext(DbContextOptions<MedilogDbContext> options)
         : base(options)

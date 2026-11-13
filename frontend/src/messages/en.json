@@ -2,7 +2,15 @@
   "Metadata": {
     "title": "Medilog — Smart Medical Records Platform",
     "description": "Medilog is a smart medical records platform for managing patient files, appointments, visits, and prescriptions securely.",
-    "keywords": ["medical records", "clinic management", "patient records", "doctor software", "medical appointments", "healthcare platform", "Medilog"]
+    "keywords": [
+      "medical records",
+      "clinic management",
+      "patient records",
+      "doctor software",
+      "medical appointments",
+      "healthcare platform",
+      "Medilog"
+    ]
   },
   "Navigation": {
     "brand": "Medilog",
@@ -11,13 +19,18 @@
     "howItWorks": "How it works",
     "security": "Security",
     "contact": "Contact",
+    "medicalRecords": "Medical records",
     "login": "Sign in",
     "lightMode": "Light mode",
     "darkMode": "Dark mode",
     "openMenu": "Open menu",
     "closeMenu": "Close menu"
   },
-  "LocaleSwitcher": {"label": "Change language", "ar": "العربية", "en": "English"},
+  "LocaleSwitcher": {
+    "label": "Change language",
+    "ar": "العربية",
+    "en": "English"
+  },
   "Home": {
     "badge": "Smarter care starts here",
     "title": "Everything about your patient, in one place.",
@@ -33,43 +46,99 @@
     "activity": "Clinic activity",
     "weeklyVisits": "Weekly visits",
     "tickerLabel": "Platform benefits",
-    "ticker": {"one": "Complete medical records", "two": "Organized appointments", "three": "Secure data", "four": "Simpler collaboration", "five": "Sharper decisions", "six": "A smarter clinic"},
+    "ticker": {
+      "one": "Complete medical records",
+      "two": "Organized appointments",
+      "three": "Secure data",
+      "four": "Simpler collaboration",
+      "five": "Sharper decisions",
+      "six": "A smarter clinic"
+    },
     "featuresEyebrow": "Everything your clinic needs",
     "featuresTitle": "Simple tools, meaningful impact",
     "featuresDescription": "Medilog gives you a clearer view and better control over every part of the patient journey.",
     "learnMore": "Learn more",
     "featuresList": [
-      {"title": "Organized records", "description": "Keep medical history, diagnoses, and prescriptions in one clear profile."},
-      {"title": "Effortless scheduling", "description": "Organize your calendar and keep a quick view of every patient's visit."},
-      {"title": "Data-led decisions", "description": "Track your clinic activity and uncover insights that help you grow."},
-      {"title": "One connected team", "description": "Give your team the right tools for a smoother care experience."}
+      {
+        "title": "Organized records",
+        "description": "Keep medical history, diagnoses, and prescriptions in one clear profile."
+      },
+      {
+        "title": "Effortless scheduling",
+        "description": "Organize your calendar and keep a quick view of every patient's visit."
+      },
+      {
+        "title": "Data-led decisions",
+        "description": "Track your clinic activity and uncover insights that help you grow."
+      },
+      {
+        "title": "One connected team",
+        "description": "Give your team the right tools for a smoother care experience."
+      }
     ],
     "stats": {
-      "patientsCount": {"value": "+12K", "label": "organized patient files"},
-      "visitsCount": {"value": "+48K", "label": "visits recorded"},
-      "timeSaved": {"value": "35%", "label": "less paperwork time"},
-      "availability": {"value": "24/7", "label": "secure access to your data"}
+      "patientsCount": {
+        "value": "+12K",
+        "label": "organized patient files"
+      },
+      "visitsCount": {
+        "value": "+48K",
+        "label": "visits recorded"
+      },
+      "timeSaved": {
+        "value": "35%",
+        "label": "less paperwork time"
+      },
+      "availability": {
+        "value": "24/7",
+        "label": "secure access to your data"
+      }
     },
     "workflowEyebrow": "How the platform works",
     "workflowTitle": "The patient journey, made clearer",
     "workflowDescription": "From the first appointment to follow-up, every step is organized so you can focus on what matters.",
     "workflow": [
-      {"title": "Add patient details", "description": "Create an organized medical profile in seconds."},
-      {"title": "Record the visit", "description": "Document diagnoses, prescriptions, and notes in one place."},
-      {"title": "Track progress", "description": "Return to a clear timeline and make better decisions."}
+      {
+        "title": "Add patient details",
+        "description": "Create an organized medical profile in seconds."
+      },
+      {
+        "title": "Record the visit",
+        "description": "Document diagnoses, prescriptions, and notes in one place."
+      },
+      {
+        "title": "Track progress",
+        "description": "Return to a clear timeline and make better decisions."
+      }
     ],
     "securityEyebrow": "Privacy that care deserves",
     "securityTitle": "Your patients' data is always protected",
     "securityDescription": "Privacy and security are at the heart of the experience, so you can work with confidence.",
-    "securityPoints": ["Clear access for every role", "Protection for sensitive medical data", "A timeline that's easy to review"],
+    "securityPoints": [
+      "Clear access for every role",
+      "Protection for sensitive medical data",
+      "A timeline that's easy to review"
+    ],
     "protected": "Data protected",
     "storyEyebrow": "Real experiences, even when starting small",
     "storyTitle": "Made for the busy clinic day",
     "storyDescription": "Every detail in Medilog is designed to make your day calmer and give you more time to focus on patients.",
     "testimonials": [
-      {"quote": "I can see the patient's full history before the visit starts, without searching through scattered files.", "name": "Dr. Sarah Khaled", "role": "Internal medicine doctor"},
-      {"quote": "Organizing appointments and daily follow-ups saved our team hours of calls and coordination.", "name": "Mona Ali", "role": "Clinic manager"},
-      {"quote": "The interface is clear and fast, and sensitive information stays visible only to the right person.", "name": "Dr. Omar Hassan", "role": "Dentist"}
+      {
+        "quote": "I can see the patient's full history before the visit starts, without searching through scattered files.",
+        "name": "Dr. Sarah Khaled",
+        "role": "Internal medicine doctor"
+      },
+      {
+        "quote": "Organizing appointments and daily follow-ups saved our team hours of calls and coordination.",
+        "name": "Mona Ali",
+        "role": "Clinic manager"
+      },
+      {
+        "quote": "The interface is clear and fast, and sensitive information stays visible only to the right person.",
+        "name": "Dr. Omar Hassan",
+        "role": "Dentist"
+      }
     ],
     "ctaEyebrow": "Ready for the next step?",
     "ctaTitle": "Build a smarter clinic today",
@@ -92,6 +161,180 @@
     "privacy": "Privacy",
     "copyright": "© 2025 Medilog. All rights reserved.",
     "project": "Graduation project"
+  },
+  "MedicalRecords": {
+    "meta": {
+      "title": "Medical records",
+      "description": "Record a visit, its diagnoses and its prescribed medications for your patients.",
+      "shortLabel": "Doctor workspace"
+    },
+    "common": {
+      "backHome": "Back to home",
+      "backToWorkspace": "Back to medical records",
+      "retry": "Try again",
+      "cancel": "Cancel",
+      "validationSummary": "Please review the highlighted fields."
+    },
+    "workspace": {
+      "eyebrow": "Doctor workspace",
+      "title": "Medical records",
+      "description": "Open a visit to review its clinical content and keep it up to date.",
+      "openVisitTitle": "Open an existing visit",
+      "openVisitHint": "Paste the identifier of the visit you want to review.",
+      "visitIdLabel": "Visit ID",
+      "visitIdPlaceholder": "00000000-0000-0000-0000-000000000000",
+      "invalidVisitId": "Enter a valid visit identifier.",
+      "tokenRequired": "Add a development token before opening a visit.",
+      "openVisit": "Open visit",
+      "createVisit": "Record a new visit"
+    },
+    "token": {
+      "title": "Development token",
+      "description": "Paste a JWT created with the 'dotnet user-jwts' command. It is kept in this browser tab only, is never logged, and this panel is hidden in production builds.",
+      "label": "Bearer token",
+      "placeholder": "eyJhbGciOi...",
+      "save": "Save token",
+      "clear": "Clear token",
+      "saved": "Token saved for this tab.",
+      "cleared": "Token cleared.",
+      "statusSet": "Token set",
+      "statusMissing": "No token",
+      "statusChecking": "Checking…",
+      "storageFailed": "This browser blocked storage, so the token could not be saved."
+    },
+    "visit": {
+      "eyebrow": "Medical visit",
+      "title": "Visit details",
+      "visitDate": "Visit date",
+      "patientId": "Patient ID",
+      "appointmentId": "Appointment ID",
+      "chiefComplaint": "Chief complaint",
+      "symptoms": "Symptoms",
+      "clinicalNotes": "Clinical notes",
+      "notProvided": "Not recorded",
+      "notLinked": "No linked appointment",
+      "editAction": "Edit visit",
+      "readOnlyNote": "The patient and the appointment link cannot be changed after the visit is created."
+    },
+    "visitForm": {
+      "eyebrow": "Medical visit",
+      "createTitle": "Record a new visit",
+      "createDescription": "Document the consultation for a patient in your workspace. The patient identifier is required.",
+      "patientId": "Patient ID",
+      "patientIdHint": "The patient must belong to your workspace.",
+      "appointmentId": "Appointment ID (optional)",
+      "appointmentIdHint": "Leave empty when the visit is not linked to an appointment.",
+      "visitDate": "Visit date and time",
+      "chiefComplaint": "Chief complaint",
+      "symptoms": "Symptoms",
+      "clinicalNotes": "Clinical notes",
+      "submitCreate": "Save visit",
+      "submitEdit": "Save changes",
+      "submitting": "Saving…",
+      "readOnlyNote": "The patient and the appointment link stay unchanged."
+    },
+    "diagnosis": {
+      "title": "Diagnoses",
+      "description": "The conditions recorded during this visit.",
+      "addAction": "Add diagnosis",
+      "editAction": "Edit",
+      "emptyTitle": "No diagnosis recorded yet",
+      "emptyDescription": "Add the first diagnosis for this visit.",
+      "nameLabel": "Diagnosis",
+      "dateLabel": "Diagnosis date",
+      "descriptionLabel": "Description",
+      "notProvided": "Not recorded",
+      "createTitle": "New diagnosis",
+      "editTitle": "Edit diagnosis",
+      "createSubmit": "Add diagnosis",
+      "editSubmit": "Save changes",
+      "saving": "Saving…"
+    },
+    "medication": {
+      "title": "Medications",
+      "description": "The prescription recorded for this visit.",
+      "addAction": "Add medication",
+      "editAction": "Edit",
+      "deleteAction": "Delete",
+      "emptyTitle": "No medication recorded yet",
+      "emptyDescription": "Add the first medication line for this visit.",
+      "nameLabel": "Medication",
+      "dosageLabel": "Dosage",
+      "frequencyLabel": "Frequency",
+      "durationLabel": "Duration",
+      "instructionsLabel": "Instructions",
+      "notProvided": "Not recorded",
+      "createTitle": "New medication",
+      "editTitle": "Edit medication",
+      "createSubmit": "Add medication",
+      "editSubmit": "Save changes",
+      "saving": "Saving…",
+      "deleteTitle": "Delete this medication?",
+      "deleteDescription": "This permanently removes the line from the prescription. It cannot be undone.",
+      "deleteConfirm": "Delete permanently",
+      "deleting": "Deleting…"
+    },
+    "states": {
+      "loading": "Loading visit…",
+      "refreshing": "Refreshing…",
+      "retry": "Try again",
+      "tokenTitle": "A token is required",
+      "tokenDescription": "Open this record after adding a development token in the medical-records workspace.",
+      "tokenRequiredNotice": "Add a development token to save this visit.",
+      "unauthorizedTitle": "Your session is not valid",
+      "unauthorizedDescription": "The token is missing or expired. Add a valid development token and try again.",
+      "forbiddenTitle": "Access denied",
+      "forbiddenDescription": "You do not have access to this patient record.",
+      "notFoundTitle": "Visit not found",
+      "notFoundDescription": "This visit does not exist or is outside your workspace.",
+      "networkTitle": "The server is unreachable",
+      "networkDescription": "Check the API address and your connection, then try again.",
+      "serverTitle": "Something went wrong",
+      "serverDescription": "The server could not complete the request. Please try again."
+    },
+    "errors": {
+      "unauthorized": "Your session is not valid. Add a valid development token and try again.",
+      "forbidden": "You do not have access to this patient record.",
+      "notFound": "This visit does not exist or is outside your workspace.",
+      "conflict": "This appointment is already linked to another visit.",
+      "validation": "Please review the highlighted fields.",
+      "network": "The server is unreachable. Check your connection and try again.",
+      "server": "Something went wrong. Please try again."
+    },
+    "validation": {
+      "patientIdRequired": "Enter the patient identifier.",
+      "patientIdInvalid": "Enter a valid patient identifier.",
+      "appointmentIdInvalid": "Enter a valid appointment identifier.",
+      "visitDateRequired": "Enter the visit date and time.",
+      "visitDateInvalid": "Enter a valid visit date and time.",
+      "visitDateFuture": "The visit date cannot be in the future.",
+      "diagnosisNameRequired": "Enter the diagnosis name.",
+      "diagnosisDateRequired": "Enter the diagnosis date.",
+      "diagnosisDateInvalid": "Enter a valid diagnosis date.",
+      "diagnosisDateFuture": "The diagnosis date cannot be in the future.",
+      "medicationNameRequired": "Enter the medication name.",
+      "dosageRequired": "Enter the dosage.",
+      "frequencyRequired": "Enter how often the medication is taken.",
+      "maxLength": "This field must be at most {max} characters."
+    },
+    "notifications": {
+      "created": "The visit was saved.",
+      "updated": "The visit was updated.",
+      "saveFailed": "The visit could not be saved.",
+      "diagnosisCreated": "The diagnosis was added.",
+      "diagnosisUpdated": "The diagnosis was updated.",
+      "diagnosisSaveFailed": "The diagnosis could not be saved.",
+      "medicationCreated": "The medication was added.",
+      "medicationUpdated": "The medication was updated.",
+      "medicationDeleted": "The medication was deleted.",
+      "medicationSaveFailed": "The medication could not be saved.",
+      "medicationDeleteFailed": "The medication could not be deleted."
+    }
+  },
+  "NotFound": {
+    "title": "Page not found",
+    "description": "The page you are looking for could not be found.",
+    "backHome": "Back to home"
   },
   "Payments": {
     "title": "Payments",

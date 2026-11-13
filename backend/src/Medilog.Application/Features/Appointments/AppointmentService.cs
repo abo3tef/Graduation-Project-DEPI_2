@@ -1,7 +1,9 @@
 using FluentValidation;
 using Medilog.Application.Common;
+using Medilog.Application.Common.Abstractions;
 using Medilog.Application.Common.Exceptions;
 using Medilog.Application.Common.Paging;
+using Medilog.Application.Common.Validation;
 using Medilog.Application.Features.Appointments.Lookups;
 using Medilog.Application.Features.Appointments.Requests;
 using Medilog.Application.Features.Appointments.Responses;
@@ -54,7 +56,7 @@ public sealed class AppointmentService : IAppointmentService
         BookAppointmentRequest request,
         CancellationToken cancellationToken)
     {
-        await ValidateAsync(_bookValidator, request, cancellationToken);
+        await RequestValidation.ValidateAsync(_bookValidator, request, cancellationToken);
         var actor = await RequireActorAsync(cancellationToken);
 
         // Doctors book for themselves; secretaries only for assigned doctors.
@@ -112,7 +114,7 @@ public sealed class AppointmentService : IAppointmentService
         RescheduleAppointmentRequest request,
         CancellationToken cancellationToken)
     {
-        await ValidateAsync(_rescheduleValidator, request, cancellationToken);
+        await RequestValidation.ValidateAsync(_rescheduleValidator, request, cancellationToken);
 
         var date = request.AppointmentDate!.Value;
         var start = ToWholeSeconds(request.StartTime!.Value);
@@ -136,7 +138,7 @@ public sealed class AppointmentService : IAppointmentService
         CancelAppointmentRequest request,
         CancellationToken cancellationToken)
     {
-        await ValidateAsync(_cancelValidator, request, cancellationToken);
+        await RequestValidation.ValidateAsync(_cancelValidator, request, cancellationToken);
 
         return await ModifyAsync(
             appointmentId,
@@ -153,7 +155,7 @@ public sealed class AppointmentService : IAppointmentService
         UpdateAppointmentStatusRequest request,
         CancellationToken cancellationToken)
     {
-        await ValidateAsync(_statusValidator, request, cancellationToken);
+        await RequestValidation.ValidateAsync(_statusValidator, request, cancellationToken);
 
         var newStatus = request.Status!.Value;
 
@@ -194,7 +196,7 @@ public sealed class AppointmentService : IAppointmentService
         ListAppointmentsQuery query,
         CancellationToken cancellationToken)
     {
-        await ValidateAsync(_listValidator, query, cancellationToken);
+        await RequestValidation.ValidateAsync(_listValidator, query, cancellationToken);
         var actor = await RequireActorAsync(cancellationToken);
 
         // The visible doctors always come from the server-side identity. A client
@@ -244,7 +246,7 @@ public sealed class AppointmentService : IAppointmentService
         PatientLookupQuery query,
         CancellationToken cancellationToken)
     {
-        await ValidateAsync(_patientLookupValidator, query, cancellationToken);
+        await RequestValidation.ValidateAsync(_patientLookupValidator, query, cancellationToken);
         await RequireActorAsync(cancellationToken);
 
         // Patients are only searched inside a doctor the caller may act for;
@@ -294,12 +296,13 @@ public sealed class AppointmentService : IAppointmentService
 
     private async Task<ActorInfo> RequireActorAsync(CancellationToken cancellationToken)
     {
-        if (!Enum.IsDefined(_currentUser.Role) || _currentUser.UserId == Guid.Empty)
+        if (_currentUser.UserId is not { } userId || userId == Guid.Empty ||
+            _currentUser.Role is not { } role || !Enum.IsDefined(role))
         {
             throw new ForbiddenException("The current user cannot manage appointments.", ErrorCodes.IdentityInvalid);
         }
 
-        var actor = await _store.GetActorAsync(_currentUser.Role, _currentUser.UserId, cancellationToken);
+        var actor = await _store.GetActorAsync(role, userId, cancellationToken);
 
         if (actor is null || !actor.IsActive)
         {
@@ -313,7 +316,7 @@ public sealed class AppointmentService : IAppointmentService
     {
         return _currentUser.Role == UserRole.Doctor
             ? doctorId == _currentUser.UserId
-            : await _store.IsDoctorAssignedAsync(_currentUser.UserId, doctorId, cancellationToken);
+            : await _store.IsDoctorAssignedAsync(_currentUser.UserId!.Value, doctorId, cancellationToken);
     }
 
     /// <summary>
@@ -385,29 +388,6 @@ public sealed class AppointmentService : IAppointmentService
     {
         return await _store.GetDetailsAsync(appointmentId, cancellationToken)
             ?? throw new NotFoundException("The appointment was not found.", ErrorCodes.AppointmentNotFound);
-    }
-
-    private static async Task ValidateAsync<T>(IValidator<T> validator, T instance, CancellationToken cancellationToken)
-    {
-        var result = await validator.ValidateAsync(instance, cancellationToken);
-
-        if (result.IsValid)
-        {
-            return;
-        }
-
-        var grouped = result.Errors.GroupBy(failure => failure.PropertyName).ToArray();
-
-        var errors = grouped.ToDictionary(
-            group => group.Key,
-            group => group.Select(failure => failure.ErrorMessage).ToArray());
-
-        // Validator codes (e.g. NotEmptyValidator) let clients localize each message.
-        var errorCodes = grouped.ToDictionary(
-            group => group.Key,
-            group => group.Select(failure => failure.ErrorCode).ToArray());
-
-        throw new RequestValidationException(errors, errorCodes);
     }
 
     /// <summary>The database column is <c>time(0)</c>, so times are whole seconds.</summary>

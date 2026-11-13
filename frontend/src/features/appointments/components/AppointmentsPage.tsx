@@ -145,7 +145,7 @@ export function AppointmentsPage() {
                   busy={list.isFetching}
                 />
                 <Pagination
-                  pageNumber={page.pageNumber}
+                  pageNumber={page.page}
                   totalPages={page.totalPages}
                   onChange={controller.setPageNumber}
                   disabled={list.isFetching}

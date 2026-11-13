@@ -23,8 +23,6 @@ export function holdsSlot(status: AppointmentStatus): boolean {
 
 export const REASON_MAX_LENGTH = 1000;
 export const CANCELLATION_REASON_MAX_LENGTH = 500;
-export const DEFAULT_PAGE_SIZE = 10;
-export const MAX_PAGE_SIZE = 100;
 export const PATIENT_SEARCH_MIN_LENGTH = 2;
 export const PATIENT_SEARCH_LIMIT = 10;
 
@@ -47,14 +45,6 @@ export type Appointment = {
   readonly cancellationReason: string | null;
   readonly createdBy: string;
   readonly createdAtUtc: string;
-};
-
-export type PagedResult<T> = {
-  readonly items: readonly T[];
-  readonly pageNumber: number;
-  readonly pageSize: number;
-  readonly totalCount: number;
-  readonly totalPages: number;
 };
 
 export type DoctorLookup = {

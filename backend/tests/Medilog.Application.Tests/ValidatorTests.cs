@@ -102,6 +102,20 @@ public class ValidatorTests
         Assert.Equal(valid, new ListAppointmentsQueryValidator().Validate(new ListAppointmentsQuery(PageNumber: page, PageSize: size)).IsValid);
 
     [Fact]
+    public void Paging_defaults_match_the_shared_contract()
+    {
+        Assert.Equal(1, PagingDefaults.MinPageNumber);
+        Assert.Equal(1, PagingDefaults.DefaultPageNumber);
+        Assert.Equal(10, PagingDefaults.DefaultPageSize);
+        Assert.Equal(50, PagingDefaults.MaxPageSize);
+
+        var defaults = new ListAppointmentsQuery();
+
+        Assert.Equal(PagingDefaults.DefaultPageNumber, defaults.PageNumber);
+        Assert.Equal(PagingDefaults.DefaultPageSize, defaults.PageSize);
+    }
+
+    [Fact]
     public void List_rejects_an_inverted_date_range_and_an_undefined_status()
     {
         var validator = new ListAppointmentsQueryValidator();
@@ -135,7 +149,7 @@ public class ValidatorTests
 
         Assert.Equal(5, page2.TotalCount);
         Assert.Equal(3, page2.TotalPages);
-        Assert.Equal(2, page2.PageNumber);
+        Assert.Equal(2, page2.Page);
         Assert.Equal([T("10:00"), T("11:00")], page2.Items.Select(i => i.StartTime));
     }
 }

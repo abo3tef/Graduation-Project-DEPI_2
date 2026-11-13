@@ -27,7 +27,7 @@ public sealed record CancelAppointmentRequest(string? CancellationReason);
 /// <summary>Confirmed, Completed or NoShow. Cancelling uses the cancel operation.</summary>
 public sealed record UpdateAppointmentStatusRequest(AppointmentStatus? Status);
 
-/// <summary>Optional filters plus paging for the appointment list.</summary>
+/// <summary>Optional filters plus the shared paging shape for the appointment list.</summary>
 public sealed record ListAppointmentsQuery(
     Guid? DoctorId = null,
     Guid? PatientId = null,
@@ -35,4 +35,4 @@ public sealed record ListAppointmentsQuery(
     DateOnly? DateTo = null,
     AppointmentStatus? Status = null,
     int PageNumber = PagingDefaults.DefaultPageNumber,
-    int PageSize = PagingDefaults.DefaultPageSize);
+    int PageSize = PagingDefaults.DefaultPageSize) : IPagedQuery;

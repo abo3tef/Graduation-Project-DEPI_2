@@ -17,8 +17,8 @@ import {
   rescheduleAppointment,
   updateAppointmentStatus
 } from '../services/appointments.api';
+import {MAX_PAGE_SIZE} from '@/types/paging';
 import {
-  MAX_PAGE_SIZE,
   type AppointmentFilters,
   type AppointmentStatus,
   type BookAppointmentInput,

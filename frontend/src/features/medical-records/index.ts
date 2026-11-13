@@ -1,4 +1,5 @@
 ﻿// Public API for the medical records feature.
-// Export feature components, hooks, services, stores and types here as they are implemented.
-export {};
-
+// Cross-feature imports must go through this barrel only.
+export {MedicalRecordsWorkspace} from './components/MedicalRecordsWorkspace';
+export {MedicalVisitScreen} from './components/MedicalVisitScreen';
+export {NewVisitScreen} from './components/NewVisitScreen';

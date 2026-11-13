@@ -1,7 +1,7 @@
 import {fireEvent, screen, waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
-import {resetAuthHeadersProvider} from '@/lib/api';
+import {resetAuthHeadersProviders} from '@/lib/api';
 import {
   actAs,
   FakeApi,
@@ -28,7 +28,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  resetAuthHeadersProvider();
+  resetAuthHeadersProviders();
   vi.unstubAllEnvs();
   vi.unstubAllGlobals();
   notify.success.mockReset();

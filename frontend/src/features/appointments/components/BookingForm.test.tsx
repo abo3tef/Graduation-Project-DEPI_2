@@ -2,7 +2,7 @@ import {fireEvent, screen, waitFor, within} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type {ComponentProps} from 'react';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
-import {resetAuthHeadersProvider} from '@/lib/api';
+import {resetAuthHeadersProviders} from '@/lib/api';
 import {
   actAs,
   DOCTORS,
@@ -50,7 +50,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  resetAuthHeadersProvider();
+  resetAuthHeadersProviders();
   vi.unstubAllEnvs();
   vi.unstubAllGlobals();
   push.mockReset();
@@ -309,7 +309,7 @@ describe('BookingForm', () => {
       expect(day?.query.get('doctorId')).toBe(DOCTORS[0].id);
       expect(day?.query.get('dateFrom')).toBe(DAY);
       expect(day?.query.get('dateTo')).toBe(DAY);
-      expect(day?.query.get('pageSize')).toBe('100');
+      expect(day?.query.get('pageSize')).toBe('50');
     });
 
     it('warns about an overlap with the same rule as the server, and not for back-to-back or freed slots', async () => {
