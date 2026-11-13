@@ -30,7 +30,7 @@ Workflow commands: `plan → build → review → done`. Human approval is requi
 |----|---------|-------|------------------------------------------|
 | F1 | Appointment & Booking Management (Secretary) | Member 1 — TBD | Create booking; list and details; update/reschedule; cancel; prevent same-doctor overlap; secretary appointment screens |
 | F2 | Payment Management (Secretary) | Member 2 — TBD | Record patient payments; list and search; payment status; payment screens; link payment to the approved financial entity |
-| F3 | Patient Medical Status (Doctor) | Member 3 — TBD | View patient medical data; previous visits; diagnoses and prescriptions; medical history within approved scope; medical-profile screens |
+| F3 | Patient Medical Status (Doctor) | Member 3 — Mrehan Mohamed | View patient medical data; previous visits; diagnoses and prescriptions; medical history within approved scope; medical-profile screens |
 | F4 | Medical Updates & Prescriptions (Doctor) | Member 4 — TBD | Add visit data; record diagnosis; add prescription and medications; edit allowed medical data; medical entry/edit screens |
 | F5 | Doctor Clinic Dashboard | Member 5 — TBD | Visit count; doctor's total payments; today's appointments; today's patient statuses; dashboard UI on real data |
 | FS | Shared Technical Foundation & Integration | Member 6 — TBD | Unified filtering and pagination; FluentValidation setup + central registration; AutoMapper setup + central registration; entity-configuration conventions; API contract integration review; cross-feature integration and build health |
@@ -55,7 +55,7 @@ Status values: `Not started` · `Draft` · `Ready` · `Approved` · `In progress
 |---------|--------|--------|---------|
 | F1 | F1-C1 Domain & EF Core (`docs/tasks/F1/F1-C1.md`) — **Done**; F1-C2 Application Service & Business Rules (`docs/tasks/F1/F1-C2.md`) — **Done**; F1-C3 WebAPI Controllers & Security (`docs/tasks/F1/F1-C3.md`) — **Done**; F1-C3b Lookups, error codes, dev seed (`docs/tasks/F1/F1-C3b.md`) — **Done**; F1-C4 Frontend Screens (`docs/tasks/F1/F1-C4.md`) — **Done** (F1 cycles complete; commit/PR and manual verification pending) | Done (verification pending) | Q-07 (authentication) deferred by Tech Lead — API uses a temporary dev-only header identity; Q-04: temporary paging contract to be aligned with the shared one; F1-C4 needs doctor/patient lookup endpoints |
 | F2 | _to be generated_ | Blocked | Q-01 (payment model) |
-| F3 | _to be generated_ | Not started | Q-02, Q-03 |
+| F3 | F3-C1 Medical Profile & Medical History, Application + Infrastructure read side (`docs/tasks/F3/F3-C1.md`) — **In progress** | In progress | Q-02/Q-03/Q-08 approved for F3-C1 (task file §0); API-level secretary/ownership tests deferred to the next F3 cycle (AGENTS §7 release dependency) |
 | F4 | _to be generated_ | Not started | Q-02, Q-08 |
 | F5 | _to be generated_ | Blocked | Q-01, Q-03 |
 | FS | _to be generated_ | Not started | Q-04, Q-05, Q-06 |
@@ -66,7 +66,7 @@ Status values: `Not started` · `Draft` · `Ready` · `Approved` · `In progress
 |--------|--------------|--------|--------|-------------|
 | Member 1 (Menna) | F1-C3b → F1-C4 (F1-C1, F1-C2, F1-C3 Done) | `feature/menna-appointments` | F1 complete: C1–C4 and C3b Done; commit/PR and verification against real MySQL + browser pending | 2026-11-13 |
 | Member 2 | — | — | — | — |
-| Member 3 | — | — | — | — |
+| Member 3 (Mrehan) | F3-C1 (Medical Profile & Medical History) | `feature/mrehan-medical-status` | In progress — task file approved 2026-11-13; Application + Infrastructure read side + unit tests | 2026-11-13 |
 | Member 4 | — | — | — | — |
 | Member 5 | — | — | — | — |
 | Member 6 | — | — | — | — |
@@ -97,6 +97,7 @@ Status values: `Not started` · `Draft` · `Ready` · `Approved` · `In progress
 | 2026-11-12 | F1-C2 (Tech Lead via Menna): Application-owned `IAppointmentStore` port implemented in Infrastructure (Application stays EF-free); `ICurrentUser` (UserId, Role); typed Application exceptions (NotFound/Forbidden/Conflict/validation) alongside `DomainException`; temporary lightweight `PagedResult<T>` + list query in Application until Q-04 is decided (scoped to F1 only, not the shared contract); xUnit project `backend/tests/Medilog.Application.Tests` added to `Medilog.sln` (supersedes the C1 "no test project" decision); Completed = doctor only, No-Show/Confirmed = doctor or assigned secretary; patient must belong to the booking doctor; legacy null `end_time` treated as a point at start with a warning log; per-doctor `FOR UPDATE` transaction; out-of-scope ids → NotFound; inactive doctors not bookable; secretaries may filter all statuses | `docs/tasks/F1/F1-C2.md` §0 |
 | 2026-11-12 | F1-C3 (Tech Lead Abdullah via Menna): **no authentication, JWT packages, `UseAuthentication()` or `[Authorize]` until Q-07 is implemented by its owner**; temporary `HeaderCurrentUser` reads `X-User-Id` / `X-User-Role` (missing/invalid → 403) and is enabled only when `Auth:AllowHeaderIdentity` = true (Development); routes `POST/GET /api/appointments`, `GET /{id}`, `PUT /{id}/schedule`, `POST /{id}/cancel`, `PUT /{id}/status`; `IExceptionHandler` + ProblemDetails (404/403/409/400/500); string enums, `yyyy-MM-dd`, `HH:mm:ss`; new `Medilog.WebAPI.Tests` using `WebApplicationFactory`; contract doc `backend/docs/api/appointments.md` | `docs/tasks/F1/F1-C3.md` §0 |
 | 2026-11-12 | F1-C3b / F1-C4 (Tech Lead via Menna): backend mini-cycle adds read-only lookups `GET /api/appointments/lookups/doctors` and `/lookups/patients` (id, name, phone only; scoped like the service) and machine-readable `code`s on error responses; synthetic dev seed `backend/docs/dev/seed-dev-data.sql`; frontend uses a fetch-based `src/lib/api` that attaches dev identity headers from env/dev config in one place (inactive in production); Vitest + Testing Library + jsdom approved as dev dependencies; UI primitives stay inside `features/appointments/components`; routes `/appointments` and `/appointments/new` | `docs/tasks/F1/F1-C4.md` §0 |
+| 2026-11-13 | F3-C1 (team approval via Mrehan): base branch is `main`; cycle scope = Medical Profile (all Class Spec §4.2 Patient attributes incl. `EmergencyContact` and `BloodType`) + visit-based Medical History, newest first, paged; **Timeline, MedicalDocuments, unlinked notes/labs deferred to F3-C2** (explicit scope decision, Q-08 partial); doctor-only access with `medical.access_denied` before any data access; single-owner workspace via `Patient.DoctorId` (Q-02 application for this cycle); no `PatientStatus` field (Q-03 application); Application-owned store port `IMedicalRecordStore` in Infrastructure; F1's temporary `PagedResult`/`PagingDefaults` until Q-04; child-collection ordering in the Application service (string-stored enums cannot be ordered in SQL) | `docs/tasks/F3/F3-C1.md` §0 |
 
 ### Pending approval (blocks work — do NOT assume)
 | ID | Question | Affects | Needed from | Status |
@@ -139,6 +140,7 @@ Index of one report per AI-assisted Cycle (store under `docs/reports/<CycleId>.m
 | F1-C2 | Menna | 2026-11-12 | Done — build 0 warnings/0 errors; 94 tests pass; EF model in sync; real-MySQL lock verification still open | `docs/reports/F1-C2.md` |
 | F1-C3 | Menna | 2026-11-12 | Done — build 0 warnings/0 errors; 94 + 43 tests pass; EF model in sync; no authentication (temporary dev-only header identity, gated by `Auth:AllowHeaderIdentity`); real-MySQL verification still open | `docs/reports/F1-C3.md` |
 | F1-C3b + F1-C4 | Menna | 2026-11-13 | Done — backend 115 + 57 tests, frontend 282 tests, lint/typecheck/build clean; real MySQL + browser verification still open | `docs/reports/F1-C4.md` |
+| F3-C1 | Mrehan | 2026-11-13 | Done for the cycle — build 0 warnings/0 errors; Application 156 + WebAPI 57 tests pass (36 new); EF model unchanged; real-MySQL store verification **not** performed (no DB available); API-level security tests deferred to the next F3 cycle | `docs/reports/F3-C1.md` |
 
 ## 11. Next Step
 
@@ -152,3 +154,5 @@ Index of one report per AI-assisted Cycle (store under `docs/reports/<CycleId>.m
 | Date | Change | By |
 |------|--------|----|
 | 2026-11-08 | Initial STATE.md aligned with AGENTS.md: features, owners, decisions log, open questions, no Cycles yet | AI draft — pending Tech Lead review |
+| 2026-11-13 | F3-C1 approved and registered (board, active task, decisions log); owner confirmed as Mrehan Mohamed; task file `docs/tasks/F3/F3-C1.md` created | Member 3 — Mrehan Mohamed |
+| 2026-11-13 | F3-C1 implemented: `IMedicalRecordService`/`IMedicalRecordStore` (+ Infrastructure store), validators, `medical.access_denied` code, 36 unit tests; build 0/0, Application 156 + WebAPI 57 tests pass; EF model unchanged; pending review/commit/PR | Member 3 — Mrehan Mohamed |
