@@ -2,6 +2,7 @@ using Medilog.Application.Interfaces;
 using Medilog.Application.Common.Abstractions;
 using Medilog.Infrastructure.Persistence.Appointments;
 using Medilog.Infrastructure.Persistence.Context;
+using Medilog.Infrastructure.Persistence.MedicalRecords;
 using Medilog.Infrastructure.Time;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -39,14 +40,15 @@ public static class DependencyInjection
             options.UseMySQL(connectionString);
         });
 
-// Appointment persistence port (Application-owned) and clinic clock.
-services.AddScoped<IAppointmentStore, AppointmentStore>();
-services.TryAddSingleton(TimeProvider.System);
-services.AddSingleton<IClinicClock, ClinicClock>();
+        // Appointment persistence port (Application-owned) and clinic clock.
+        services.AddScoped<IAppointmentStore, AppointmentStore>();
+        services.AddScoped<IMedicalRecordStore, MedicalRecordStore>();
+        services.TryAddSingleton(TimeProvider.System);
+        services.AddSingleton<IClinicClock, ClinicClock>();
 
-// Medical Records database abstraction.
-services.AddScoped<IApplicationDbContext>(provider =>
-    provider.GetRequiredService<MedilogDbContext>());
+        // Medical Records database abstraction.
+        services.AddScoped<IApplicationDbContext>(provider =>
+            provider.GetRequiredService<MedilogDbContext>());
 
         return services;
     }
