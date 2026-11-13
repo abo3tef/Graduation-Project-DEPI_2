@@ -1,0 +1,290 @@
+using FluentValidation;
+using Medilog.Application.Common;
+using Medilog.Application.Common.Exceptions;
+using Medilog.Application.Common.Paging;
+using Medilog.Application.Features.MedicalRecords.Requests;
+using Medilog.Application.Features.MedicalRecords.Responses;
+using Medilog.Application.Features.MedicalRecords.Validators;
+using Medilog.Application.Interfaces;
+using Medilog.Domain.Enums;
+
+namespace Medilog.Application.Features.MedicalRecords;
+
+/// <inheritdoc cref="IMedicalRecordService"/>
+public sealed class MedicalRecordService : IMedicalRecordService
+{
+    private readonly IMedicalRecordStore _store;
+    private readonly ICurrentUser _currentUser;
+    private readonly IClinicClock _clock;
+    private readonly IValidator<GetMedicalProfileRequest> _profileValidator;
+    private readonly IValidator<GetMedicalHistoryRequest> _historyValidator;
+
+    public MedicalRecordService(
+        IMedicalRecordStore store,
+        ICurrentUser currentUser,
+        IClinicClock clock,
+        IValidator<GetMedicalProfileRequest> profileValidator,
+        IValidator<GetMedicalHistoryRequest> historyValidator)
+    {
+        _store = store;
+        _currentUser = currentUser;
+        _clock = clock;
+        _profileValidator = profileValidator;
+        _historyValidator = historyValidator;
+    }
+
+    public async Task<PatientMedicalProfileResponse> GetMedicalProfileAsync(
+        GetMedicalProfileRequest request,
+        CancellationToken cancellationToken)
+    {
+        // Role and identity first: a non-doctor must not reach validation or any
+        // store call (BRULE-10, AGENTS §5).
+        EnsureDoctorRole();
+
+        await ValidateAsync(_profileValidator, request, cancellationToken);
+
+        await RequireActiveDoctorAsync(cancellationToken);
+        await EnsurePatientAccessAsync(request.PatientId, cancellationToken);
+
+        var data = await _store.GetProfileDataAsync(request.PatientId, cancellationToken)
+            ?? throw new NotFoundException("The patient was not found.", ErrorCodes.PatientNotFound);
+
+        return new PatientMedicalProfileResponse(
+            data.PatientId,
+            data.FullName,
+            data.DateOfBirth,
+            CalculateAge(data.DateOfBirth),
+            data.Gender,
+            data.Phone,
+            data.Address,
+            data.BloodType,
+            data.EmergencyContact,
+            OrderAllergies(data.Allergies),
+            OrderConditions(data.ChronicConditions));
+    }
+
+    public async Task<PagedResult<MedicalVisitResponse>> GetMedicalHistoryAsync(
+        GetMedicalHistoryRequest request,
+        CancellationToken cancellationToken)
+    {
+        EnsureDoctorRole();
+
+        await ValidateAsync(_historyValidator, request, cancellationToken);
+
+        await RequireActiveDoctorAsync(cancellationToken);
+        await EnsurePatientAccessAsync(request.PatientId, cancellationToken);
+
+        var page = await _store.ListVisitsAsync(
+            request.PatientId,
+            request.PageNumber,
+            request.PageSize,
+            cancellationToken);
+
+        var items = page.Items.Select(ToVisitResponse).ToArray();
+
+        return new PagedResult<MedicalVisitResponse>(items, page.PageNumber, page.PageSize, page.TotalCount);
+    }
+
+    /// <summary>
+    /// The medical-data boundary: only doctors may read records, decided before
+    /// validation or persistence (the store must observe zero calls for a
+    /// secretary). An empty user id is an identity failure, not an access rule.
+    /// </summary>
+    private void EnsureDoctorRole()
+    {
+        if (_currentUser.Role != UserRole.Doctor)
+        {
+            throw new ForbiddenException(
+                "Medical records are only available to doctors.",
+                ErrorCodes.MedicalRecordAccessDenied);
+        }
+
+        if (_currentUser.UserId == Guid.Empty)
+        {
+            throw new ForbiddenException(
+                "The current user cannot access medical records.",
+                ErrorCodes.IdentityInvalid);
+        }
+    }
+
+    private async Task RequireActiveDoctorAsync(CancellationToken cancellationToken)
+    {
+        var doctor = await _store.GetDoctorAsync(_currentUser.UserId, cancellationToken);
+
+        if (doctor is null || !doctor.IsActive)
+        {
+            throw new ForbiddenException(
+                "The current user cannot access medical records.",
+                ErrorCodes.IdentityInvalid);
+        }
+    }
+
+    /// <summary>
+    /// The workspace scope (BRULE-03/04): the patient must exist and be owned by
+    /// the acting doctor. All failure cases report the same not-found result so
+    /// out-of-scope patients are not revealed.
+    /// </summary>
+    private async Task EnsurePatientAccessAsync(Guid patientId, CancellationToken cancellationToken)
+    {
+        var owner = await _store.GetPatientOwnerAsync(patientId, cancellationToken);
+
+        if (owner is null || owner.DoctorId is null || owner.DoctorId.Value != _currentUser.UserId)
+        {
+            throw new NotFoundException("The patient was not found.", ErrorCodes.PatientNotFound);
+        }
+    }
+
+    /// <summary>Age in whole years at the clinic-local current date (birthday-safe, incl. Feb 29).</summary>
+    private int CalculateAge(DateOnly dateOfBirth)
+    {
+        var today = DateOnly.FromDateTime(_clock.LocalNow.Date);
+        var age = today.Year - dateOfBirth.Year;
+
+        if (dateOfBirth > today.AddYears(-age))
+        {
+            age--;
+        }
+
+        return age;
+    }
+
+    // Deterministic response ordering (task file D-13). The enum values are
+    // stored as their string labels in the database, so the severity/status
+    // ranking can only be expressed here, not in SQL.
+
+    private static IReadOnlyList<PatientAllergyResponse> OrderAllergies(IReadOnlyList<PatientAllergyData> source) =>
+        source
+            .OrderBy(allergy => SeverityRank(allergy.Severity))
+            .ThenBy(allergy => allergy.Name, StringComparer.Ordinal)
+            .ThenBy(allergy => allergy.Id)
+            .Select(allergy => new PatientAllergyResponse(
+                allergy.Id,
+                allergy.Name,
+                allergy.Severity,
+                allergy.Description,
+                allergy.Notes))
+            .ToArray();
+
+    private static IReadOnlyList<PatientChronicConditionResponse> OrderConditions(
+        IReadOnlyList<PatientConditionData> source) =>
+        source
+            .OrderBy(condition => StatusRank(condition.Status))
+            // Nulls last: the sentinel is the smallest value, so descending puts it at the end.
+            .ThenByDescending(condition => condition.DiagnosisDate ?? DateOnly.MinValue)
+            .ThenBy(condition => condition.Name, StringComparer.Ordinal)
+            .ThenBy(condition => condition.Id)
+            .Select(condition => new PatientChronicConditionResponse(
+                condition.Id,
+                condition.Name,
+                condition.DiagnosisDate,
+                condition.Status,
+                condition.Notes))
+            .ToArray();
+
+    private static int SeverityRank(AllergySeverity? severity) => severity switch
+    {
+        AllergySeverity.Severe => 0,
+        AllergySeverity.Moderate => 1,
+        AllergySeverity.Mild => 2,
+        _ => 3
+    };
+
+    private static int StatusRank(ChronicConditionStatus? status) => status switch
+    {
+        ChronicConditionStatus.Active => 0,
+        ChronicConditionStatus.Controlled => 1,
+        ChronicConditionStatus.Resolved => 2,
+        _ => 3
+    };
+
+    private static MedicalVisitResponse ToVisitResponse(MedicalVisitData visit) => new(
+        visit.VisitId,
+        visit.VisitDate,
+        visit.DoctorId,
+        visit.DoctorName,
+        visit.ChiefComplaint,
+        visit.Symptoms,
+        visit.ClinicalNotes,
+        visit.Diagnoses
+            .OrderByDescending(diagnosis => diagnosis.DiagnosisDate)
+            .ThenBy(diagnosis => diagnosis.Name, StringComparer.Ordinal)
+            .ThenBy(diagnosis => diagnosis.Id)
+            .Select(diagnosis => new VisitDiagnosisResponse(
+                diagnosis.Id,
+                diagnosis.Name,
+                diagnosis.Description,
+                diagnosis.DiagnosisDate))
+            .ToArray(),
+        visit.Medications
+            .OrderBy(medication => medication.Name, StringComparer.Ordinal)
+            .ThenBy(medication => medication.Id)
+            .Select(medication => new VisitMedicationResponse(
+                medication.Id,
+                medication.Name,
+                medication.Dosage,
+                medication.Frequency,
+                medication.Duration,
+                medication.Instructions))
+            .ToArray(),
+        visit.VitalSigns
+            .OrderBy(vitalSigns => vitalSigns.Id)
+            .Select(vitalSigns => new VisitVitalSignsResponse(
+                vitalSigns.Id,
+                vitalSigns.BloodPressure,
+                vitalSigns.HeartRate,
+                vitalSigns.Temperature,
+                vitalSigns.RespiratoryRate,
+                vitalSigns.Weight,
+                vitalSigns.Height,
+                vitalSigns.SpO2))
+            .ToArray(),
+        visit.Notes
+            .OrderByDescending(note => note.CreatedAtUtc)
+            .ThenBy(note => note.Id)
+            .Select(note => new VisitNoteResponse(
+                note.Id,
+                note.DoctorId,
+                note.DoctorName,
+                note.Content,
+                note.CreatedAtUtc,
+                note.UpdatedAtUtc))
+            .ToArray(),
+        visit.LabResults
+            .OrderByDescending(labResult => labResult.TestDate)
+            .ThenBy(labResult => labResult.TestName, StringComparer.Ordinal)
+            .ThenBy(labResult => labResult.Id)
+            .Select(labResult => new VisitLabResultResponse(
+                labResult.Id,
+                labResult.TestName,
+                labResult.TestDate,
+                labResult.Value,
+                labResult.Unit,
+                labResult.ReferenceRange,
+                labResult.Notes))
+            .ToArray());
+
+    private static async Task ValidateAsync<T>(
+        IValidator<T> validator,
+        T instance,
+        CancellationToken cancellationToken)
+    {
+        var result = await validator.ValidateAsync(instance, cancellationToken);
+
+        if (result.IsValid)
+        {
+            return;
+        }
+
+        var grouped = result.Errors.GroupBy(failure => failure.PropertyName).ToArray();
+
+        var errors = grouped.ToDictionary(
+            group => group.Key,
+            group => group.Select(failure => failure.ErrorMessage).ToArray());
+
+        var errorCodes = grouped.ToDictionary(
+            group => group.Key,
+            group => group.Select(failure => failure.ErrorCode).ToArray());
+
+        throw new RequestValidationException(errors, errorCodes);
+    }
+}

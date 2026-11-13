@@ -1,6 +1,7 @@
 using System.Reflection;
 using FluentValidation;
 using Medilog.Application.Features.Appointments;
+using Medilog.Application.Features.MedicalRecords;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Medilog.Application;
@@ -23,6 +24,11 @@ public static class DependencyInjection
 
         // Appointment use cases. Requires an ICurrentUser, which the WebAPI host provides.
         services.AddScoped<IAppointmentService, AppointmentService>();
+
+        // Medical-record read use cases (F3). Same pattern: requires an
+        // ICurrentUser, which the WebAPI host provides. Controllers arrive in the
+        // next F3 (API) cycle.
+        services.AddScoped<IMedicalRecordService, MedicalRecordService>();
 
         return services;
     }
