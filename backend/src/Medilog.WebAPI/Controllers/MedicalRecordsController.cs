@@ -77,4 +77,50 @@ public sealed class MedicalRecordsController : ControllerBase
 
         return Ok(response);
     }
+
+    /// <summary>
+    /// Returns every clinical note of the patient — visit-linked and unlinked
+    /// (F3-C3a) — newest first. Paging follows the shared Q-04 contract.
+    /// </summary>
+    [HttpGet("notes")]
+    [ProducesResponseType(typeof(PagedResult<PatientNoteResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<PagedResult<PatientNoteResponse>>> ListNotesAsync(
+        Guid patientId,
+        [FromQuery(Name = "pageNumber")] int pageNumber = PagingDefaults.DefaultPageNumber,
+        [FromQuery(Name = "pageSize")] int pageSize = PagingDefaults.DefaultPageSize,
+        CancellationToken cancellationToken = default)
+    {
+        var response = await _medicalRecords.ListPatientNotesAsync(
+            new ListPatientNotesRequest(patientId, pageNumber, pageSize),
+            cancellationToken);
+
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Returns every laboratory result of the patient — visit-linked and
+    /// unlinked (F3-C3a) — newest test first. Paging follows the shared Q-04 contract.
+    /// </summary>
+    [HttpGet("lab-results")]
+    [ProducesResponseType(typeof(PagedResult<PatientLabResultResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<PagedResult<PatientLabResultResponse>>> ListLabResultsAsync(
+        Guid patientId,
+        [FromQuery(Name = "pageNumber")] int pageNumber = PagingDefaults.DefaultPageNumber,
+        [FromQuery(Name = "pageSize")] int pageSize = PagingDefaults.DefaultPageSize,
+        CancellationToken cancellationToken = default)
+    {
+        var response = await _medicalRecords.ListPatientLabResultsAsync(
+            new ListPatientLabResultsRequest(patientId, pageNumber, pageSize),
+            cancellationToken);
+
+        return Ok(response);
+    }
 }

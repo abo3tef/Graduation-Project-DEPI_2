@@ -20,19 +20,25 @@ public sealed class MedicalRecordService : IMedicalRecordService
     private readonly IClinicClock _clock;
     private readonly IValidator<GetMedicalProfileRequest> _profileValidator;
     private readonly IValidator<GetMedicalHistoryRequest> _historyValidator;
+    private readonly IValidator<ListPatientNotesRequest> _notesValidator;
+    private readonly IValidator<ListPatientLabResultsRequest> _labResultsValidator;
 
     public MedicalRecordService(
         IMedicalRecordStore store,
         ICurrentUser currentUser,
         IClinicClock clock,
         IValidator<GetMedicalProfileRequest> profileValidator,
-        IValidator<GetMedicalHistoryRequest> historyValidator)
+        IValidator<GetMedicalHistoryRequest> historyValidator,
+        IValidator<ListPatientNotesRequest> notesValidator,
+        IValidator<ListPatientLabResultsRequest> labResultsValidator)
     {
         _store = store;
         _currentUser = currentUser;
         _clock = clock;
         _profileValidator = profileValidator;
         _historyValidator = historyValidator;
+        _notesValidator = notesValidator;
+        _labResultsValidator = labResultsValidator;
     }
 
     public async Task<PatientMedicalProfileResponse> GetMedicalProfileAsync(
@@ -85,6 +91,71 @@ public sealed class MedicalRecordService : IMedicalRecordService
         var items = page.Items.Select(ToVisitResponse).ToArray();
 
         return new PagedResult<MedicalVisitResponse>(items, page.Page, page.PageSize, page.TotalCount);
+    }
+
+    public async Task<PagedResult<PatientNoteResponse>> ListPatientNotesAsync(
+        ListPatientNotesRequest request,
+        CancellationToken cancellationToken)
+    {
+        // Same authorization order as every F3 read use case: the boundary
+        // decision happens before validation or persistence.
+        EnsureDoctorRole();
+
+        await RequestValidation.ValidateAsync(_notesValidator, request, cancellationToken);
+
+        await RequireActiveDoctorAsync(cancellationToken);
+        await EnsurePatientAccessAsync(request.PatientId, cancellationToken);
+
+        var page = await _store.ListNotesAsync(
+            request.PatientId,
+            request.PageNumber,
+            request.PageSize,
+            cancellationToken);
+
+        var items = page.Items
+            .Select(note => new PatientNoteResponse(
+                note.Id,
+                note.VisitId,
+                note.DoctorId,
+                note.DoctorName,
+                note.NoteContent,
+                note.CreatedAtUtc,
+                note.UpdatedAtUtc))
+            .ToArray();
+
+        return new PagedResult<PatientNoteResponse>(items, page.Page, page.PageSize, page.TotalCount);
+    }
+
+    public async Task<PagedResult<PatientLabResultResponse>> ListPatientLabResultsAsync(
+        ListPatientLabResultsRequest request,
+        CancellationToken cancellationToken)
+    {
+        EnsureDoctorRole();
+
+        await RequestValidation.ValidateAsync(_labResultsValidator, request, cancellationToken);
+
+        await RequireActiveDoctorAsync(cancellationToken);
+        await EnsurePatientAccessAsync(request.PatientId, cancellationToken);
+
+        var page = await _store.ListLabResultsAsync(
+            request.PatientId,
+            request.PageNumber,
+            request.PageSize,
+            cancellationToken);
+
+        var items = page.Items
+            .Select(labResult => new PatientLabResultResponse(
+                labResult.Id,
+                labResult.VisitId,
+                labResult.TestName,
+                labResult.TestDate,
+                labResult.Value,
+                labResult.Unit,
+                labResult.ReferenceRange,
+                labResult.Notes))
+            .ToArray();
+
+        return new PagedResult<PatientLabResultResponse>(items, page.Page, page.PageSize, page.TotalCount);
     }
 
     /// <summary>

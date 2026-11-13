@@ -21,4 +21,20 @@ public interface IMedicalRecordService
     Task<PagedResult<MedicalVisitResponse>> GetMedicalHistoryAsync(
         GetMedicalHistoryRequest request,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Every clinical note of one of the acting doctor's own patients, linked
+    /// and unlinked (F3-C3a), paged.
+    /// </summary>
+    Task<PagedResult<PatientNoteResponse>> ListPatientNotesAsync(
+        ListPatientNotesRequest request,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Every laboratory result of one of the acting doctor's own patients,
+    /// linked and unlinked (F3-C3a), paged.
+    /// </summary>
+    Task<PagedResult<PatientLabResultResponse>> ListPatientLabResultsAsync(
+        ListPatientLabResultsRequest request,
+        CancellationToken cancellationToken);
 }

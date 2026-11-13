@@ -232,6 +232,81 @@ internal sealed class MedicalRecordStore : IMedicalRecordStore
         return new PagedResult<MedicalVisitData>(items, pageNumber, pageSize, totalCount);
     }
 
+    public async Task<PagedResult<PatientNoteData>> ListNotesAsync(
+        Guid patientId,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken)
+    {
+        // Every note of the patient (F3-C3a C-2), linked and unlinked. The
+        // doctor join supplies the display name without loading the graph.
+        var query = _db.MedicalNotes
+            .AsNoTracking()
+            .Where(note => note.PatientId == patientId);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var skip = (pageNumber - 1) * pageSize;
+
+        if (skip >= totalCount)
+        {
+            return new PagedResult<PatientNoteData>([], pageNumber, pageSize, totalCount);
+        }
+
+        var items = await query
+            .OrderByDescending(note => note.CreatedAtUtc)
+            .ThenByDescending(note => note.Id)
+            .Skip(skip)
+            .Take(pageSize)
+            .Select(note => new PatientNoteData(
+                note.Id,
+                note.VisitId,
+                note.DoctorId,
+                note.Doctor.FullName,
+                note.NoteContent,
+                note.CreatedAtUtc,
+                note.UpdatedAtUtc))
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<PatientNoteData>(items, pageNumber, pageSize, totalCount);
+    }
+
+    public async Task<PagedResult<PatientLabResultData>> ListLabResultsAsync(
+        Guid patientId,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken)
+    {
+        var query = _db.LaboratoryResults
+            .AsNoTracking()
+            .Where(labResult => labResult.PatientId == patientId);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var skip = (pageNumber - 1) * pageSize;
+
+        if (skip >= totalCount)
+        {
+            return new PagedResult<PatientLabResultData>([], pageNumber, pageSize, totalCount);
+        }
+
+        var items = await query
+            .OrderByDescending(labResult => labResult.TestDate)
+            .ThenByDescending(labResult => labResult.Id)
+            .Skip(skip)
+            .Take(pageSize)
+            .Select(labResult => new PatientLabResultData(
+                labResult.Id,
+                labResult.VisitId,
+                labResult.TestName,
+                labResult.TestDate,
+                labResult.Value,
+                labResult.Unit,
+                labResult.ReferenceRange,
+                labResult.Notes))
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<PatientLabResultData>(items, pageNumber, pageSize, totalCount);
+    }
+
     /// <summary>Page row of the visit query, before the children are attached.</summary>
     private sealed record VisitHeaderData(
         Guid VisitId,

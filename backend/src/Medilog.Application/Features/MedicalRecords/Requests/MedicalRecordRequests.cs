@@ -16,3 +16,21 @@ public sealed record GetMedicalHistoryRequest(
     Guid PatientId,
     int PageNumber = PagingDefaults.DefaultPageNumber,
     int PageSize = PagingDefaults.DefaultPageSize) : IPagedQuery;
+
+/// <summary>
+/// Input of the patient-notes use case (F3-C3a). Every note of the patient is
+/// returned — visit-linked and unlinked (contributor decision C-2).
+/// </summary>
+public sealed record ListPatientNotesRequest(
+    Guid PatientId,
+    int PageNumber = PagingDefaults.DefaultPageNumber,
+    int PageSize = PagingDefaults.DefaultPageSize) : IPagedQuery;
+
+/// <summary>
+/// Input of the patient-lab-results use case (F3-C3a). Every laboratory result
+/// of the patient is returned — visit-linked and unlinked (contributor decision C-2).
+/// </summary>
+public sealed record ListPatientLabResultsRequest(
+    Guid PatientId,
+    int PageNumber = PagingDefaults.DefaultPageNumber,
+    int PageSize = PagingDefaults.DefaultPageSize) : IPagedQuery;
