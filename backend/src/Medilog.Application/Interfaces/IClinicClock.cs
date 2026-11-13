@@ -13,4 +13,7 @@ public interface IClinicClock
     /// (the skipped hour when daylight saving time starts).
     /// </summary>
     bool IsNonExistentLocalTime(DateTime localTime);
+
+    /// <summary>The configured clinic time zone.</summary>
+    TimeZoneInfo TimeZone => TimeZoneInfo.Utc;
 }

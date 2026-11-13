@@ -20,6 +20,8 @@ internal sealed class FakeClock : IClinicClock
 {
     public DateTime LocalNow { get; set; } = new(2030, 1, 1, 8, 0, 0);
 
+    public TimeZoneInfo TimeZone { get; set; } = TimeZoneInfo.Utc;
+
     public HashSet<DateTime> NonExistentTimes { get; } = [];
 
     public bool IsNonExistentLocalTime(DateTime localTime) => NonExistentTimes.Contains(localTime);
