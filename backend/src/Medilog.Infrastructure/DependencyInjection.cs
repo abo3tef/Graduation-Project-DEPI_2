@@ -1,4 +1,5 @@
 using Medilog.Application.Interfaces;
+using Medilog.Application.Common.Abstractions;
 using Medilog.Infrastructure.Persistence.Appointments;
 using Medilog.Infrastructure.Persistence.Context;
 using Medilog.Infrastructure.Persistence.MedicalRecords;
@@ -44,6 +45,10 @@ public static class DependencyInjection
         services.AddScoped<IMedicalRecordStore, MedicalRecordStore>();
         services.TryAddSingleton(TimeProvider.System);
         services.AddSingleton<IClinicClock, ClinicClock>();
+
+        // Medical Records database abstraction.
+        services.AddScoped<IApplicationDbContext>(provider =>
+            provider.GetRequiredService<MedilogDbContext>());
 
         return services;
     }

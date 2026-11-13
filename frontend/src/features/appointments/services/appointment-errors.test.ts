@@ -56,7 +56,7 @@ describe('getAppointmentErrorKey', () => {
   });
 
   it('never exposes the English server text', () => {
-    const error = new ApiError({kind: 'http', status: 409, code: 'appointment.overlap', detail: 'The doctor already has an appointment'});
+    const error = new ApiError({kind: 'conflict', status: 409, code: 'appointment.overlap', detail: 'The doctor already has an appointment'});
 
     expect(getAppointmentErrorKey(error)).toBe('overlap');
   });

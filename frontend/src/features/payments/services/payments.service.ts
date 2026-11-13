@@ -1,5 +1,6 @@
+import {MAX_PAGE_SIZE} from '@/types/paging';
+import type {PagedResult} from '@/types/paging';
 import {
-  MAX_PAGE_SIZE,
   PAYMENT_AMOUNT_MAX,
   PAYMENT_AMOUNT_MIN,
   PAYMENT_NOTES_MAX_LENGTH,
@@ -8,7 +9,6 @@ import {
 } from '../types/payment.types';
 import type {
   CreatePaymentInput,
-  PagedResult,
   Payment,
   PaymentAppointmentOption,
   PaymentFilters,
@@ -107,8 +107,8 @@ export async function listPayments(
   });
 
   const totalCount = sorted.length;
-  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
-  const page = clampInteger(filters.page, 1, totalPages);
+  const totalPages = Math.ceil(totalCount / pageSize);
+  const page = totalPages === 0 ? 1 : clampInteger(filters.page, 1, totalPages);
   const start = (page - 1) * pageSize;
 
   return {

@@ -1,4 +1,4 @@
-import {setAuthHeadersProvider, type AuthHeaders} from '@/lib/api';
+import {registerAuthHeadersProvider, type AuthHeaders} from '@/lib/api';
 
 /**
  * TEMPORARY development identity (STATE.md Q-07). Real authentication is not
@@ -166,6 +166,8 @@ export function devAuthHeadersProvider(): AuthHeaders {
  */
 export function registerDevAuthHeaders(): void {
   if (isDevIdentityEnabled()) {
-    setAuthHeadersProvider(devAuthHeadersProvider);
+    // Idempotent: `devAuthHeadersProvider` is a stable function reference, so the
+    // shared provider registry keeps a single entry however often this is called.
+    registerAuthHeadersProvider(devAuthHeadersProvider);
   }
 }

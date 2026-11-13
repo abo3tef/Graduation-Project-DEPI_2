@@ -107,10 +107,10 @@ export function problem(status: number, code: string, extra: Record<string, unkn
   };
 }
 
-export function page(items: readonly Appointment[], overrides: Partial<{pageNumber: number; pageSize: number; totalCount: number; totalPages: number}> = {}) {
+export function page(items: readonly Appointment[], overrides: Partial<{page: number; pageSize: number; totalCount: number; totalPages: number}> = {}) {
   return {
     items,
-    pageNumber: 1,
+    page: 1,
     pageSize: 10,
     totalCount: items.length,
     totalPages: items.length === 0 ? 0 : 1,

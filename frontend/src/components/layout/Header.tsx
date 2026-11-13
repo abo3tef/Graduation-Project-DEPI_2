@@ -48,6 +48,13 @@ export function Header() {
               {t(item)}
             </Link>
           ))}
+          <Link
+            className="rounded-lg px-3 py-3 text-xs font-semibold text-brand transition hover:bg-brand-soft md:p-0 md:hover:bg-transparent"
+            href="/medical-records"
+            onClick={() => setIsMenuOpen(false)}
+          >
+            {t("medicalRecords")}
+          </Link>
         </nav>
 
         <div className="flex items-center gap-2">

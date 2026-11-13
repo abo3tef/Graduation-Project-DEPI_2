@@ -72,16 +72,16 @@ describe('readAppointment', () => {
 
 describe('readAppointmentPage', () => {
   it('reads the paged envelope', () => {
-    const page = readAppointmentPage({items: [APPOINTMENT], pageNumber: 2, pageSize: 10, totalCount: 11, totalPages: 2});
+    const page = readAppointmentPage({items: [APPOINTMENT], page: 2, pageSize: 10, totalCount: 11, totalPages: 2});
 
     expect(page.items).toHaveLength(1);
-    expect(page).toMatchObject({pageNumber: 2, pageSize: 10, totalCount: 11, totalPages: 2});
+    expect(page).toMatchObject({page: 2, pageSize: 10, totalCount: 11, totalPages: 2});
   });
 
   it('rejects a malformed envelope or item', () => {
-    invalid(() => readAppointmentPage({items: 'x', pageNumber: 1, pageSize: 10, totalCount: 0, totalPages: 0}));
-    invalid(() => readAppointmentPage({items: [], pageNumber: '1', pageSize: 10, totalCount: 0, totalPages: 0}));
-    invalid(() => readAppointmentPage({items: [{id: 'only'}], pageNumber: 1, pageSize: 10, totalCount: 1, totalPages: 1}));
+    invalid(() => readAppointmentPage({items: 'x', page: 1, pageSize: 10, totalCount: 0, totalPages: 0}));
+    invalid(() => readAppointmentPage({items: [], page: '1', pageSize: 10, totalCount: 0, totalPages: 0}));
+    invalid(() => readAppointmentPage({items: [{id: 'only'}], page: 1, pageSize: 10, totalCount: 1, totalPages: 1}));
     invalid(() => readAppointmentPage([]));
   });
 });

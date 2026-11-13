@@ -1,4 +1,5 @@
 import {apiRequest} from '@/lib/api';
+import type {PagedResult} from '@/types/paging';
 import {
   PATIENT_SEARCH_LIMIT,
   type Appointment,
@@ -6,7 +7,6 @@ import {
   type AppointmentStatus,
   type BookAppointmentInput,
   type DoctorLookup,
-  type PagedResult,
   type PatientLookup,
   type RescheduleAppointmentInput
 } from '../types/appointment.types';

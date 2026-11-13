@@ -11,6 +11,7 @@
   --brand: #2dd4bf;
   --brand-strong: #0e9f91;
   --brand-soft: #0c393a;
+  --danger: #fca5a5;
 }
 
 :root[data-theme='light'] {
@@ -24,6 +25,7 @@
   --brand: #10b7a5;
   --brand-strong: #087c78;
   --brand-soft: #e2f5f2;
+  --danger: #b91c1c;
 }
 
 @theme inline {
@@ -36,6 +38,7 @@
   --color-brand: var(--brand);
   --color-brand-strong: var(--brand-strong);
   --color-brand-soft: var(--brand-soft);
+  --color-danger: var(--danger);
   --font-sans: var(--font-cairo), ui-sans-serif, system-ui, sans-serif;
 }
 

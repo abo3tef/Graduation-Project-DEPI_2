@@ -1,0 +1,58 @@
+namespace Medilog.Application.Features.MedicalRecords.Validation;
+
+/// <summary>
+/// Request-level limits and the small text helpers shared by the medical-record validators and
+/// services, so a rule is written once (AGENTS.md §3.2).
+/// </summary>
+/// <remarks>
+/// The database stores these columns as MySQL <c>text</c>, which has no practical per-column limit;
+/// the limits below are deliberate request-level guards, recorded as decision D-14.
+/// </remarks>
+public static class MedicalRecordText
+{
+    public const int ChiefComplaintMaxLength = 2000;
+
+    public const int SymptomsMaxLength = 2000;
+
+    public const int ClinicalNotesMaxLength = 4000;
+
+    public const int DiagnosisNameMaxLength = 200;
+
+    public const int DiagnosisDescriptionMaxLength = 4000;
+
+    /// <summary>Matches the persisted <c>medication_name</c> column length.</summary>
+    public const int MedicationNameMaxLength = 200;
+
+    /// <summary>Matches the persisted <c>dosage</c> column length.</summary>
+    public const int MedicationDosageMaxLength = 100;
+
+    /// <summary>Matches the persisted <c>frequency</c> column length.</summary>
+    public const int MedicationFrequencyMaxLength = 100;
+
+    /// <summary>Matches the persisted <c>duration</c> column length.</summary>
+    public const int MedicationDurationMaxLength = 100;
+
+    /// <summary>
+    /// Request-level guard for the unbounded <c>instructions</c> text column (decision D-26).
+    /// </summary>
+    public const int MedicationInstructionsMaxLength = 4000;
+
+    /// <summary>Tolerance applied when rejecting timestamps that lie in the future.</summary>
+    public static readonly TimeSpan FutureTolerance = TimeSpan.FromMinutes(5);
+
+    /// <summary>
+    /// Trims a free-text value and turns an empty or whitespace-only value into <c>null</c>, so the
+    /// database never stores meaningless whitespace.
+    /// </summary>
+    public static string? Normalize(string? value)
+    {
+        if (value is null)
+        {
+            return null;
+        }
+
+        var trimmed = value.Trim();
+
+        return trimmed.Length == 0 ? null : trimmed;
+    }
+}

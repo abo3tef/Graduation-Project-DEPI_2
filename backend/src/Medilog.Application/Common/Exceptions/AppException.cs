@@ -20,8 +20,8 @@ public abstract class AppException : Exception
 /// <summary>The resource does not exist or is outside the caller's scope (404).</summary>
 public sealed class NotFoundException : AppException
 {
-    public NotFoundException(string message, string code)
-        : base(message, code)
+    public NotFoundException(string message, string? code = null)
+        : base(message, code ?? ErrorCodes.NotFound)
     {
     }
 }
@@ -29,8 +29,8 @@ public sealed class NotFoundException : AppException
 /// <summary>The caller is authenticated but not allowed to perform the action (403).</summary>
 public sealed class ForbiddenException : AppException
 {
-    public ForbiddenException(string message, string code)
-        : base(message, code)
+    public ForbiddenException(string message, string? code = null)
+        : base(message, code ?? ErrorCodes.Forbidden)
     {
     }
 }
@@ -38,8 +38,8 @@ public sealed class ForbiddenException : AppException
 /// <summary>The request conflicts with the current state, e.g. an overlap (409).</summary>
 public sealed class ConflictException : AppException
 {
-    public ConflictException(string message, string code)
-        : base(message, code)
+    public ConflictException(string message, string? code = null)
+        : base(message, code ?? ErrorCodes.Conflict)
     {
     }
 }

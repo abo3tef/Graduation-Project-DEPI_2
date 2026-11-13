@@ -1,7 +1,9 @@
 using FluentValidation;
 using Medilog.Application.Common;
+using Medilog.Application.Common.Abstractions;
 using Medilog.Application.Common.Exceptions;
 using Medilog.Application.Common.Paging;
+using Medilog.Application.Common.Validation;
 using Medilog.Application.Features.MedicalRecords.Requests;
 using Medilog.Application.Features.MedicalRecords.Responses;
 using Medilog.Application.Features.MedicalRecords.Validators;
@@ -41,7 +43,7 @@ public sealed class MedicalRecordService : IMedicalRecordService
         // store call (BRULE-10, AGENTS §5).
         EnsureDoctorRole();
 
-        await ValidateAsync(_profileValidator, request, cancellationToken);
+        await RequestValidation.ValidateAsync(_profileValidator, request, cancellationToken);
 
         await RequireActiveDoctorAsync(cancellationToken);
         await EnsurePatientAccessAsync(request.PatientId, cancellationToken);
@@ -69,7 +71,7 @@ public sealed class MedicalRecordService : IMedicalRecordService
     {
         EnsureDoctorRole();
 
-        await ValidateAsync(_historyValidator, request, cancellationToken);
+        await RequestValidation.ValidateAsync(_historyValidator, request, cancellationToken);
 
         await RequireActiveDoctorAsync(cancellationToken);
         await EnsurePatientAccessAsync(request.PatientId, cancellationToken);
@@ -82,24 +84,25 @@ public sealed class MedicalRecordService : IMedicalRecordService
 
         var items = page.Items.Select(ToVisitResponse).ToArray();
 
-        return new PagedResult<MedicalVisitResponse>(items, page.PageNumber, page.PageSize, page.TotalCount);
+        return new PagedResult<MedicalVisitResponse>(items, page.Page, page.PageSize, page.TotalCount);
     }
 
     /// <summary>
     /// The medical-data boundary: only doctors may read records, decided before
     /// validation or persistence (the store must observe zero calls for a
-    /// secretary). An empty user id is an identity failure, not an access rule.
+    /// secretary). An unauthenticated or empty identity is an identity failure,
+    /// not an access rule.
     /// </summary>
     private void EnsureDoctorRole()
     {
-        if (_currentUser.Role != UserRole.Doctor)
+        if (_currentUser.Role is not UserRole.Doctor)
         {
             throw new ForbiddenException(
                 "Medical records are only available to doctors.",
                 ErrorCodes.MedicalRecordAccessDenied);
         }
 
-        if (_currentUser.UserId == Guid.Empty)
+        if (_currentUser.UserId is not { } userId || userId == Guid.Empty)
         {
             throw new ForbiddenException(
                 "The current user cannot access medical records.",
@@ -109,7 +112,7 @@ public sealed class MedicalRecordService : IMedicalRecordService
 
     private async Task RequireActiveDoctorAsync(CancellationToken cancellationToken)
     {
-        var doctor = await _store.GetDoctorAsync(_currentUser.UserId, cancellationToken);
+        var doctor = await _store.GetDoctorAsync(_currentUser.UserId!.Value, cancellationToken);
 
         if (doctor is null || !doctor.IsActive)
         {
@@ -121,14 +124,15 @@ public sealed class MedicalRecordService : IMedicalRecordService
 
     /// <summary>
     /// The workspace scope (BRULE-03/04): the patient must exist and be owned by
-    /// the acting doctor. All failure cases report the same not-found result so
-    /// out-of-scope patients are not revealed.
+    /// the acting doctor. The decision itself is the team's single
+    /// <see cref="MedicalRecordAccessPolicy"/>; all failure cases report the same
+    /// not-found result so out-of-scope patients are not revealed.
     /// </summary>
     private async Task EnsurePatientAccessAsync(Guid patientId, CancellationToken cancellationToken)
     {
         var owner = await _store.GetPatientOwnerAsync(patientId, cancellationToken);
 
-        if (owner is null || owner.DoctorId is null || owner.DoctorId.Value != _currentUser.UserId)
+        if (owner is null || !MedicalRecordAccessPolicy.CanAccessPatient(owner.DoctorId, _currentUser.UserId!.Value))
         {
             throw new NotFoundException("The patient was not found.", ErrorCodes.PatientNotFound);
         }
@@ -262,29 +266,4 @@ public sealed class MedicalRecordService : IMedicalRecordService
                 labResult.ReferenceRange,
                 labResult.Notes))
             .ToArray());
-
-    private static async Task ValidateAsync<T>(
-        IValidator<T> validator,
-        T instance,
-        CancellationToken cancellationToken)
-    {
-        var result = await validator.ValidateAsync(instance, cancellationToken);
-
-        if (result.IsValid)
-        {
-            return;
-        }
-
-        var grouped = result.Errors.GroupBy(failure => failure.PropertyName).ToArray();
-
-        var errors = grouped.ToDictionary(
-            group => group.Key,
-            group => group.Select(failure => failure.ErrorMessage).ToArray());
-
-        var errorCodes = grouped.ToDictionary(
-            group => group.Key,
-            group => group.Select(failure => failure.ErrorCode).ToArray());
-
-        throw new RequestValidationException(errors, errorCodes);
-    }
 }

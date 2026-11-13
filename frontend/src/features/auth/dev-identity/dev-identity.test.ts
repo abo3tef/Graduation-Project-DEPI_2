@@ -1,5 +1,5 @@
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
-import {getAuthHeaders, resetAuthHeadersProvider} from '@/lib/api';
+import {getAuthHeaders, resetAuthHeadersProviders} from '@/lib/api';
 import {
   DEV_IDENTITY_STORAGE_KEY,
   devAuthHeadersProvider,
@@ -23,7 +23,7 @@ describe('dev identity', () => {
   });
 
   afterEach(() => {
-    resetAuthHeadersProvider();
+    resetAuthHeadersProviders();
     vi.unstubAllEnvs();
     window.localStorage.clear();
   });

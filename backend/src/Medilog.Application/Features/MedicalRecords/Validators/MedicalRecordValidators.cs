@@ -5,7 +5,8 @@ using Medilog.Application.Features.MedicalRecords.Requests;
 namespace Medilog.Application.Features.MedicalRecords.Validators;
 
 // Shape-level rules only. The doctor/secretary boundary and the ownership scope
-// are business rules enforced by the service, not duplicated here.
+// are business rules enforced by the service, not duplicated here. Paging rules
+// come from the shared PagedQueryValidator (Q-04).
 
 public sealed class GetMedicalProfileRequestValidator : AbstractValidator<GetMedicalProfileRequest>
 {
@@ -15,15 +16,10 @@ public sealed class GetMedicalProfileRequestValidator : AbstractValidator<GetMed
     }
 }
 
-public sealed class GetMedicalHistoryRequestValidator : AbstractValidator<GetMedicalHistoryRequest>
+public sealed class GetMedicalHistoryRequestValidator : PagedQueryValidator<GetMedicalHistoryRequest>
 {
     public GetMedicalHistoryRequestValidator()
     {
         RuleFor(request => request.PatientId).NotEmpty();
-
-        RuleFor(request => request.PageNumber).GreaterThanOrEqualTo(1);
-
-        RuleFor(request => request.PageSize)
-            .InclusiveBetween(1, PagingDefaults.MaxPageSize);
     }
 }

@@ -53,11 +53,11 @@ public class MedicalRecordAuthorizationTests
     }
 
     [Fact]
-    public async Task Empty_user_id_is_an_identity_failure()
+    public async Task Missing_user_id_is_an_identity_failure()
     {
         var s = new MedicalRecordScenario();
         s.ActAsDoctor(s.DoctorA);
-        s.User.UserId = Guid.Empty;
+        s.User.UserId = null; // unauthenticated, per the nullable ICurrentUser contract
 
         var exception = await Assert.ThrowsAsync<ForbiddenException>(
             () => s.ProfileAsync(s.PatientA));
@@ -169,7 +169,7 @@ public class MedicalRecordAuthorizationTests
         Assert.Equal(ErrorCodes.MedicalRecordAccessDenied, forbidden.Code);
 
         s.ActAsDoctor(s.DoctorA);
-        s.User.UserId = Guid.Empty;
+        s.User.UserId = null; // unauthenticated, per the nullable ICurrentUser contract
         var identity = await Assert.ThrowsAsync<ForbiddenException>(
             () => s.HistoryAsync(s.PatientA));
         Assert.Equal(ErrorCodes.IdentityInvalid, identity.Code);

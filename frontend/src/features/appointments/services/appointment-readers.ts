@@ -1,9 +1,9 @@
-import {createInvalidResponseError} from '@/lib/api';
+import {createInvalidResponseError, readPagedResult} from '@/lib/api';
+import type {PagedResult} from '@/types/paging';
 import {
   isAppointmentStatus,
   type Appointment,
   type DoctorLookup,
-  type PagedResult,
   type PatientLookup
 } from '../types/appointment.types';
 
@@ -30,10 +30,6 @@ function nullableText(value: unknown): string | null {
   return value === null || value === undefined ? null : text(value);
 }
 
-function integer(value: unknown): number {
-  return typeof value === 'number' && Number.isInteger(value) ? value : fail();
-}
-
 export function readAppointment(value: unknown): Appointment {
   const source = record(value);
   const status = source.status;
@@ -58,19 +54,7 @@ export function readAppointment(value: unknown): Appointment {
 }
 
 export function readAppointmentPage(value: unknown): PagedResult<Appointment> {
-  const source = record(value);
-
-  if (!Array.isArray(source.items)) {
-    fail();
-  }
-
-  return {
-    items: (source.items as unknown[]).map(readAppointment),
-    pageNumber: integer(source.pageNumber),
-    pageSize: integer(source.pageSize),
-    totalCount: integer(source.totalCount),
-    totalPages: integer(source.totalPages)
-  };
+  return readPagedResult(value, readAppointment);
 }
 
 export function readDoctorLookups(value: unknown): readonly DoctorLookup[] {

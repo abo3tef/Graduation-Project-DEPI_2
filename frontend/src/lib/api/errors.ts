@@ -1,6 +1,26 @@
 export type FieldErrors = Readonly<Record<string, readonly string[]>>;
 
-export type ApiErrorKind = 'network' | 'http' | 'invalid-response';
+/**
+ * Why a request failed. The value is derived from the HTTP status for error
+ * responses, and uses dedicated values for failures that never produced a usable
+ * response:
+ *
+ * - `network` — the request never reached the server.
+ * - `invalid-response` — a success response had no usable JSON body.
+ * - the rest map 1:1 to the HTTP status family.
+ *
+ * UI code switches on `kind` (or on `code` when a specific business rule matters)
+ * and never renders `message`, `title` or `detail`, which are English server text.
+ */
+export type ApiErrorKind =
+  | 'network'
+  | 'invalid-response'
+  | 'unauthorized'
+  | 'forbidden'
+  | 'not-found'
+  | 'conflict'
+  | 'validation'
+  | 'server';
 
 type ApiErrorInit = {
   kind: ApiErrorKind;
@@ -15,13 +35,13 @@ type ApiErrorInit = {
 };
 
 /**
- * The single error type thrown by the API client.
+ * The single error type thrown by the API transport.
  *
  * - `status` is the HTTP status, or `0` when no response was received.
  * - `code` is the stable machine-readable code from the API (for example
  *   `appointment.overlap`); `null` for framework-generated errors.
  * - `fieldErrors` / `fieldErrorCodes` use camelCase field names.
- * `detail` is English server text meant for logs; screens translate by `code`.
+ * - `detail` is English server text meant for logs; screens translate by `code`.
  */
 export class ApiError extends Error {
   readonly kind: ApiErrorKind;
@@ -73,6 +93,25 @@ export function createInvalidResponseError(status: number): ApiError {
   });
 }
 
+/** Maps an HTTP status to the failure kind the UI switches on. */
+export function kindFromStatus(status: number): ApiErrorKind {
+  switch (status) {
+    case 400:
+    case 422:
+      return 'validation';
+    case 401:
+      return 'unauthorized';
+    case 403:
+      return 'forbidden';
+    case 404:
+      return 'not-found';
+    case 409:
+      return 'conflict';
+    default:
+      return 'server';
+  }
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
@@ -117,11 +156,11 @@ function readFieldMap(value: unknown): FieldErrors {
  */
 export function parseProblem(status: number, body: unknown): ApiError {
   if (!isRecord(body)) {
-    return new ApiError({kind: 'http', status});
+    return new ApiError({kind: kindFromStatus(status), status});
   }
 
   return new ApiError({
-    kind: 'http',
+    kind: kindFromStatus(status),
     status,
     code: asString(body.code),
     title: asString(body.title),

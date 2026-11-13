@@ -69,15 +69,10 @@ public sealed class UpdateAppointmentStatusRequestValidator : AbstractValidator<
     }
 }
 
-public sealed class ListAppointmentsQueryValidator : AbstractValidator<ListAppointmentsQuery>
+public sealed class ListAppointmentsQueryValidator : PagedQueryValidator<ListAppointmentsQuery>
 {
     public ListAppointmentsQueryValidator()
     {
-        RuleFor(query => query.PageNumber).GreaterThanOrEqualTo(1);
-
-        RuleFor(query => query.PageSize)
-            .InclusiveBetween(1, PagingDefaults.MaxPageSize);
-
         RuleFor(query => query.Status).IsInEnum().When(query => query.Status.HasValue);
 
         RuleFor(query => query.DateTo)

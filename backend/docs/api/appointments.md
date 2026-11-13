@@ -1,7 +1,10 @@
 # Appointments API contract (F1)
 
-> Status: implemented in F1-C3. Source of truth for the frontend (F1-C4). Any change to a route,
-> body, status code or JSON rule here must be coordinated with the frontend (AGENTS.md §4.4).
+> Status: implemented in F1-C3; paging and error envelope aligned with the shared contract in
+> Phase 1. Source of truth for the frontend (F1-C4). Any change to a route, body, status code or
+> JSON rule here must be coordinated with the frontend (AGENTS.md §4.4). Shared behaviour
+> (pagination, filtering, error envelope) is defined once in
+> [`CONVENTIONS.md`](./CONVENTIONS.md); this document only adds the appointment-specific rules.
 > The machine-readable form is served by the app in Development at `/openapi/v1.json`.
 
 Base path: `/api/appointments`
@@ -71,9 +74,11 @@ Anything outside the caller's scope behaves exactly like a missing record (`404`
 
 ### Paged list
 ```json
-{ "items": [ /* AppointmentResponse */ ], "pageNumber": 1, "pageSize": 20, "totalCount": 0, "totalPages": 0 }
+{ "items": [ /* AppointmentResponse */ ], "page": 1, "pageSize": 10, "totalCount": 0, "totalPages": 0 }
 ```
-> Temporary contract (STATE.md Q-04): the names and limits may be aligned with the shared pagination contract later.
+> Shared contract (STATE.md Q-04, [`CONVENTIONS.md`](./CONVENTIONS.md)): request `pageNumber`
+> (default 1) / `pageSize` (1–50, default 10); response `page`; deterministic ordering by
+> `appointmentDate`, `startTime`, then `id`.
 
 ## 4. Endpoints
 
@@ -81,7 +86,7 @@ Anything outside the caller's scope behaves exactly like a missing record (`404`
 |---|---|---|---|
 | `POST /api/appointments` | `{ patientId, doctorId, appointmentDate, startTime, endTime, reason? }` (`endTime` required, later than `startTime`; `reason` ≤ 1000) | **201** + `Location: /api/appointments/{id}` + `AppointmentResponse` | 400, 403, 404, 409 |
 | `GET /api/appointments/{id}` | – | 200 `AppointmentResponse` | 403, 404 |
-| `GET /api/appointments` | query: `doctorId?`, `patientId?`, `dateFrom?`, `dateTo?`, `status?`, `pageNumber=1`, `pageSize=20` (1–100) | 200 paged list, ordered by date, start time, id | 400, 403 |
+| `GET /api/appointments` | query: `doctorId?`, `patientId?`, `dateFrom?`, `dateTo?`, `status?`, `pageNumber=1`, `pageSize=10` (1–50) | 200 paged list, ordered by date, start time, id | 400, 403 |
 | `PUT /api/appointments/{id}/schedule` | `{ appointmentDate, startTime, endTime }` | 200 `AppointmentResponse` (status unchanged; patient and doctor never change) | 400, 403, 404, 409 |
 | `POST /api/appointments/{id}/cancel` | `{ cancellationReason }` (required, non-blank, ≤ 500) | 200 `AppointmentResponse` | 400, 403, 404 |
 | `PUT /api/appointments/{id}/status` | `{ status }` = `Confirmed`, `Completed` or `NoShow` | 200 `AppointmentResponse` | 400, 403, 404 |
@@ -106,16 +111,23 @@ Rules behind the status codes:
 
 ## 5. Errors
 
-All errors are RFC 7807 `application/problem+json` and carry `traceId`. Nothing internal (stack trace, SQL,
+All errors use the shared RFC 7807 envelope defined in
+[`CONVENTIONS.md`](./CONVENTIONS.md): `type`, `title`, `status`, `instance`, `code` and `traceId`,
+plus camelCase `errors`/`errorCodes` on validation failures. Nothing internal (stack trace, SQL,
 exception text) is ever returned.
 
-| Status | When | Body |
+| Status | When | Envelope |
 |---|---|---|
-| 400 | Validation, malformed JSON, unknown enum or date format, domain rule (past date, invalid transition, already cancelled, …) | `{ title, status, detail }` or, for field errors, `{ title, status, errors: { "endTime": ["…"] } }` (keys camelCase) |
-| 403 | Missing/invalid identity, inactive user, secretary marking Completed | `{ title: "Forbidden", status, detail }` |
-| 404 | Missing or out-of-scope appointment / doctor / patient | `{ title: "Not Found", status, detail }` |
-| 409 | Overlap, inactive doctor, busy schedule | `{ title: "Conflict", status, detail }` |
-| 500 | Unexpected error | `{ title: "Internal Server Error", status, detail: "An unexpected error occurred. Please try again later." , traceId }` |
+| 400 | Field validation (domain or shape) | `code = validation.failed` with camelCase `errors` + `errorCodes` |
+| 400 | Malformed JSON, wrong type, unknown enum/date format | `code = request.invalid` with camelCase `errors` |
+| 400 | Domain rule (past date, invalid transition, already cancelled, …) | `code = appointment.*` (or `domain.rule_violation`) |
+| 401 | No authenticated principal (when the endpoint is protected) | `code = auth.unauthorized` |
+| 403 | Missing/invalid identity, inactive user, secretary marking Completed | `code = identity.invalid` / `appointment.complete_requires_doctor` |
+| 404 | Missing or out-of-scope appointment / doctor / patient, or unmatched route | `code = *.not_found` / `resource.not_found` |
+| 405 | Route does not support the method | `code = request.method_not_allowed` |
+| 409 | Overlap, inactive doctor, busy schedule | `code = appointment.overlap` / `doctor.unavailable` / `schedule.busy` |
+| 415 | Unsupported request content type | `code = request.unsupported_media_type` |
+| 500 | Unexpected error | `code = server.error` (generic body) |
 
 ### Machine-readable error codes (for localization)
 
@@ -135,6 +147,12 @@ Every problem response produced by the application carries a stable `code`; vali
 | `doctor.unavailable` | 409 | The doctor is inactive |
 | `schedule.busy` | 409 | The doctor's schedule is locked by another request; retry |
 | `validation.failed` | 400 | Field validation failed (see `errors` / `errorCodes`) |
+| `request.invalid` | 400 | Model binding failed (malformed JSON, wrong type, missing body) |
+| `auth.unauthorized` | 401 | No authenticated principal |
+| `access.forbidden` | 403 | Generic forbidden (no more specific code) |
+| `resource.not_found` | 404 | Generic not-found (unmatched route or no specific code) |
+| `request.method_not_allowed` | 405 | Route does not support the method |
+| `request.unsupported_media_type` | 415 | Request content type is not supported |
 | `appointment.time_not_in_time_zone` | 400 (field `startTime`/`endTime`) | The wall-clock time does not exist (daylight-saving gap) |
 | `appointment.in_the_past` | 400 | Start is in the past (clinic time zone) |
 | `appointment.invalid_interval` | 400 | End is not later than start |
@@ -148,7 +166,6 @@ Every problem response produced by the application carries a stable `code`; vali
 | `domain.rule_violation` | 400 | Any other domain rule |
 | `server.error` | 500 | Unexpected error (generic body) |
 
-Responses without a `code` come from the framework (malformed JSON, wrong types, unmatched route); treat a 400 without a `code` as `request.invalid`.
-
-Note: errors produced by the framework itself (malformed JSON, wrong types) use the framework's standard 400
-`ValidationProblemDetails` shape (`type`, `title`, `status`, `errors`, `traceId`), with JSON paths such as `$.status` as keys.
+The full shared catalogue and the envelope examples live in [`CONVENTIONS.md`](./CONVENTIONS.md).
+Framework-generated responses now carry the same envelope and a `code`, so a client never has to
+special-case a body-less error.

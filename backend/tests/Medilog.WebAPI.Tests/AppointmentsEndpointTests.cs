@@ -187,13 +187,62 @@ public class AppointmentsEndpointTests
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var json = await response.ReadJsonAsync();
-        Assert.Equal(2, json.GetProperty("pageNumber").GetInt32());
+        Assert.Equal(2, json.GetProperty("page").GetInt32());
         Assert.Equal(2, json.GetProperty("pageSize").GetInt32());
         Assert.Equal(3, json.GetProperty("totalCount").GetInt32());
         Assert.Equal(2, json.GetProperty("totalPages").GetInt32());
         var items = json.GetProperty("items").EnumerateArray().ToArray();
         Assert.Single(items);
         Assert.Equal(s.DoctorA.Id, items[0].GetProperty("doctorId").GetGuid());
+    }
+
+    [Fact]
+    public async Task List_uses_the_shared_default_page_size_when_none_is_sent()
+    {
+        await using var api = new ApiFactory();
+        using var client = api.CreateClient();
+        var s = api.Scenario;
+
+        for (var hour = 8; hour < 20; hour++)
+        {
+            s.Seed(s.DoctorA, s.PatientA, $"{hour:00}:00", $"{hour:00}:30");
+        }
+
+        var response = await client.CallAsync(HttpMethod.Get, Base, api.SecretaryCaller());
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var json = await response.ReadJsonAsync();
+        Assert.Equal(1, json.GetProperty("page").GetInt32());
+        Assert.Equal(10, json.GetProperty("pageSize").GetInt32());
+        Assert.Equal(12, json.GetProperty("totalCount").GetInt32());
+        Assert.Equal(2, json.GetProperty("totalPages").GetInt32());
+        Assert.Equal(10, json.GetProperty("items").GetArrayLength());
+    }
+
+    [Fact]
+    public async Task List_pages_are_deterministic_when_appointments_share_the_same_slot()
+    {
+        await using var api = new ApiFactory();
+        using var client = api.CreateClient();
+        var s = api.Scenario;
+
+        // Three rows share date and start time, so only the id tie-breaker can
+        // keep paging stable (seeded directly; overlap rules are not under test).
+        s.Seed(s.DoctorA, s.PatientA, "10:00", "10:30");
+        s.Seed(s.DoctorA, s.PatientA, "10:00", "10:30");
+        s.Seed(s.DoctorA, s.PatientA, "10:00", "10:30");
+
+        var first = await (await client.CallAsync(HttpMethod.Get, $"{Base}?pageNumber=1&pageSize=2", api.SecretaryCaller())).ReadJsonAsync();
+        var second = await (await client.CallAsync(HttpMethod.Get, $"{Base}?pageNumber=2&pageSize=2", api.SecretaryCaller())).ReadJsonAsync();
+
+        var ids = first.GetProperty("items").EnumerateArray()
+            .Concat(second.GetProperty("items").EnumerateArray())
+            .Select(item => item.GetProperty("id").GetGuid())
+            .ToArray();
+
+        Assert.Equal(2, first.GetProperty("items").GetArrayLength());
+        Assert.Equal(1, second.GetProperty("items").GetArrayLength());
+        Assert.Equal(3, ids.Distinct().Count());
     }
 
     [Fact]
@@ -208,7 +257,7 @@ public class AppointmentsEndpointTests
         var cancelled = await client.CallAsync(HttpMethod.Get, $"{Base}?status=Cancelled", api.SecretaryCaller());
         Assert.Equal(1, (await cancelled.ReadJsonAsync()).GetProperty("totalCount").GetInt32());
 
-        foreach (var bad in new[] { "status=Nope", "pageNumber=0", "pageSize=0", "pageSize=101", "dateFrom=not-a-date", "dateFrom=2030-02-01&dateTo=2030-01-01" })
+        foreach (var bad in new[] { "status=Nope", "pageNumber=0", "pageSize=0", "pageSize=51", "dateFrom=not-a-date", "dateFrom=2030-02-01&dateTo=2030-01-01" })
         {
             var response = await client.CallAsync(HttpMethod.Get, $"{Base}?{bad}", api.SecretaryCaller());
             Assert.True(response.StatusCode == HttpStatusCode.BadRequest, $"'{bad}' returned {(int)response.StatusCode}");

@@ -1,8 +1,8 @@
 'use client';
 
 import {useCallback, useMemo, useState} from 'react';
+import {DEFAULT_PAGE_SIZE} from '@/types/paging';
 import {
-  DEFAULT_PAGE_SIZE,
   type AppointmentFilters,
   type AppointmentStatus
 } from '../types/appointment.types';

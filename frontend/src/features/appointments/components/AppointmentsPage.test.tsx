@@ -2,7 +2,7 @@ import {act, fireEvent, screen, waitFor, within} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type {ComponentProps} from 'react';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
-import {resetAuthHeadersProvider} from '@/lib/api';
+import {resetAuthHeadersProviders} from '@/lib/api';
 import {getClinicNow} from '../utils/date-time';
 import {setDevIdentityForTests} from '../test/dev-identity-helper';
 import {
@@ -43,7 +43,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  resetAuthHeadersProvider();
+  resetAuthHeadersProviders();
   vi.unstubAllEnvs();
   vi.unstubAllGlobals();
   notify.success.mockReset();
@@ -168,7 +168,7 @@ describe('AppointmentsPage', () => {
     api.on('GET', LIST, (call) => {
       const pageNumber = Number(call.query.get('pageNumber'));
       return {
-        body: page([makeAppointment({patientName: `Patient page ${pageNumber}`})], {pageNumber, totalCount: 12, totalPages: 2})
+        body: page([makeAppointment({patientName: `Patient page ${pageNumber}`})], {page: pageNumber, totalCount: 12, totalPages: 2})
       };
     });
     renderWithProviders(<AppointmentsPage />);
@@ -190,8 +190,8 @@ describe('AppointmentsPage', () => {
     api.on('GET', LIST, (call) => {
       const pageNumber = Number(call.query.get('pageNumber'));
       return pageNumber === 2
-        ? {body: page([], {pageNumber: 2, totalCount: 10, totalPages: 1})}
-        : {body: page([makeAppointment({patientName: 'Only page'})], {pageNumber: 1, totalCount: 10, totalPages: 2})};
+        ? {body: page([], {page: 2, totalCount: 10, totalPages: 1})}
+        : {body: page([makeAppointment({patientName: 'Only page'})], {page: 1, totalCount: 10, totalPages: 2})};
     });
     renderWithProviders(<AppointmentsPage />);
     await waitForRow('Only page');
