@@ -16,6 +16,8 @@ public static class ErrorCodes
 
     public const string AppointmentNotFound = "appointment.not_found";
 
+    public const string MedicalRecordAccessDenied = "medical.access_denied";
+
     public const string DoctorUnavailable = "doctor.unavailable";
 
     public const string AppointmentOverlap = "appointment.overlap";

@@ -29,9 +29,6 @@ public static class DependencyInjection
         // Appointment use cases. Requires an ICurrentUser, which the WebAPI host provides.
         services.AddScoped<IAppointmentService, AppointmentService>();
 
-        // Doctor dashboard service
-        services.AddScoped<IDoctorDashboardService, DoctorDashboardService>();
-
         return services;
     }
 }
