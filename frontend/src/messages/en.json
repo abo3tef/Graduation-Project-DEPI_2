@@ -642,5 +642,50 @@
       "invalidId": "The id must be a valid GUID with hyphens.",
       "invalidRole": "The role is not valid."
     }
+  },
+  "dashboard": {
+    "meta": {
+      "title": "Doctor Dashboard | Medilog"
+    },
+    "navLink": "Dashboard",
+    "title": "Doctor Clinic Dashboard",
+    "subtitle": "Clinic activity and appointments for today",
+    "welcome": "Welcome,",
+    "refresh": "Refresh",
+    "stats": {
+      "todayAppointments": "Today's Appointments",
+      "todayVisits": "Today's Visits",
+      "totalVisits": "Total Visits",
+      "totalPatients": "Total Patients",
+      "revenue": "Total Revenue"
+    },
+    "revenueUnavailable": "Currently unavailable",
+    "revenueUnavailableHint": "Pending payment module activation",
+    "table": {
+      "title": "Today's Appointments",
+      "subtitle": "Scheduled appointments for the current clinic day",
+      "patientName": "Patient Name",
+      "time": "Time",
+      "reason": "Reason",
+      "status": "Status",
+      "noReason": "Not specified",
+      "empty": "No appointments today",
+      "emptyHint": "Appointments booked for today will appear here as soon as they are scheduled."
+    },
+    "statuses": {
+      "Scheduled": "Scheduled",
+      "Confirmed": "Confirmed",
+      "Completed": "Completed",
+      "Cancelled": "Cancelled",
+      "NoShow": "No Show"
+    },
+    "states": {
+      "identityRequiredTitle": "Identity Required",
+      "identityRequired": "Please select a doctor identity using the developer identity chip to access the dashboard.",
+      "forbiddenTitle": "Access Restricted",
+      "doctorOnly": "This dashboard is restricted to doctors only. Please switch to a doctor account to view it.",
+      "error": "Failed to load clinic dashboard data.",
+      "retry": "Retry"
+    }
   }
 }

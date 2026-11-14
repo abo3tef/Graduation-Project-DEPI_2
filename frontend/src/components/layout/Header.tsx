@@ -10,9 +10,13 @@ import { LocaleSwitcher } from "@/components/shared/LocaleSwitcher";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { useState } from "react";
 import { Link } from "@/i18n/navigation";
+import { useActingIdentity } from "@/features/auth";
 
 export function Header() {
   const t = useTranslations("Navigation");
+  const tDashboard = useTranslations("dashboard");
+  const identity = useActingIdentity();
+  const isDoctor = identity.status === "ready" && identity.role === "Doctor";
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navItems = ["features", "howItWorks", "security", "contact"] as const;
 
@@ -55,6 +59,15 @@ export function Header() {
           >
             {t("medicalRecords")}
           </Link>
+          {isDoctor && (
+            <Link
+              className="rounded-lg px-3 py-3 text-xs font-semibold text-brand transition hover:bg-brand-soft md:p-0 md:hover:bg-transparent"
+              href="/dashboard"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              {tDashboard("navLink")}
+            </Link>
+          )}
         </nav>
 
         <div className="flex items-center gap-2">
