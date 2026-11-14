@@ -1,16 +1,22 @@
 import {describe, expect, it} from 'vitest';
 import {isApiError} from '@/lib/api';
 import {
+  readLabPage,
   readMedicalProfile,
+  readNotePage,
+  readPatientLabResult,
   readPatientLookup,
   readPatientLookups,
+  readPatientNote,
   readVisit,
   readVisitPage
 } from './patient-readers';
-import {makeProfile, makeVisit} from '../test/test-utils';
+import {makePatientLabResult, makePatientNote, makeProfile, makeVisit} from '../test/test-utils';
 
 const PROFILE = makeProfile();
 const VISIT = makeVisit();
+const NOTE = makePatientNote();
+const LAB_RESULT = makePatientLabResult();
 
 function invalid(action: () => unknown) {
   try {
@@ -173,5 +179,86 @@ describe('readVisitPage', () => {
 
   it('rejects items that are not visits', () => {
     invalid(() => readVisitPage({items: [{visitId: 1}], page: 1, pageSize: 10, totalCount: 1, totalPages: 1}));
+  });
+});
+
+describe('readPatientNote', () => {
+  it('reads a visit-linked note', () => {
+    expect(readPatientNote(NOTE)).toEqual(NOTE);
+  });
+
+  it('accepts visitId and updatedAtUtc as null for an unlinked note', () => {
+    const unlinked = readPatientNote({...NOTE, visitId: null, updatedAtUtc: null});
+
+    expect(unlinked.visitId).toBeNull();
+    expect(unlinked.updatedAtUtc).toBeNull();
+  });
+
+  it('rejects a note without noteContent', () => {
+    invalid(() => readPatientNote({...NOTE, noteContent: undefined}));
+  });
+
+  it('rejects a missing doctorName', () => {
+    invalid(() => readPatientNote({...NOTE, doctorName: undefined}));
+  });
+
+  it('rejects a non-object', () => {
+    invalid(() => readPatientNote('a note'));
+  });
+});
+
+describe('readPatientLabResult', () => {
+  it('reads a visit-linked result with a reference range', () => {
+    expect(readPatientLabResult(LAB_RESULT)).toEqual(LAB_RESULT);
+  });
+
+  it('accepts visitId as null for an unlinked result', () => {
+    expect(readPatientLabResult({...LAB_RESULT, visitId: null}).visitId).toBeNull();
+  });
+
+  it('rejects a string value', () => {
+    invalid(() => readPatientLabResult({...LAB_RESULT, value: '13.5'}));
+  });
+
+  it('rejects a missing testName', () => {
+    invalid(() => readPatientLabResult({...LAB_RESULT, testName: undefined}));
+  });
+
+  it('rejects a missing unit', () => {
+    invalid(() => readPatientLabResult({...LAB_RESULT, unit: undefined}));
+  });
+});
+
+describe('readNotePage', () => {
+  it('reads the shared paged envelope', () => {
+    expect(
+      readNotePage({items: [NOTE], page: 1, pageSize: 10, totalCount: 1, totalPages: 1})
+    ).toEqual({items: [NOTE], page: 1, pageSize: 10, totalCount: 1, totalPages: 1});
+  });
+
+  it('accepts an empty beyond-last page', () => {
+    const emptyPage = {items: [], page: 3, pageSize: 10, totalCount: 21, totalPages: 3};
+
+    expect(readNotePage(emptyPage)).toEqual(emptyPage);
+  });
+
+  it('rejects items that are not notes', () => {
+    invalid(() => readNotePage({items: [{id: 1}], page: 1, pageSize: 10, totalCount: 1, totalPages: 1}));
+  });
+});
+
+describe('readLabPage', () => {
+  it('reads the shared paged envelope', () => {
+    expect(
+      readLabPage({items: [LAB_RESULT], page: 2, pageSize: 10, totalCount: 11, totalPages: 2})
+    ).toEqual({items: [LAB_RESULT], page: 2, pageSize: 10, totalCount: 11, totalPages: 2});
+  });
+
+  it('rejects a missing totalPages', () => {
+    invalid(() => readLabPage({items: [], page: 1, pageSize: 10, totalCount: 0}));
+  });
+
+  it('rejects items that are not lab results', () => {
+    invalid(() => readLabPage({items: [{}], page: 1, pageSize: 10, totalCount: 1, totalPages: 1}));
   });
 });

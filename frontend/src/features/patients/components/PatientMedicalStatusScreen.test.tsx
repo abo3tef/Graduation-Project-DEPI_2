@@ -8,6 +8,8 @@ import {
   actAs,
   DOCTOR_ID,
   FakeApi,
+  makePatientLabResult,
+  makePatientNote,
   makeProfile,
   makeVisit,
   page,
@@ -197,5 +199,46 @@ describe('PatientMedicalStatusScreen', () => {
     expect(await screen.findByText('فصيلة الدم')).toBeInTheDocument();
     expect(screen.getByText('O+')).toBeInTheDocument();
     expect(screen.getByRole('tab', {name: /الحساسية/})).toBeInTheDocument();
+  });
+
+  it('offers five tabs and loads notes and lab results on demand', async () => {
+    actAs('Doctor');
+    api.on('GET', PROFILE_PATH, {body: PROFILE});
+    api.on('GET', `/api/patients/${PATIENT_ID}/notes`, {
+      body: page([makePatientNote()], {totalCount: 1, totalPages: 1})
+    });
+    api.on('GET', `/api/patients/${PATIENT_ID}/lab-results`, {
+      body: page([makePatientLabResult()], {totalCount: 1, totalPages: 1})
+    });
+    renderWithProviders(<PatientMedicalStatusScreen patientId={PATIENT_ID} />);
+
+    await screen.findByRole('heading', {name: 'Mona Said'});
+
+    const tabs = screen.getAllByRole('tab');
+    expect(tabs).toHaveLength(5);
+    // The accessible name carries the label; the visible index badge is aria-hidden.
+    expect(tabs.map((tab) => (tab.textContent ?? '').replace(/\d+$/, ''))).toEqual([
+      'Profile',
+      'Allergies & conditions',
+      'Visit history',
+      'Notes',
+      'Lab results'
+    ]);
+
+    // Only the active tab's query runs: switching tabs is what triggers each request.
+    await userEvent.click(screen.getByRole('tab', {name: /Notes/}));
+    expect(await screen.findByTestId('patient-notes')).toBeInTheDocument();
+    expect(screen.getByTestId('note-content')).toHaveTextContent(
+      'Patient advised to track blood pressure daily.'
+    );
+    expect(api.callsTo('GET', `/api/patients/${PATIENT_ID}/notes`)).toHaveLength(1);
+
+    await userEvent.click(screen.getByRole('tab', {name: /Lab results/}));
+    expect(await screen.findByTestId('patient-labs')).toBeInTheDocument();
+    expect(screen.getByTestId('lab-test-name')).toHaveTextContent('Hemoglobin');
+    expect(api.callsTo('GET', `/api/patients/${PATIENT_ID}/lab-results`)).toHaveLength(1);
+
+    // The other tabs made no extra requests beyond their first open.
+    expect(api.callsTo('GET', PROFILE_PATH)).toHaveLength(1);
   });
 });

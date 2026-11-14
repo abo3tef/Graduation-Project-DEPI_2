@@ -7,8 +7,10 @@ import {registerDevAuthHeaders, setDevIdentityForTests} from './dev-identity-hel
 import arMessages from '@/messages/ar.json';
 import enMessages from '@/messages/en.json';
 import type {
+  PatientLabResult,
   PatientLookup,
   PatientMedicalProfileResponse,
+  PatientNote,
   PatientVisitResponse
 } from '../types';
 
@@ -176,6 +178,35 @@ export function makeVisit(overrides: Partial<PatientVisitResponse> = {}): Patien
     labResults: [
       {id: 'e0000005-0000-4000-8000-000000000005', testName: 'CBC', testDate: '2030-01-02', value: 12.5, unit: 'g/dL', referenceRange: '12–15', notes: null}
     ],
+    ...overrides
+  };
+}
+
+const VISIT_ID = 'd0000001-0000-4000-8000-000000000001';
+
+export function makePatientNote(overrides: Partial<PatientNote> = {}): PatientNote {
+  return {
+    id: 'f0000001-0000-4000-8000-000000000001',
+    visitId: VISIT_ID,
+    doctorId: DOCTOR_ID,
+    doctorName: 'Dr. Dev One',
+    noteContent: 'Patient advised to track blood pressure daily.',
+    createdAtUtc: '2030-01-02T10:00:00+00:00',
+    updatedAtUtc: null,
+    ...overrides
+  };
+}
+
+export function makePatientLabResult(overrides: Partial<PatientLabResult> = {}): PatientLabResult {
+  return {
+    id: 'f0000002-0000-4000-8000-000000000002',
+    visitId: VISIT_ID,
+    testName: 'Hemoglobin',
+    testDate: '2030-01-02',
+    value: 13.5,
+    unit: 'g/dL',
+    referenceRange: null,
+    notes: null,
     ...overrides
   };
 }
