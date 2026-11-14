@@ -1,4 +1,8 @@
-﻿// Public API for the dashboard feature.
-// Export feature components, hooks, services, stores and types here as they are implemented.
-export {};
-
+// Public API for the dashboard feature.
+export * from './types/dashboard.types';
+export * from './services/dashboard.api';
+export * from './hooks/useDoctorDashboard';
+export * from './components/DashboardStatCards';
+export * from './components/TodayAppointmentsTable';
+export * from './components/AppointmentStatusBadge';
+export * from './components/DoctorDashboardScreen';

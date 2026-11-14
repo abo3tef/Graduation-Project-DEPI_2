@@ -37,6 +37,8 @@ internal sealed class ClinicClock : IClinicClock
 
     public DateTime LocalNow => TimeZoneInfo.ConvertTime(_timeProvider.GetUtcNow(), _timeZone).DateTime;
 
+    public TimeZoneInfo TimeZone => _timeZone;
+
     public bool IsNonExistentLocalTime(DateTime localTime) =>
         _timeZone.IsInvalidTime(DateTime.SpecifyKind(localTime, DateTimeKind.Unspecified));
 }

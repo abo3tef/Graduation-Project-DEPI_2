@@ -1,6 +1,7 @@
 using System.Reflection;
 using FluentValidation;
 using Medilog.Application.Features.Appointments;
+using Medilog.Application.Features.Dashboard;
 using Medilog.Application.Features.MedicalRecords;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -32,6 +33,9 @@ public static class DependencyInjection
         // ICurrentUser, which the WebAPI host provides. Controllers arrive in the
         // next F3 (API) cycle.
         services.AddScoped<IMedicalRecordService, MedicalRecordService>();
+
+        // Doctor dashboard service (F5).
+        services.AddScoped<IDoctorDashboardService, DoctorDashboardService>();
 
         return services;
     }
