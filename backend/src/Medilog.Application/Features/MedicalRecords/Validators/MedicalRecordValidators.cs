@@ -23,3 +23,19 @@ public sealed class GetMedicalHistoryRequestValidator : PagedQueryValidator<GetM
         RuleFor(request => request.PatientId).NotEmpty();
     }
 }
+
+public sealed class ListPatientNotesRequestValidator : PagedQueryValidator<ListPatientNotesRequest>
+{
+    public ListPatientNotesRequestValidator()
+    {
+        RuleFor(request => request.PatientId).NotEmpty();
+    }
+}
+
+public sealed class ListPatientLabResultsRequestValidator : PagedQueryValidator<ListPatientLabResultsRequest>
+{
+    public ListPatientLabResultsRequestValidator()
+    {
+        RuleFor(request => request.PatientId).NotEmpty();
+    }
+}

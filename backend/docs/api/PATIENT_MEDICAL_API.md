@@ -26,6 +26,8 @@ by the F3-C1 unit tests.
 |---|--------|-------|---------|
 | 1 | `GET` | `/api/patients/{patientId}/medical-profile` | `200 OK` |
 | 2 | `GET` | `/api/patients/{patientId}/medical-visits` | `200 OK` |
+| 3 | `GET` | `/api/patients/{patientId}/notes` | `200 OK` (F3-C3a) |
+| 4 | `GET` | `/api/patients/{patientId}/lab-results` | `200 OK` (F3-C3a) |
 
 ## 3.1 Medical profile — `GET /api/patients/{patientId}/medical-profile`
 
@@ -93,6 +95,64 @@ an empty `items` array with correct metadata):
 }
 ```
 
+## 3.3 Patient notes — `GET /api/patients/{patientId}/notes` (F3-C3a)
+
+Every clinical note of the patient — **visit-linked and unlinked** (Class Spec §4.10
+`listByPatient()`), newest first (`createdAtUtc` descending, note id as tie-breaker). A note
+attached to a visit also appears inside that visit in §3.2; `visitId` is `null` for an
+unlinked note.
+
+**Response `200`** (shared envelope; paging per §2 of `CONVENTIONS.md`):
+
+```json
+{
+  "items": [
+    {
+      "id": "…",
+      "visitId": "…",
+      "doctorId": "…",
+      "doctorName": "Doctor Under Test",
+      "noteContent": "…",
+      "createdAtUtc": "2026-11-13T10:00:00+00:00",
+      "updatedAtUtc": null
+    }
+  ],
+  "page": 1,
+  "pageSize": 10,
+  "totalCount": 1,
+  "totalPages": 1
+}
+```
+
+## 3.4 Patient lab results — `GET /api/patients/{patientId}/lab-results` (F3-C3a)
+
+Every laboratory result of the patient — **visit-linked and unlinked** (Class Spec §4.9
+`getHistory()`), newest test first (`testDate` descending, result id as tie-breaker);
+`visitId` is `null` for an unlinked result.
+
+**Response `200`:**
+
+```json
+{
+  "items": [
+    {
+      "id": "…",
+      "visitId": "…",
+      "testName": "Hemoglobin",
+      "testDate": "2026-11-13",
+      "value": 13.5,
+      "unit": "g/dL",
+      "referenceRange": null,
+      "notes": null
+    }
+  ],
+  "page": 1,
+  "pageSize": 10,
+  "totalCount": 1,
+  "totalPages": 1
+}
+```
+
 ## 4. Errors
 
 | Status | When | `code` |
@@ -107,8 +167,9 @@ an empty `items` array with correct metadata):
 
 - Any write operation on medical data (F4, `MEDICAL_RECORDS_API.md`; the acting doctor resolves
   from the same `ICurrentUser`, but routes and use cases are separate).
-- The patient timeline, medical documents (view/download) and patient-level (unlinked) notes and
-  laboratory results — deferred by the approved F3-C1 scope decision (task file D-11); they
-  return via a later approved cycle, not via these endpoints.
+- The patient timeline and medical documents (view/download) — deferred by the approved F3-C1
+  scope decision (task file D-11) and re-confirmed for F3-C3b (contributor decision C-6); they
+  return via a later approved cycle, not via these endpoints. (Patient-level notes and
+  laboratory results entered scope with F3-C3a, Q-08b.)
 - Any "patient status" view — blocked on the open question Q-03; no `PatientStatus` field exists
   in the domain model.

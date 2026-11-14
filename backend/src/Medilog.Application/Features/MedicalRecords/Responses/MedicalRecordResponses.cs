@@ -85,6 +85,33 @@ public sealed record VisitLabResultResponse(
     string? Notes);
 
 /// <summary>
+/// One patient-level clinical note, linked or unlinked (Class Spec §4.10;
+/// F3-C3a). <see cref="VisitId"/> is null for an unlinked note.
+/// </summary>
+public sealed record PatientNoteResponse(
+    Guid Id,
+    Guid? VisitId,
+    Guid DoctorId,
+    string DoctorName,
+    string NoteContent,
+    DateTimeOffset CreatedAtUtc,
+    DateTimeOffset? UpdatedAtUtc);
+
+/// <summary>
+/// One patient-level laboratory result, linked or unlinked (Class Spec §4.9;
+/// F3-C3a). <see cref="VisitId"/> is null for an unlinked result.
+/// </summary>
+public sealed record PatientLabResultResponse(
+    Guid Id,
+    Guid? VisitId,
+    string TestName,
+    DateOnly TestDate,
+    decimal Value,
+    string Unit,
+    string? ReferenceRange,
+    string? Notes);
+
+/// <summary>
 /// One previous visit of the patient with its linked clinical records
 /// (Class Spec §4.3). Patient-level (unlinked) notes and lab results, documents
 /// and the timeline are deferred to F3-C2 and are never part of this response.

@@ -69,7 +69,9 @@ internal sealed class MedicalRecordScenario
             User,
             Clock,
             new GetMedicalProfileRequestValidator(),
-            new GetMedicalHistoryRequestValidator());
+            new GetMedicalHistoryRequestValidator(),
+            new ListPatientNotesRequestValidator(),
+            new ListPatientLabResultsRequestValidator());
     }
 
     public Doctor DoctorA { get; }
@@ -111,6 +113,22 @@ internal sealed class MedicalRecordScenario
             new GetMedicalHistoryRequest((patient ?? PatientA).Id, page, pageSize),
             CancellationToken.None);
 
+    public Task<PagedResult<PatientNoteResponse>> NotesAsync(
+        Patient? patient = null,
+        int page = 1,
+        int pageSize = PagingDefaults.DefaultPageSize) =>
+        Service.ListPatientNotesAsync(
+            new ListPatientNotesRequest((patient ?? PatientA).Id, page, pageSize),
+            CancellationToken.None);
+
+    public Task<PagedResult<PatientLabResultResponse>> LabResultsAsync(
+        Patient? patient = null,
+        int page = 1,
+        int pageSize = PagingDefaults.DefaultPageSize) =>
+        Service.ListPatientLabResultsAsync(
+            new ListPatientLabResultsRequest((patient ?? PatientA).Id, page, pageSize),
+            CancellationToken.None);
+
     /// <summary>Inserts a visit directly (bypassing all rules).</summary>
     public MedicalVisit SeedVisit(
         Patient patient,
@@ -128,5 +146,45 @@ internal sealed class MedicalRecordScenario
 
         Store.Visits.Add(visit);
         return visit;
+    }
+
+    /// <summary>Inserts a clinical note directly (bypassing all rules).</summary>
+    public MedicalNote SeedNote(
+        Patient patient,
+        Doctor doctor,
+        DateTimeOffset createdAtUtc,
+        Guid? visitId = null)
+    {
+        var note = new MedicalNote
+        {
+            PatientId = patient.Id,
+            DoctorId = doctor.Id,
+            VisitId = visitId,
+            NoteContent = "test-only note",
+            CreatedAtUtc = createdAtUtc
+        };
+
+        Store.Notes.Add(note);
+        return note;
+    }
+
+    /// <summary>Inserts a laboratory result directly (bypassing all rules).</summary>
+    public LaboratoryResult SeedLabResult(
+        Patient patient,
+        DateOnly testDate,
+        Guid? visitId = null)
+    {
+        var labResult = new LaboratoryResult
+        {
+            PatientId = patient.Id,
+            VisitId = visitId,
+            TestName = "Hemoglobin",
+            TestDate = testDate,
+            Value = 13.5m,
+            Unit = "g/dL"
+        };
+
+        Store.LabResults.Add(labResult);
+        return labResult;
     }
 }

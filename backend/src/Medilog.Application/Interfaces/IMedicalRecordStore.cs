@@ -116,7 +116,35 @@ public sealed record MedicalVisitData(
     IReadOnlyList<VisitLabResultData> LabResults);
 
 /// <summary>
+/// <summary>
+/// One patient-level clinical note, linked or unlinked (Class Spec §4.10).
+/// <see cref="VisitId"/> is null when the note is not attached to a visit.
+/// </summary>
+public sealed record PatientNoteData(
+    Guid Id,
+    Guid? VisitId,
+    Guid DoctorId,
+    string DoctorName,
+    string NoteContent,
+    DateTimeOffset CreatedAtUtc,
+    DateTimeOffset? UpdatedAtUtc);
+
+/// <summary>
+/// One patient-level laboratory result, linked or unlinked (Class Spec §4.9).
+/// <see cref="VisitId"/> is null when the result is not attached to a visit.
+/// </summary>
+public sealed record PatientLabResultData(
+    Guid Id,
+    Guid? VisitId,
+    string TestName,
+    DateOnly TestDate,
+    decimal Value,
+    string Unit,
+    string? ReferenceRange,
+    string? Notes);
+
 /// Persistence port for the F3 medical-record read use cases. Implemented in
+
 /// Infrastructure so the Application layer stays free of EF Core. Read-only by
 /// design: F3-C1 never writes, so the port has no save/transaction members.
 /// </summary>
@@ -139,6 +167,27 @@ public interface IMedicalRecordStore
     /// Children are unsorted and must be ordered by the service.
     /// </summary>
     Task<PagedResult<MedicalVisitData>> ListVisitsAsync(
+        Guid patientId,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Every clinical note of the patient — visit-linked and unlinked — newest
+    /// first (F3-C3a C-2); the ordering is applied here because a flat list can
+    /// be ordered in SQL (unlike the visit children with string-stored enums).
+    /// </summary>
+    Task<PagedResult<PatientNoteData>> ListNotesAsync(
+        Guid patientId,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Every laboratory result of the patient — visit-linked and unlinked —
+    /// newest test first (F3-C3a C-2).
+    /// </summary>
+    Task<PagedResult<PatientLabResultData>> ListLabResultsAsync(
         Guid patientId,
         int pageNumber,
         int pageSize,

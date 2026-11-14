@@ -22,6 +22,10 @@ public sealed class MedicalRecordsApiTests
 
     private static string HistoryUrl(Guid patientId) => $"/api/patients/{patientId}/medical-visits";
 
+    private static string NotesUrl(Guid patientId) => $"/api/patients/{patientId}/notes";
+
+    private static string LabResultsUrl(Guid patientId) => $"/api/patients/{patientId}/lab-results";
+
     private static Patient ProfilePatient(Guid id, Guid owningDoctorId)
     {
         var patient = ApiData.Patient(id, owningDoctorId);
@@ -62,7 +66,13 @@ public sealed class MedicalRecordsApiTests
         HeartRate = 72,
     };
 
-    private static MedicalNote Note(Guid id, Guid patientId, Guid doctorId, Guid visitId) => new()
+    // Note: CreatedAtUtc is deliberately not seedable — the audit interceptor
+    // assigns it on insert (see the ordering test below).
+    private static MedicalNote Note(
+        Guid id,
+        Guid patientId,
+        Guid doctorId,
+        Guid? visitId = null) => new()
     {
         Id = id,
         PatientId = patientId,
@@ -71,13 +81,17 @@ public sealed class MedicalRecordsApiTests
         NoteContent = "test-only note",
     };
 
-    private static LaboratoryResult LabResult(Guid id, Guid patientId, Guid visitId) => new()
+    private static LaboratoryResult LabResult(
+        Guid id,
+        Guid patientId,
+        Guid? visitId = null,
+        DateOnly? testDate = null) => new()
     {
         Id = id,
         PatientId = patientId,
         VisitId = visitId,
         TestName = "Hemoglobin",
-        TestDate = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-1),
+        TestDate = testDate ?? DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-1),
         Value = 13.5m,
         Unit = "g/dL",
     };
@@ -234,7 +248,15 @@ public sealed class MedicalRecordsApiTests
         using var client = factory.CreateClientFor(Guid.NewGuid(), Roles.Secretary);
 
         // Act & Assert
-        foreach (var url in new[] { ProfileUrl(patientId), $"{HistoryUrl(patientId)}?pageNumber=1&pageSize=10" })
+        var medicalRoutes = new[]
+        {
+            ProfileUrl(patientId),
+            $"{HistoryUrl(patientId)}?pageNumber=1&pageSize=10",
+            $"{NotesUrl(patientId)}?pageNumber=1&pageSize=10",
+            $"{LabResultsUrl(patientId)}?pageNumber=1&pageSize=10"
+        };
+
+        foreach (var url in medicalRoutes)
         {
             var response = await client.GetAsync(url);
 
@@ -244,7 +266,8 @@ public sealed class MedicalRecordsApiTests
             var root = body.RootElement;
             Assert.True(root.TryGetProperty("code", out _), "The 403 must use the shared envelope.");
             Assert.False(
-                root.TryGetProperty("fullName", out _) || root.TryGetProperty("bloodType", out _),
+                root.TryGetProperty("fullName", out _) || root.TryGetProperty("bloodType", out _) ||
+                root.TryGetProperty("noteContent", out _) || root.TryGetProperty("testName", out _),
                 "A secretary must never receive medical data.");
         }
     }
@@ -268,7 +291,15 @@ public sealed class MedicalRecordsApiTests
         using var client = factory.CreateClientFor(otherDoctorId);
 
         // Act & Assert
-        foreach (var url in new[] { ProfileUrl(patientId), $"{HistoryUrl(patientId)}?pageNumber=1&pageSize=10" })
+        var medicalRoutes = new[]
+        {
+            ProfileUrl(patientId),
+            $"{HistoryUrl(patientId)}?pageNumber=1&pageSize=10",
+            $"{NotesUrl(patientId)}?pageNumber=1&pageSize=10",
+            $"{LabResultsUrl(patientId)}?pageNumber=1&pageSize=10"
+        };
+
+        foreach (var url in medicalRoutes)
         {
             var response = await client.GetAsync(url);
 
@@ -278,7 +309,8 @@ public sealed class MedicalRecordsApiTests
             var root = body.RootElement;
             Assert.Equal("patient.not_found", root.GetProperty("code").GetString());
             Assert.False(
-                root.TryGetProperty("fullName", out _) || root.TryGetProperty("bloodType", out _),
+                root.TryGetProperty("fullName", out _) || root.TryGetProperty("bloodType", out _) ||
+                root.TryGetProperty("noteContent", out _) || root.TryGetProperty("testName", out _),
                 "Out-of-scope medical data must never be revealed.");
         }
     }
@@ -301,7 +333,15 @@ public sealed class MedicalRecordsApiTests
         using var client = factory.CreateClientFor(null);
 
         // Act & Assert
-        foreach (var url in new[] { ProfileUrl(patientId), $"{HistoryUrl(patientId)}?pageNumber=1&pageSize=10" })
+        var medicalRoutes = new[]
+        {
+            ProfileUrl(patientId),
+            $"{HistoryUrl(patientId)}?pageNumber=1&pageSize=10",
+            $"{NotesUrl(patientId)}?pageNumber=1&pageSize=10",
+            $"{LabResultsUrl(patientId)}?pageNumber=1&pageSize=10"
+        };
+
+        foreach (var url in medicalRoutes)
         {
             var response = await client.GetAsync(url);
 
@@ -309,7 +349,8 @@ public sealed class MedicalRecordsApiTests
 
             using var body = await ReadJsonAsync(response);
             Assert.False(
-                body.RootElement.TryGetProperty("fullName", out _),
+                body.RootElement.TryGetProperty("fullName", out _) ||
+                body.RootElement.TryGetProperty("noteContent", out _),
                 "An unauthenticated caller must never receive medical data.");
         }
     }
@@ -345,10 +386,16 @@ public sealed class MedicalRecordsApiTests
     }
 
     [Theory]
-    [InlineData("pageNumber=0")]
-    [InlineData("pageSize=0")]
-    [InlineData("pageSize=51")]
-    public async Task Invalid_paging_returns_400_with_the_shared_validation_envelope(string query)
+    [InlineData("medical-visits", "pageNumber=0")]
+    [InlineData("medical-visits", "pageSize=0")]
+    [InlineData("medical-visits", "pageSize=51")]
+    [InlineData("notes", "pageNumber=0")]
+    [InlineData("notes", "pageSize=51")]
+    [InlineData("lab-results", "pageNumber=0")]
+    [InlineData("lab-results", "pageSize=51")]
+    public async Task Invalid_paging_returns_400_with_the_shared_validation_envelope(
+        string route,
+        string query)
     {
         // Arrange
         using var factory = new WebApiFactory();
@@ -363,7 +410,7 @@ public sealed class MedicalRecordsApiTests
         using var client = factory.CreateClientFor(doctorId);
 
         // Act
-        var response = await client.GetAsync($"{HistoryUrl(patientId)}?{query}");
+        var response = await client.GetAsync($"/api/patients/{patientId}/{route}?{query}");
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -394,16 +441,188 @@ public sealed class MedicalRecordsApiTests
         var unknownPatientId = Guid.NewGuid();
 
         // Act
-        var profileResponse = await client.GetAsync(ProfileUrl(unknownPatientId));
-        var historyResponse = await client.GetAsync($"{HistoryUrl(unknownPatientId)}?pageNumber=1&pageSize=10");
+        var routes = new[]
+        {
+            ProfileUrl(unknownPatientId),
+            $"{HistoryUrl(unknownPatientId)}?pageNumber=1&pageSize=10",
+            $"{NotesUrl(unknownPatientId)}?pageNumber=1&pageSize=10",
+            $"{LabResultsUrl(unknownPatientId)}?pageNumber=1&pageSize=10"
+        };
 
         // Assert
-        foreach (var response in new[] { profileResponse, historyResponse })
+        foreach (var url in routes)
         {
+            var response = await client.GetAsync(url);
+
             Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
 
             using var body = await ReadJsonAsync(response);
             Assert.Equal("patient.not_found", body.RootElement.GetProperty("code").GetString());
         }
+    }
+
+    [Fact]
+    public async Task Notes_return_every_patient_record_in_deterministic_order_with_visit_links()
+    {
+        // Arrange
+        using var factory = new WebApiFactory();
+        var doctorId = Guid.NewGuid();
+        var patientId = Guid.NewGuid();
+        var linkedVisitId = Guid.NewGuid();
+
+        // CreatedAtUtc is system-assigned on insert and deliberately protected
+        // afterwards by the audit interceptor (tests must not backdate it), and
+        // every row of one SaveChanges shares the same instant. This test
+        // therefore exercises the P-C tie-breaker deterministically on the real
+        // provider: with equal creation instants the descending-id order fully
+        // decides. The ids are crafted to differ only in the final byte, so they
+        // order identically as SQLite TEXT, MySQL CHAR(36)/BINARY(16), and under
+        // .NET Guid.CompareTo, and they agree with the intended age order. The
+        // ascending-timestamp path itself is proven against the store contract by
+        // the Application-level tests (Notes_are_newest_first); date-descending
+        // SQL ordering is proven below by the lab-results test, whose TestDate is
+        // a plain domain field the interceptor does not touch.
+        var newestId = new Guid("00000000-0000-0000-0000-000000000003");
+        var middleId = new Guid("00000000-0000-0000-0000-000000000002");
+        var oldestId = new Guid("00000000-0000-0000-0000-000000000001");
+
+        await factory.SeedAsync(db =>
+        {
+            db.Add(ApiData.Doctor(doctorId));
+            db.Add(ApiData.Patient(patientId, doctorId));
+            db.Add(ApiData.Visit(linkedVisitId, patientId, doctorId));
+            db.Add(Note(oldestId, patientId, doctorId));
+            db.Add(Note(middleId, patientId, doctorId));
+            db.Add(Note(newestId, patientId, doctorId, linkedVisitId));
+        });
+
+        using var client = factory.CreateClientFor(doctorId);
+
+        // Act
+        var response = await client.GetAsync($"{NotesUrl(patientId)}?pageNumber=1&pageSize=2");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        using var body = await ReadJsonAsync(response);
+        var root = body.RootElement;
+        Assert.Equal(1, root.GetProperty("page").GetInt32());
+        Assert.Equal(2, root.GetProperty("pageSize").GetInt32());
+        Assert.Equal(3, root.GetProperty("totalCount").GetInt32());
+        Assert.Equal(2, root.GetProperty("totalPages").GetInt32());
+
+        var items = root.GetProperty("items");
+        Assert.Equal(2, items.GetArrayLength());
+        Assert.Equal(newestId, items[0].GetProperty("id").GetGuid());
+        Assert.Equal(linkedVisitId, items[0].GetProperty("visitId").GetGuid());
+        Assert.Equal(doctorId, items[0].GetProperty("doctorId").GetGuid());
+        Assert.Equal("Doctor Under Test", items[0].GetProperty("doctorName").GetString());
+        Assert.Equal(middleId, items[1].GetProperty("id").GetGuid());
+        Assert.True(items[1].TryGetProperty("visitId", out var middleVisitId));
+        Assert.Equal(JsonValueKind.Null, middleVisitId.ValueKind);
+    }
+
+    [Fact]
+    public async Task Lab_results_return_every_patient_record_newest_test_first()
+    {
+        // Arrange
+        using var factory = new WebApiFactory();
+        var doctorId = Guid.NewGuid();
+        var patientId = Guid.NewGuid();
+        var linkedVisitId = Guid.NewGuid();
+        var newestId = Guid.NewGuid();
+        var unlinkedId = Guid.NewGuid();
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        await factory.SeedAsync(db =>
+        {
+            db.Add(ApiData.Doctor(doctorId));
+            db.Add(ApiData.Patient(patientId, doctorId));
+            db.Add(ApiData.Visit(linkedVisitId, patientId, doctorId));
+            db.Add(LabResult(newestId, patientId, linkedVisitId, today));
+            db.Add(LabResult(unlinkedId, patientId, null, today.AddDays(-1)));
+        });
+
+        using var client = factory.CreateClientFor(doctorId);
+
+        // Act
+        var response = await client.GetAsync($"{LabResultsUrl(patientId)}?pageNumber=1&pageSize=10");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        using var body = await ReadJsonAsync(response);
+        var root = body.RootElement;
+        Assert.Equal(1, root.GetProperty("page").GetInt32());
+        Assert.Equal(10, root.GetProperty("pageSize").GetInt32());
+        Assert.Equal(2, root.GetProperty("totalCount").GetInt32());
+
+        var items = root.GetProperty("items");
+        Assert.Equal(2, items.GetArrayLength());
+        Assert.Equal(newestId, items[0].GetProperty("id").GetGuid());
+        Assert.Equal(linkedVisitId, items[0].GetProperty("visitId").GetGuid());
+        Assert.Equal("Hemoglobin", items[0].GetProperty("testName").GetString());
+        Assert.Equal(unlinkedId, items[1].GetProperty("id").GetGuid());
+        Assert.True(items[1].TryGetProperty("visitId", out var unlinkedVisitId));
+        Assert.Equal(JsonValueKind.Null, unlinkedVisitId.ValueKind);
+    }
+
+    [Fact]
+    public async Task Lab_results_beyond_the_last_page_return_200_with_empty_items()
+    {
+        // Arrange
+        using var factory = new WebApiFactory();
+        var doctorId = Guid.NewGuid();
+        var patientId = Guid.NewGuid();
+        await factory.SeedAsync(db =>
+        {
+            db.Add(ApiData.Doctor(doctorId));
+            db.Add(ApiData.Patient(patientId, doctorId));
+            db.Add(LabResult(Guid.NewGuid(), patientId, null, DateOnly.FromDateTime(DateTime.UtcNow)));
+        });
+
+        using var client = factory.CreateClientFor(doctorId);
+
+        // Act
+        var response = await client.GetAsync($"{LabResultsUrl(patientId)}?pageNumber=2&pageSize=10");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        using var body = await ReadJsonAsync(response);
+        var root = body.RootElement;
+        Assert.Equal(2, root.GetProperty("page").GetInt32());
+        Assert.Equal(0, root.GetProperty("items").GetArrayLength());
+        Assert.Equal(1, root.GetProperty("totalCount").GetInt32());
+        Assert.Equal(1, root.GetProperty("totalPages").GetInt32());
+    }
+
+    [Fact]
+    public async Task Notes_with_no_records_return_200_with_an_empty_page()
+    {
+        // Arrange
+        using var factory = new WebApiFactory();
+        var doctorId = Guid.NewGuid();
+        var patientId = Guid.NewGuid();
+        await factory.SeedAsync(db =>
+        {
+            db.Add(ApiData.Doctor(doctorId));
+            db.Add(ApiData.Patient(patientId, doctorId));
+        });
+
+        using var client = factory.CreateClientFor(doctorId);
+
+        // Act
+        var response = await client.GetAsync(NotesUrl(patientId));
+
+        // Assert: omitted query uses the shared defaults, empty result set stays a success.
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        using var body = await ReadJsonAsync(response);
+        var root = body.RootElement;
+        Assert.Equal(1, root.GetProperty("page").GetInt32());
+        Assert.Equal(10, root.GetProperty("pageSize").GetInt32());
+        Assert.Equal(0, root.GetProperty("totalCount").GetInt32());
+        Assert.Equal(0, root.GetProperty("totalPages").GetInt32());
+        Assert.Equal(0, root.GetProperty("items").GetArrayLength());
     }
 }

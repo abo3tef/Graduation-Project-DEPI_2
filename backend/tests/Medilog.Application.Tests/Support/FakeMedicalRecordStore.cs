@@ -185,4 +185,68 @@ internal sealed class FakeMedicalRecordStore : IMedicalRecordStore
 
         return Task.FromResult(new PagedResult<MedicalVisitData>(items, pageNumber, pageSize, ordered.Length));
     }
+
+    public Task<PagedResult<PatientNoteData>> ListNotesAsync(
+        Guid patientId,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken)
+    {
+        CallCount++;
+
+        // Same ordering contract as the real store: newest first, id tie-breaker.
+        var ordered = Notes
+            .Where(note => note.PatientId == patientId)
+            .OrderByDescending(note => note.CreatedAtUtc)
+            .ThenByDescending(note => note.Id)
+            .ToArray();
+
+        var skip = (pageNumber - 1) * pageSize;
+        var page = ordered.Skip(skip).Take(pageSize).ToArray();
+
+        var items = page
+            .Select(note => new PatientNoteData(
+                note.Id,
+                note.VisitId,
+                note.DoctorId,
+                Doctors.FirstOrDefault(doctor => doctor.Id == note.DoctorId)?.FullName ?? string.Empty,
+                note.NoteContent,
+                note.CreatedAtUtc,
+                note.UpdatedAtUtc))
+            .ToArray();
+
+        return Task.FromResult(new PagedResult<PatientNoteData>(items, pageNumber, pageSize, ordered.Length));
+    }
+
+    public Task<PagedResult<PatientLabResultData>> ListLabResultsAsync(
+        Guid patientId,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken)
+    {
+        CallCount++;
+
+        var ordered = LabResults
+            .Where(labResult => labResult.PatientId == patientId)
+            .OrderByDescending(labResult => labResult.TestDate)
+            .ThenByDescending(labResult => labResult.Id)
+            .ToArray();
+
+        var skip = (pageNumber - 1) * pageSize;
+        var page = ordered.Skip(skip).Take(pageSize).ToArray();
+
+        var items = page
+            .Select(labResult => new PatientLabResultData(
+                labResult.Id,
+                labResult.VisitId,
+                labResult.TestName,
+                labResult.TestDate,
+                labResult.Value,
+                labResult.Unit,
+                labResult.ReferenceRange,
+                labResult.Notes))
+            .ToArray();
+
+        return Task.FromResult(new PagedResult<PatientLabResultData>(items, pageNumber, pageSize, ordered.Length));
+    }
 }
