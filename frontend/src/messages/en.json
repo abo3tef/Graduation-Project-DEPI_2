@@ -674,7 +674,9 @@
         "allergies": "Allergies & conditions",
         "history": "Visit history",
         "notes": "Notes",
-        "labs": "Lab results"
+        "labs": "Lab results",
+        "timeline": "Timeline",
+        "documents": "Documents"
       },
       "notProvided": "Not provided",
       "loadingSection": "Loading allergies and conditions…",
@@ -791,6 +793,32 @@
       "referenceRange": "Reference range",
       "link": "Open visit details",
       "unlinked": "Not linked to a visit"
+    },
+    "timeline": {
+      "loading": "Loading timeline…",
+      "errorTitle": "Timeline could not be loaded.",
+      "empty": "No timeline events for this patient.",
+      "emptyBeyond": "No events on this page.",
+      "paginationLabel": "Timeline pages",
+      "event": {
+        "visit": "Medical visit",
+        "note": "Clinical note",
+        "lab_result": "Laboratory result",
+        "document": "Medical document"
+      },
+      "noComplaint": "No complaint recorded",
+      "counts": "{diagnoses} diagnoses · {medications} medications · {notes} notes · {labs} lab results",
+      "openVisit": "Open visit details",
+      "unlinked": "Not linked to a visit"
+    },
+    "documents": {
+      "loading": "Loading documents…",
+      "errorTitle": "Documents could not be loaded.",
+      "empty": "No medical documents recorded for this patient.",
+      "emptyBeyond": "No documents on this page.",
+      "paginationLabel": "Document pages",
+      "uploaded": "Uploaded",
+      "metadataOnly": "Document metadata only — viewing and downloading files is not available."
     }
   }
 }

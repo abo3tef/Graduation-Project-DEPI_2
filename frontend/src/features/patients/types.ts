@@ -129,3 +129,37 @@ export type PatientLabResult = {
   readonly referenceRange: string | null;
   readonly notes: string | null;
 };
+
+/** Exactly one event payload is set by the backend for each eventType. */
+export type PatientTimelineEvent = {
+  readonly id: string;
+  readonly eventType: 'visit' | 'note' | 'lab_result' | 'document';
+  readonly occurredAtUtc: string;
+  readonly visitId: string | null;
+  readonly visit: {
+    readonly doctorName: string;
+    readonly chiefComplaint: string | null;
+    readonly diagnosesCount: number;
+    readonly medicationsCount: number;
+    readonly notesCount: number;
+    readonly labResultsCount: number;
+  } | null;
+  readonly note: {readonly doctorName: string; readonly noteContent: string} | null;
+  readonly labResult: {readonly testName: string; readonly value: number; readonly unit: string} | null;
+  readonly document: {
+    readonly fileName: string;
+    readonly fileType: string;
+    readonly description: string | null;
+    readonly uploadedByDoctorName: string | null;
+  } | null;
+};
+
+/** File metadata only. Storage locations are never accepted or displayed. */
+export type PatientDocument = {
+  readonly id: string;
+  readonly fileName: string;
+  readonly type: string;
+  readonly uploadDateUtc: string;
+  readonly description: string | null;
+  readonly uploadedByDoctorName: string | null;
+};

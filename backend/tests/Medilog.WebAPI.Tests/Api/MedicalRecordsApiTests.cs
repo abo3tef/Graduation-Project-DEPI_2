@@ -26,6 +26,10 @@ public sealed class MedicalRecordsApiTests
 
     private static string LabResultsUrl(Guid patientId) => $"/api/patients/{patientId}/lab-results";
 
+    private static string TimelineUrl(Guid patientId) => $"/api/patients/{patientId}/timeline";
+
+    private static string DocumentsUrl(Guid patientId) => $"/api/patients/{patientId}/documents";
+
     private static Patient ProfilePatient(Guid id, Guid owningDoctorId)
     {
         var patient = ApiData.Patient(id, owningDoctorId);
@@ -94,6 +98,30 @@ public sealed class MedicalRecordsApiTests
         TestDate = testDate ?? DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-1),
         Value = 13.5m,
         Unit = "g/dL",
+    };
+
+    /// <summary>
+    /// Seeds a document with a sentinel storage location. Unlike the read models,
+    /// the persisted entity requires <see cref="MedicalDocument.Location"/>; every
+    /// F3-C3b test proves that this sentinel never reaches a response.
+    /// </summary>
+    private static MedicalDocument MedicalDocument(
+        Guid id,
+        Guid patientId,
+        DateTimeOffset uploadDate,
+        Guid? uploadedBy = null,
+        string fileName = "report.pdf",
+        MedicalDocumentType type = MedicalDocumentType.Pdf,
+        string? description = null) => new()
+    {
+        Id = id,
+        PatientId = patientId,
+        UploadedBy = uploadedBy,
+        FileName = fileName,
+        Type = type,
+        Location = "sentinel-storage-location-must-not-leak",
+        UploadDate = uploadDate,
+        Description = description,
     };
 
     private static async Task<JsonDocument> ReadJsonAsync(HttpResponseMessage response)
@@ -253,7 +281,9 @@ public sealed class MedicalRecordsApiTests
             ProfileUrl(patientId),
             $"{HistoryUrl(patientId)}?pageNumber=1&pageSize=10",
             $"{NotesUrl(patientId)}?pageNumber=1&pageSize=10",
-            $"{LabResultsUrl(patientId)}?pageNumber=1&pageSize=10"
+            $"{LabResultsUrl(patientId)}?pageNumber=1&pageSize=10",
+            $"{TimelineUrl(patientId)}?pageNumber=1&pageSize=10",
+            $"{DocumentsUrl(patientId)}?pageNumber=1&pageSize=10"
         };
 
         foreach (var url in medicalRoutes)
@@ -267,7 +297,8 @@ public sealed class MedicalRecordsApiTests
             Assert.True(root.TryGetProperty("code", out _), "The 403 must use the shared envelope.");
             Assert.False(
                 root.TryGetProperty("fullName", out _) || root.TryGetProperty("bloodType", out _) ||
-                root.TryGetProperty("noteContent", out _) || root.TryGetProperty("testName", out _),
+                root.TryGetProperty("noteContent", out _) || root.TryGetProperty("testName", out _) ||
+                root.TryGetProperty("fileName", out _),
                 "A secretary must never receive medical data.");
         }
     }
@@ -296,7 +327,9 @@ public sealed class MedicalRecordsApiTests
             ProfileUrl(patientId),
             $"{HistoryUrl(patientId)}?pageNumber=1&pageSize=10",
             $"{NotesUrl(patientId)}?pageNumber=1&pageSize=10",
-            $"{LabResultsUrl(patientId)}?pageNumber=1&pageSize=10"
+            $"{LabResultsUrl(patientId)}?pageNumber=1&pageSize=10",
+            $"{TimelineUrl(patientId)}?pageNumber=1&pageSize=10",
+            $"{DocumentsUrl(patientId)}?pageNumber=1&pageSize=10"
         };
 
         foreach (var url in medicalRoutes)
@@ -310,7 +343,8 @@ public sealed class MedicalRecordsApiTests
             Assert.Equal("patient.not_found", root.GetProperty("code").GetString());
             Assert.False(
                 root.TryGetProperty("fullName", out _) || root.TryGetProperty("bloodType", out _) ||
-                root.TryGetProperty("noteContent", out _) || root.TryGetProperty("testName", out _),
+                root.TryGetProperty("noteContent", out _) || root.TryGetProperty("testName", out _) ||
+                root.TryGetProperty("fileName", out _),
                 "Out-of-scope medical data must never be revealed.");
         }
     }
@@ -338,7 +372,9 @@ public sealed class MedicalRecordsApiTests
             ProfileUrl(patientId),
             $"{HistoryUrl(patientId)}?pageNumber=1&pageSize=10",
             $"{NotesUrl(patientId)}?pageNumber=1&pageSize=10",
-            $"{LabResultsUrl(patientId)}?pageNumber=1&pageSize=10"
+            $"{LabResultsUrl(patientId)}?pageNumber=1&pageSize=10",
+            $"{TimelineUrl(patientId)}?pageNumber=1&pageSize=10",
+            $"{DocumentsUrl(patientId)}?pageNumber=1&pageSize=10"
         };
 
         foreach (var url in medicalRoutes)
@@ -393,6 +429,10 @@ public sealed class MedicalRecordsApiTests
     [InlineData("notes", "pageSize=51")]
     [InlineData("lab-results", "pageNumber=0")]
     [InlineData("lab-results", "pageSize=51")]
+    [InlineData("timeline", "pageNumber=0")]
+    [InlineData("timeline", "pageSize=51")]
+    [InlineData("documents", "pageNumber=0")]
+    [InlineData("documents", "pageSize=51")]
     public async Task Invalid_paging_returns_400_with_the_shared_validation_envelope(
         string route,
         string query)
@@ -446,7 +486,9 @@ public sealed class MedicalRecordsApiTests
             ProfileUrl(unknownPatientId),
             $"{HistoryUrl(unknownPatientId)}?pageNumber=1&pageSize=10",
             $"{NotesUrl(unknownPatientId)}?pageNumber=1&pageSize=10",
-            $"{LabResultsUrl(unknownPatientId)}?pageNumber=1&pageSize=10"
+            $"{LabResultsUrl(unknownPatientId)}?pageNumber=1&pageSize=10",
+            $"{TimelineUrl(unknownPatientId)}?pageNumber=1&pageSize=10",
+            $"{DocumentsUrl(unknownPatientId)}?pageNumber=1&pageSize=10"
         };
 
         // Assert
@@ -624,5 +666,303 @@ public sealed class MedicalRecordsApiTests
         Assert.Equal(0, root.GetProperty("totalCount").GetInt32());
         Assert.Equal(0, root.GetProperty("totalPages").GetInt32());
         Assert.Equal(0, root.GetProperty("items").GetArrayLength());
+    }
+
+    /// <summary>
+    /// F3-C3b Q-12: the timeline is one chronological feed over the four persisted
+    /// event sources. Seeded instants are chosen so the global order is provider
+    /// independent: the audit interceptor stamps the note at the SaveChanges
+    /// instant (newest), the documents are backdated relative to each other, the
+    /// visit sits two days back, and the lab event is midnight UTC of today —
+    /// always later than any instant ≥ 48h ago and earlier than any instant today.
+    /// A second patient of the same doctor proves event isolation, and the raw
+    /// body proves the document storage location never leaks (Q-13).
+    /// </summary>
+    [Fact]
+    public async Task Timeline_returns_all_four_event_types_newest_first_with_document_metadata()
+    {
+        // Arrange
+        using var factory = new WebApiFactory();
+        var doctorId = Guid.NewGuid();
+        var patientId = Guid.NewGuid();
+        var otherPatientId = Guid.NewGuid();
+        var visitId = Guid.NewGuid();
+        var noteId = Guid.NewGuid();
+        var labId = Guid.NewGuid();
+        var namedDocId = Guid.NewGuid();
+        var anonymousDocId = Guid.NewGuid();
+        var now = DateTimeOffset.UtcNow;
+
+        await factory.SeedAsync(db =>
+        {
+            db.Add(ApiData.Doctor(doctorId));
+            db.Add(ApiData.Patient(patientId, doctorId));
+            db.Add(ApiData.Patient(otherPatientId, doctorId));
+            db.Add(ApiData.Visit(visitId, patientId, doctorId));
+            db.Add(ApiData.Diagnosis(Guid.NewGuid(), visitId, patientId));
+            db.Add(Note(noteId, patientId, doctorId, visitId));
+            db.Add(LabResult(labId, patientId, null, DateOnly.FromDateTime(now.UtcDateTime)));
+            db.Add(MedicalDocument(namedDocId, patientId, now.AddHours(-2), doctorId, "mri-scan.pdf",
+                MedicalDocumentType.Pdf, "MRI of the knee"));
+            db.Add(MedicalDocument(anonymousDocId, patientId, now.AddHours(-1), null, "x-ray.png",
+                MedicalDocumentType.Png));
+            // Another patient of the same doctor: these events must never leak in.
+            db.Add(VisitAt(Guid.NewGuid(), otherPatientId, doctorId, now.AddHours(-3)));
+            db.Add(MedicalDocument(Guid.NewGuid(), otherPatientId, now.AddHours(-3)));
+        });
+
+        using var client = factory.CreateClientFor(doctorId);
+
+        // Act
+        var response = await client.GetAsync($"{TimelineUrl(patientId)}?pageNumber=1&pageSize=10");
+
+        // Assert: shared envelope with only this patient's five events.
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var rawBody = await response.Content.ReadAsStringAsync();
+        Assert.DoesNotContain("location", rawBody, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("sentinel", rawBody, StringComparison.OrdinalIgnoreCase);
+
+        using var body = await ReadJsonAsync(response);
+        var root = body.RootElement;
+        Assert.Equal(1, root.GetProperty("page").GetInt32());
+        Assert.Equal(10, root.GetProperty("pageSize").GetInt32());
+        Assert.Equal(5, root.GetProperty("totalCount").GetInt32());
+        Assert.Equal(1, root.GetProperty("totalPages").GetInt32());
+
+        // Global order: note (SaveChanges instant), documents (newest first),
+        // lab (midnight UTC of today — later than any instant ≥ 48h ago),
+        // visit (two days back).
+        var items = root.GetProperty("items");
+        Assert.Equal(5, items.GetArrayLength());
+        Assert.Equal(
+            new[] { noteId, anonymousDocId, namedDocId, labId, visitId },
+            items.EnumerateArray().Select(item => item.GetProperty("id").GetGuid()).ToArray());
+        Assert.Equal(
+            new[] { "note", "document", "document", "lab_result", "visit" },
+            items.EnumerateArray().Select(item => item.GetProperty("eventType").GetString()).ToArray());
+
+        // Note event: full content (D-T2) and the owning visit id for deep-linking.
+        var noteEvent = items[0];
+        Assert.Equal(visitId, noteEvent.GetProperty("visitId").GetGuid());
+        Assert.Equal("test-only note", noteEvent.GetProperty("note").GetProperty("noteContent").GetString());
+        Assert.Equal("Doctor Under Test", noteEvent.GetProperty("note").GetProperty("doctorName").GetString());
+
+        // Document events: metadata only, no location anywhere (Q-13); the newer
+        // upload has no uploader (D-T5) and therefore no uploader name.
+        var anonymousEvent = items[1];
+        Assert.True(anonymousEvent.TryGetProperty("visitId", out var anonymousVisitId));
+        Assert.Equal(JsonValueKind.Null, anonymousVisitId.ValueKind);
+        Assert.Equal("x-ray.png", anonymousEvent.GetProperty("document").GetProperty("fileName").GetString());
+        Assert.Equal("Png", anonymousEvent.GetProperty("document").GetProperty("fileType").GetString());
+        Assert.Null(anonymousEvent.GetProperty("document").GetProperty("uploadedByDoctorName").GetString());
+
+        var namedEvent = items[2];
+        Assert.Equal("mri-scan.pdf", namedEvent.GetProperty("document").GetProperty("fileName").GetString());
+        Assert.Equal("MRI of the knee", namedEvent.GetProperty("document").GetProperty("description").GetString());
+        Assert.Equal("Doctor Under Test", namedEvent.GetProperty("document").GetProperty("uploadedByDoctorName").GetString());
+
+        // Lab event: dated at midnight UTC of the test date (documented
+        // convention); payload carries name, value and unit.
+        var labEvent = items[3];
+        Assert.True(labEvent.TryGetProperty("visitId", out var labVisitId));
+        Assert.Equal(JsonValueKind.Null, labVisitId.ValueKind);
+        Assert.Equal("Hemoglobin", labEvent.GetProperty("labResult").GetProperty("testName").GetString());
+        Assert.Equal("g/dL", labEvent.GetProperty("labResult").GetProperty("unit").GetString());
+
+        // Visit event: a summary with child counts (D-T1), never the full visit.
+        var visitEvent = items[4];
+        Assert.Equal(visitId, visitEvent.GetProperty("visitId").GetGuid());
+        var visitPayload = visitEvent.GetProperty("visit");
+        Assert.Equal("Doctor Under Test", visitPayload.GetProperty("doctorName").GetString());
+        Assert.Equal(1, visitPayload.GetProperty("diagnosesCount").GetInt32());
+        Assert.Equal(0, visitPayload.GetProperty("medicationsCount").GetInt32());
+        // The linked note (noteId) counts toward the visit's note count.
+        Assert.Equal(1, visitPayload.GetProperty("notesCount").GetInt32());
+        Assert.Equal(0, visitPayload.GetProperty("labResultsCount").GetInt32());
+        Assert.True(visitEvent.TryGetProperty("note", out var visitNotePayload));
+        Assert.Equal(JsonValueKind.Null, visitNotePayload.ValueKind);
+    }
+
+    /// <summary>
+    /// The Q-12 tie-breaker on equal instants: with occurredAtUtc equal the
+    /// ordinal event type decides before the id — "document" &lt; "visit" — so
+    /// the document event precedes the visit event even when the visit has the
+    /// smaller id. This proves the event type outranks the id.
+    /// </summary>
+    [Fact]
+    public async Task Timeline_equal_instants_are_broken_by_event_type_before_id()
+    {
+        // Arrange
+        using var factory = new WebApiFactory();
+        var doctorId = Guid.NewGuid();
+        var patientId = Guid.NewGuid();
+        var sameInstant = DateTimeOffset.UtcNow.AddDays(-1);
+
+        // The visit deliberately has the smaller id: an id-first ordering would
+        // put it first and fail this test.
+        var visitId = new Guid("00000000-0000-0000-0000-000000000001");
+        var documentId = new Guid("00000000-0000-0000-0000-000000000002");
+
+        await factory.SeedAsync(db =>
+        {
+            db.Add(ApiData.Doctor(doctorId));
+            db.Add(ApiData.Patient(patientId, doctorId));
+            db.Add(VisitAt(visitId, patientId, doctorId, sameInstant));
+            db.Add(MedicalDocument(documentId, patientId, sameInstant));
+        });
+
+        using var client = factory.CreateClientFor(doctorId);
+
+        // Act
+        var response = await client.GetAsync($"{TimelineUrl(patientId)}?pageNumber=1&pageSize=10");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        using var body = await ReadJsonAsync(response);
+        var items = body.RootElement.GetProperty("items");
+        Assert.Equal(2, items.GetArrayLength());
+        Assert.Equal("document", items[0].GetProperty("eventType").GetString());
+        Assert.Equal(documentId, items[0].GetProperty("id").GetGuid());
+        Assert.Equal("visit", items[1].GetProperty("eventType").GetString());
+        Assert.Equal(visitId, items[1].GetProperty("id").GetGuid());
+    }
+
+    [Fact]
+    public async Task Timeline_beyond_the_last_page_returns_200_with_empty_items()
+    {
+        // Arrange
+        using var factory = new WebApiFactory();
+        var doctorId = Guid.NewGuid();
+        var patientId = Guid.NewGuid();
+        await factory.SeedAsync(db =>
+        {
+            db.Add(ApiData.Doctor(doctorId));
+            db.Add(ApiData.Patient(patientId, doctorId));
+            db.Add(VisitAt(Guid.NewGuid(), patientId, doctorId, DateTimeOffset.UtcNow.AddDays(-1)));
+        });
+
+        using var client = factory.CreateClientFor(doctorId);
+
+        // Act
+        var response = await client.GetAsync($"{TimelineUrl(patientId)}?pageNumber=2&pageSize=10");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        using var body = await ReadJsonAsync(response);
+        var root = body.RootElement;
+        Assert.Equal(2, root.GetProperty("page").GetInt32());
+        Assert.Equal(0, root.GetProperty("items").GetArrayLength());
+        Assert.Equal(1, root.GetProperty("totalCount").GetInt32());
+        Assert.Equal(1, root.GetProperty("totalPages").GetInt32());
+    }
+
+    [Fact]
+    public async Task Timeline_with_no_events_returns_200_with_an_empty_page()
+    {
+        // Arrange
+        using var factory = new WebApiFactory();
+        var doctorId = Guid.NewGuid();
+        var patientId = Guid.NewGuid();
+        await factory.SeedAsync(db =>
+        {
+            db.Add(ApiData.Doctor(doctorId));
+            db.Add(ApiData.Patient(patientId, doctorId));
+        });
+
+        using var client = factory.CreateClientFor(doctorId);
+
+        // Act
+        var response = await client.GetAsync(TimelineUrl(patientId));
+
+        // Assert: omitted query uses the shared defaults, empty result set stays a success.
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        using var body = await ReadJsonAsync(response);
+        var root = body.RootElement;
+        Assert.Equal(1, root.GetProperty("page").GetInt32());
+        Assert.Equal(10, root.GetProperty("pageSize").GetInt32());
+        Assert.Equal(0, root.GetProperty("totalCount").GetInt32());
+        Assert.Equal(0, root.GetProperty("totalPages").GetInt32());
+        Assert.Equal(0, root.GetProperty("items").GetArrayLength());
+    }
+
+    /// <summary>
+    /// F3-C3b Q-13: the documents endpoint lists metadata only — file name, type,
+    /// upload date, description and the uploader's name — newest upload first,
+    /// isolated to the requested patient. The raw serialized body is asserted
+    /// directly: no <c>location</c>, no storage path and no file URL may exist
+    /// anywhere in the response, for any page.
+    /// </summary>
+    [Fact]
+    public async Task Documents_return_metadata_only_and_never_expose_the_storage_location()
+    {
+        // Arrange
+        using var factory = new WebApiFactory();
+        var doctorId = Guid.NewGuid();
+        var patientId = Guid.NewGuid();
+        var otherPatientId = Guid.NewGuid();
+        var olderId = Guid.NewGuid();
+        var newerId = Guid.NewGuid();
+        var now = DateTimeOffset.UtcNow;
+
+        await factory.SeedAsync(db =>
+        {
+            db.Add(ApiData.Doctor(doctorId));
+            db.Add(ApiData.Patient(patientId, doctorId));
+            db.Add(ApiData.Patient(otherPatientId, doctorId));
+            db.Add(MedicalDocument(olderId, patientId, now.AddDays(-2), doctorId, "report-2029.pdf",
+                MedicalDocumentType.Pdf, "Annual report"));
+            db.Add(MedicalDocument(newerId, patientId, now.AddDays(-1), null, "scan.jpg",
+                MedicalDocumentType.Jpg));
+            // Non-document rows and another patient's rows must stay out.
+            db.Add(VisitAt(Guid.NewGuid(), patientId, doctorId, now.AddDays(-3)));
+            db.Add(MedicalDocument(Guid.NewGuid(), otherPatientId, now));
+        });
+
+        using var client = factory.CreateClientFor(doctorId);
+
+        // Act
+        var response = await client.GetAsync($"{DocumentsUrl(patientId)}?pageNumber=1&pageSize=10");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var rawBody = await response.Content.ReadAsStringAsync();
+        Assert.DoesNotContain("location", rawBody, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("sentinel", rawBody, StringComparison.OrdinalIgnoreCase);
+
+        using var body = await ReadJsonAsync(response);
+        var root = body.RootElement;
+        Assert.Equal(1, root.GetProperty("page").GetInt32());
+        Assert.Equal(10, root.GetProperty("pageSize").GetInt32());
+        Assert.Equal(2, root.GetProperty("totalCount").GetInt32());
+        Assert.Equal(1, root.GetProperty("totalPages").GetInt32());
+
+        var items = root.GetProperty("items");
+        Assert.Equal(2, items.GetArrayLength());
+        Assert.Equal(newerId, items[0].GetProperty("id").GetGuid());
+        Assert.Equal("scan.jpg", items[0].GetProperty("fileName").GetString());
+        Assert.Equal("Jpg", items[0].GetProperty("type").GetString());
+        Assert.Null(items[0].GetProperty("uploadedByDoctorName").GetString()); // D-T5
+
+        Assert.Equal(olderId, items[1].GetProperty("id").GetGuid());
+        Assert.Equal("report-2029.pdf", items[1].GetProperty("fileName").GetString());
+        Assert.Equal("Pdf", items[1].GetProperty("type").GetString());
+        Assert.Equal("Doctor Under Test", items[1].GetProperty("uploadedByDoctorName").GetString());
+        Assert.Equal("Annual report", items[1].GetProperty("description").GetString());
+
+        // Act: beyond the last page stays a success with no data.
+        var secondPage = await client.GetAsync($"{DocumentsUrl(patientId)}?pageNumber=2&pageSize=10");
+        Assert.Equal(HttpStatusCode.OK, secondPage.StatusCode);
+
+        var secondRaw = await secondPage.Content.ReadAsStringAsync();
+        Assert.DoesNotContain("location", secondRaw, StringComparison.OrdinalIgnoreCase);
+
+        using var secondBody = await ReadJsonAsync(secondPage);
+        Assert.Equal(0, secondBody.RootElement.GetProperty("items").GetArrayLength());
+        Assert.Equal(2, secondBody.RootElement.GetProperty("totalCount").GetInt32());
     }
 }

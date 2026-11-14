@@ -35,6 +35,8 @@ internal sealed class FakeMedicalRecordStore : IMedicalRecordStore
 
     public List<LaboratoryResult> LabResults { get; } = [];
 
+    public List<MedicalDocument> Documents { get; } = [];
+
     public int CallCount { get; private set; }
 
     public Task<MedicalDoctorInfo?> GetDoctorAsync(Guid doctorId, CancellationToken cancellationToken)
@@ -248,5 +250,144 @@ internal sealed class FakeMedicalRecordStore : IMedicalRecordStore
             .ToArray();
 
         return Task.FromResult(new PagedResult<PatientLabResultData>(items, pageNumber, pageSize, ordered.Length));
+    }
+
+    public Task<PagedResult<PatientTimelineEventData>> ListTimelineAsync(
+        Guid patientId,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken)
+    {
+        CallCount++;
+
+        // Same contract as the real store: one global ordering across the four
+        // sources — occurredAtUtc desc, event type ordinal asc, id asc — with
+        // lab events dated at midnight UTC of their test date.
+        var events = Visits
+            .Where(visit => visit.PatientId == patientId)
+            .Select(visit => new PatientTimelineEventData(
+                visit.Id,
+                TimelineEventTypes.Visit,
+                visit.VisitDate,
+                visit.Id,
+                visit.DoctorId,
+                Doctors.FirstOrDefault(doctor => doctor.Id == visit.DoctorId)?.FullName ?? string.Empty,
+                visit.ChiefComplaint,
+                Diagnoses.Count(diagnosis => diagnosis.PatientId == patientId && diagnosis.VisitId == visit.Id),
+                Medications.Count(medication => medication.PatientId == patientId && medication.VisitId == visit.Id),
+                Notes.Count(note => note.PatientId == patientId && note.VisitId == visit.Id),
+                LabResults.Count(labResult => labResult.PatientId == patientId && labResult.VisitId == visit.Id),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null))
+            .Concat(Notes
+                .Where(note => note.PatientId == patientId)
+                .Select(note => new PatientTimelineEventData(
+                    note.Id,
+                    TimelineEventTypes.Note,
+                    note.CreatedAtUtc,
+                    note.VisitId,
+                    note.DoctorId,
+                    Doctors.FirstOrDefault(doctor => doctor.Id == note.DoctorId)?.FullName ?? string.Empty,
+                    null,
+                    0,
+                    0,
+                    0,
+                    0,
+                    note.NoteContent,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null)))
+            .Concat(LabResults
+                .Where(labResult => labResult.PatientId == patientId)
+                .Select(labResult => new PatientTimelineEventData(
+                    labResult.Id,
+                    TimelineEventTypes.LabResult,
+                    new DateTimeOffset(labResult.TestDate.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero),
+                    labResult.VisitId,
+                    null,
+                    null,
+                    null,
+                    0,
+                    0,
+                    0,
+                    0,
+                    null,
+                    labResult.TestName,
+                    labResult.Value,
+                    labResult.Unit,
+                    null,
+                    null,
+                    null)))
+            .Concat(Documents
+                .Where(document => document.PatientId == patientId)
+                .Select(document => new PatientTimelineEventData(
+                    document.Id,
+                    TimelineEventTypes.Document,
+                    document.UploadDate,
+                    null,
+                    document.UploadedBy,
+                    Doctors.FirstOrDefault(doctor => doctor.Id == document.UploadedBy)?.FullName,
+                    null,
+                    0,
+                    0,
+                    0,
+                    0,
+                    null,
+                    null,
+                    null,
+                    null,
+                    document.FileName,
+                    document.Type,
+                    document.Description)))
+            .OrderByDescending(@event => @event.OccurredAtUtc)
+            .ThenBy(@event => @event.EventType, StringComparer.Ordinal)
+            .ThenBy(@event => @event.Id)
+            .ToArray();
+
+        var skip = (pageNumber - 1) * pageSize;
+        var items = events.Skip(skip).Take(pageSize).ToArray();
+
+        return Task.FromResult(new PagedResult<PatientTimelineEventData>(items, pageNumber, pageSize, events.Length));
+    }
+
+    public Task<PagedResult<PatientDocumentData>> ListDocumentsAsync(
+        Guid patientId,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken)
+    {
+        CallCount++;
+
+        var ordered = Documents
+            .Where(document => document.PatientId == patientId)
+            .OrderByDescending(document => document.UploadDate)
+            .ThenByDescending(document => document.Id)
+            .ToArray();
+
+        var skip = (pageNumber - 1) * pageSize;
+        var page = ordered.Skip(skip).Take(pageSize).ToArray();
+
+        var items = page
+            .Select(document => new PatientDocumentData(
+                document.Id,
+                document.FileName,
+                document.Type,
+                document.UploadDate,
+                document.Description,
+                document.UploadedBy,
+                document.UploadedBy is null
+                    ? null
+                    : Doctors.FirstOrDefault(doctor => doctor.Id == document.UploadedBy)?.FullName))
+            .ToArray();
+
+        return Task.FromResult(new PagedResult<PatientDocumentData>(items, pageNumber, pageSize, ordered.Length));
     }
 }

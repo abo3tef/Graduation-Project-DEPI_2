@@ -71,7 +71,9 @@ internal sealed class MedicalRecordScenario
             new GetMedicalProfileRequestValidator(),
             new GetMedicalHistoryRequestValidator(),
             new ListPatientNotesRequestValidator(),
-            new ListPatientLabResultsRequestValidator());
+            new ListPatientLabResultsRequestValidator(),
+            new ListPatientTimelineRequestValidator(),
+            new ListPatientDocumentsRequestValidator());
     }
 
     public Doctor DoctorA { get; }
@@ -127,6 +129,22 @@ internal sealed class MedicalRecordScenario
         int pageSize = PagingDefaults.DefaultPageSize) =>
         Service.ListPatientLabResultsAsync(
             new ListPatientLabResultsRequest((patient ?? PatientA).Id, page, pageSize),
+            CancellationToken.None);
+
+    public Task<PagedResult<PatientTimelineEventResponse>> TimelineAsync(
+        Patient? patient = null,
+        int page = 1,
+        int pageSize = PagingDefaults.DefaultPageSize) =>
+        Service.ListPatientTimelineAsync(
+            new ListPatientTimelineRequest((patient ?? PatientA).Id, page, pageSize),
+            CancellationToken.None);
+
+    public Task<PagedResult<PatientDocumentResponse>> DocumentsAsync(
+        Patient? patient = null,
+        int page = 1,
+        int pageSize = PagingDefaults.DefaultPageSize) =>
+        Service.ListPatientDocumentsAsync(
+            new ListPatientDocumentsRequest((patient ?? PatientA).Id, page, pageSize),
             CancellationToken.None);
 
     /// <summary>Inserts a visit directly (bypassing all rules).</summary>
@@ -186,5 +204,32 @@ internal sealed class MedicalRecordScenario
 
         Store.LabResults.Add(labResult);
         return labResult;
+    }
+
+    /// <summary>
+    /// Inserts a medical document directly (bypassing all rules). The location
+    /// is filled with a sentinel so tests can prove it is never exposed.
+    /// </summary>
+    public MedicalDocument SeedDocument(
+        Patient patient,
+        DateTimeOffset uploadDateUtc,
+        Doctor? uploadedBy = null,
+        string fileName = "report.pdf",
+        MedicalDocumentType type = MedicalDocumentType.Pdf,
+        string? description = null)
+    {
+        var document = new MedicalDocument
+        {
+            PatientId = patient.Id,
+            UploadedBy = uploadedBy?.Id,
+            FileName = fileName,
+            Type = type,
+            Location = "sentinel-storage-location-must-not-leak",
+            UploadDate = uploadDateUtc,
+            Description = description
+        };
+
+        Store.Documents.Add(document);
+        return document;
     }
 }

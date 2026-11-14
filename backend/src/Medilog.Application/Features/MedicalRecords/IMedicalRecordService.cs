@@ -37,4 +37,20 @@ public interface IMedicalRecordService
     Task<PagedResult<PatientLabResultResponse>> ListPatientLabResultsAsync(
         ListPatientLabResultsRequest request,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// One page of the patient's medical timeline — visits, notes, lab results
+    /// and document metadata in one feed (F3-C3b, Q-12), newest first.
+    /// </summary>
+    Task<PagedResult<PatientTimelineEventResponse>> ListPatientTimelineAsync(
+        ListPatientTimelineRequest request,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// One page of the patient's medical document metadata (F3-C3b, Q-13).
+    /// The response never contains a storage location, path or URL.
+    /// </summary>
+    Task<PagedResult<PatientDocumentResponse>> ListPatientDocumentsAsync(
+        ListPatientDocumentsRequest request,
+        CancellationToken cancellationToken);
 }

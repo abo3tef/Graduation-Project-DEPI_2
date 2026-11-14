@@ -1,6 +1,8 @@
 import {apiRequest} from '@/lib/api';
 import type {PagedResult} from '@/types/paging';
 import {
+  readDocumentPage,
+  readTimelinePage,
   readLabPage,
   readMedicalProfile,
   readNotePage,
@@ -9,6 +11,8 @@ import {
 } from './services/patient-readers';
 import {PATIENT_SEARCH_LIMIT} from './validation';
 import type {
+  PatientDocument,
+  PatientTimelineEvent,
   PatientLabResult,
   PatientLookup,
   PatientMedicalProfileResponse,
@@ -105,4 +109,15 @@ export async function listPatientLabResults(
   );
 
   return readLabPage(data);
+}
+
+/** Paged chronological medical feed (§3.5). */
+export async function listPatientTimeline(patientId: string, pageNumber: number, pageSize: number, signal?: AbortSignal): Promise<PagedResult<PatientTimelineEvent>> {
+  const data = await apiRequest<unknown>(`${PATIENTS_BASE}/${encodeURIComponent(patientId)}/timeline`, {query: {pageNumber, pageSize}, signal});
+  return readTimelinePage(data);
+}
+/** Paged document METADATA ONLY (§3.6); never request a file location. */
+export async function listPatientDocuments(patientId: string, pageNumber: number, pageSize: number, signal?: AbortSignal): Promise<PagedResult<PatientDocument>> {
+  const data = await apiRequest<unknown>(`${PATIENTS_BASE}/${encodeURIComponent(patientId)}/documents`, {query: {pageNumber, pageSize}, signal});
+  return readDocumentPage(data);
 }

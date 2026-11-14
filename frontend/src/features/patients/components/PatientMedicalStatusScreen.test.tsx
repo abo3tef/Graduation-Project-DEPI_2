@@ -215,14 +215,16 @@ describe('PatientMedicalStatusScreen', () => {
     await screen.findByRole('heading', {name: 'Mona Said'});
 
     const tabs = screen.getAllByRole('tab');
-    expect(tabs).toHaveLength(5);
+    expect(tabs).toHaveLength(7);
     // The accessible name carries the label; the visible index badge is aria-hidden.
     expect(tabs.map((tab) => (tab.textContent ?? '').replace(/\d+$/, ''))).toEqual([
       'Profile',
       'Allergies & conditions',
       'Visit history',
       'Notes',
-      'Lab results'
+      'Lab results',
+      'Timeline',
+      'Documents',
     ]);
 
     // Only the active tab's query runs: switching tabs is what triggers each request.

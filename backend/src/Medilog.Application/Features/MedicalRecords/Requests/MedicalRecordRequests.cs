@@ -34,3 +34,22 @@ public sealed record ListPatientLabResultsRequest(
     Guid PatientId,
     int PageNumber = PagingDefaults.DefaultPageNumber,
     int PageSize = PagingDefaults.DefaultPageSize) : IPagedQuery;
+
+/// <summary>
+/// Input of the medical-timeline use case (F3-C3b, Q-12): one page of the
+/// combined visit/note/lab-result/document event feed of the patient.
+/// </summary>
+public sealed record ListPatientTimelineRequest(
+    Guid PatientId,
+    int PageNumber = PagingDefaults.DefaultPageNumber,
+    int PageSize = PagingDefaults.DefaultPageSize) : IPagedQuery;
+
+/// <summary>
+/// Input of the patient-documents use case (F3-C3b, Q-13): one page of the
+/// patient's document metadata. The storage location is never part of the
+/// use case, the response or the request.
+/// </summary>
+public sealed record ListPatientDocumentsRequest(
+    Guid PatientId,
+    int PageNumber = PagingDefaults.DefaultPageNumber,
+    int PageSize = PagingDefaults.DefaultPageSize) : IPagedQuery;
