@@ -1,12 +1,16 @@
+using System.Text;
 using System.Text.Json.Serialization;
 using Medilog.Application;
 using Medilog.Application.Common.Abstractions;
 using Medilog.Application.Common.Exceptions;
 using Medilog.Application.Interfaces;
 using Medilog.Infrastructure;
+using Medilog.Infrastructure.Persistence.Seed;
+using Medilog.Infrastructure.Security;
 using Medilog.WebAPI.Common;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,9 +24,36 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 
-// Authentication must be registered so [Authorize] endpoints have a principal.
+// Bearer authentication for the HS256 tokens issued by /api/auth (decisions D-35/D-36).
+// Validation parameters are built from the same JwtOptions the issuer uses, at options-build
+// time, so configuration overrides (user-secrets, environment, test hosts) are honored.
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer();
+builder.Services
+    .AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
+    .Configure<JwtOptions>((options, jwtOptions) =>
+    {
+        // Claims keep their wire names (sub/role/doctorId), which is exactly what the claims
+        // contract and CurrentUser read. Role checks use "role" as the role claim type.
+        options.MapInboundClaims = false;
+
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = jwtOptions.Issuer,
+            ValidateAudience = true,
+            ValidAudience = jwtOptions.Audience,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromMinutes(1),
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = jwtOptions.IsConfigured
+                ? new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SigningKey))
+                : null,
+            ValidAlgorithms = [SecurityAlgorithms.HmacSha256],
+            NameClaimType = "sub",
+            RoleClaimType = "role",
+        };
+    });
 builder.Services.AddAuthorization();
 
 // API services. Enums are written and read as their names ("NoShow"), never numbers;
@@ -116,6 +147,14 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Development-only demo accounts (decision D-40). Gated on both the environment and the explicit
+// Seed:Enabled switch, so production and test hosts never touch the database here.
+if (app.Environment.IsDevelopment() && app.Configuration.GetValue<bool>("Seed:Enabled"))
+{
+    using var seedScope = app.Services.CreateScope();
+    await seedScope.ServiceProvider.GetRequiredService<DevelopmentSeeder>().SeedAsync();
+}
 
 app.Run();
 

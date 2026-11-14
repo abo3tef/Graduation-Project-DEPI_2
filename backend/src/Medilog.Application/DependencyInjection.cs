@@ -1,6 +1,7 @@
 using System.Reflection;
 using FluentValidation;
 using Medilog.Application.Features.Appointments;
+using Medilog.Application.Features.Auth;
 using Medilog.Application.Features.Dashboard;
 using Medilog.Application.Features.MedicalRecords;
 using Microsoft.Extensions.DependencyInjection;
@@ -36,6 +37,10 @@ public static class DependencyInjection
 
         // Doctor dashboard service (F5).
         services.AddScoped<IDoctorDashboardService, DoctorDashboardService>();
+
+        // Authentication use cases (F6-C1). Depend on infrastructure primitives registered by
+        // AddInfrastructure; the raw password never leaves the process.
+        services.AddScoped<IAuthService, AuthService>();
 
         return services;
     }
