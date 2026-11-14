@@ -23,6 +23,12 @@ public interface IApplicationDbContext
 
     DbSet<Doctor> Doctors { get; }
 
+    DbSet<Secretary> Secretaries { get; }
+
+    DbSet<Admin> Admins { get; }
+
+    DbSet<AuthToken> AuthTokens { get; }
+
     DbSet<Appointment> Appointments { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);

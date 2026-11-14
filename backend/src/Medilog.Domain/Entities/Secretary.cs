@@ -19,5 +19,11 @@ public sealed class Secretary : CreatedEntity
 
     public AccountStatus AccountStatus { get; set; }
 
+    /// <summary>
+    /// When the email address was confirmed, or <c>null</c> while it is still unverified.
+    /// An unverified account cannot sign in (Q-11).
+    /// </summary>
+    public DateTimeOffset? EmailVerifiedAtUtc { get; set; }
+
     public ICollection<Doctor> Doctors { get; set; } = new List<Doctor>();
 }

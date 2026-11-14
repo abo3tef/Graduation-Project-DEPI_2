@@ -1,8 +1,9 @@
-using Medilog.Application.Interfaces;
 using Medilog.Application.Common.Abstractions;
+using Medilog.Application.Interfaces;
 using Medilog.Infrastructure.Persistence.Appointments;
 using Medilog.Infrastructure.Persistence.Context;
 using Medilog.Infrastructure.Persistence.MedicalRecords;
+using Medilog.Infrastructure.Security;
 using Medilog.Infrastructure.Time;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -45,6 +46,13 @@ public static class DependencyInjection
         services.AddScoped<IMedicalRecordStore, MedicalRecordStore>();
         services.TryAddSingleton(TimeProvider.System);
         services.AddSingleton<IClinicClock, ClinicClock>();
+
+        // Authentication primitives (F6-C1, decisions D-34/D-35). The JWT section is bound here;
+        // only the signing key is secret and it stays in user-secrets / environment variables.
+        services.AddSingleton(JwtOptions.FromConfiguration(configuration));
+        services.AddSingleton<IPasswordHasher, PasswordHasher>();
+        services.AddSingleton<ISecureTokenGenerator, SecureTokenGenerator>();
+        services.AddSingleton<IAccessTokenIssuer, JwtAccessTokenIssuer>();
 
         // Medical Records database abstraction.
         services.AddScoped<IApplicationDbContext>(provider =>

@@ -35,6 +35,30 @@ public sealed class ForbiddenException : AppException
     }
 }
 
+/// <summary>
+/// Authentication failed: the credentials, token or account state do not allow a sign-in (401).
+/// The message is deliberately generic when the cause is a credential mismatch, so the response
+/// never reveals whether an email address exists (AGENTS.md §5).
+/// </summary>
+public sealed class AuthenticationFailedException : AppException
+{
+    public AuthenticationFailedException(string message, string? code = null)
+        : base(message, code ?? ErrorCodes.AuthInvalidCredentials)
+    {
+    }
+}
+
+/// <summary>
+/// A required external integration is not configured, so the request cannot be served (503).
+/// </summary>
+public sealed class NotConfiguredException : AppException
+{
+    public NotConfiguredException(string message, string? code = null)
+        : base(message, code ?? ErrorCodes.AuthNotConfigured)
+    {
+    }
+}
+
 /// <summary>The request conflicts with the current state, e.g. an overlap (409).</summary>
 public sealed class ConflictException : AppException
 {

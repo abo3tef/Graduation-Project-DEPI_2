@@ -9,6 +9,7 @@ internal static class ColumnLengths
     public const int Name = 200;
     public const int Email = 320;
     public const int PasswordHash = 255;
+    public const int TokenHash = 64;
     public const int Phone = 30;
     public const int Specialization = 150;
     public const int Address = 500;
