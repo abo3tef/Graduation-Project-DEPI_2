@@ -642,5 +642,155 @@
       "invalidId": "المعرّف يجب أن يكون GUID صالحًا يحتوي على شرطات.",
       "invalidRole": "الدور غير صالح."
     }
+  },
+  "Patients": {
+    "meta": {
+      "title": "الحالة الطبية للمريض",
+      "description": "مراجعة بيانات المريض والحساسية والأمراض المزمنة وسجل الزيارات.",
+      "shortLabel": "المرضى"
+    },
+    "common": {
+      "backHome": "الرجوع إلى الرئيسية",
+      "retry": "إعادة المحاولة",
+      "results": "النتائج المطابقة"
+    },
+    "finder": {
+      "eyebrow": "مساحة عمل الطبيب",
+      "title": "البحث عن مريض",
+      "description": "ابحث في مرضاك بالاسم أو رقم الهاتف، ثم افتح حالتهم الطبية.",
+      "searchLabel": "البحث بالاسم أو رقم الهاتف",
+      "searchPlaceholder": "مثال: منى أو 0100…",
+      "minChars": "اكتب {count} أحرف على الأقل.",
+      "searching": "جارٍ البحث…",
+      "none": "لا يوجد مرضى مطابقون لبحثك.",
+      "openHint": "فتح الحالة الطبية"
+    },
+    "status": {
+      "eyebrow": "الحالة الطبية",
+      "title": "الحالة الطبية للمريض",
+      "tabsLabel": "أقسام المريض",
+      "tabs": {
+        "profile": "البيانات الأساسية",
+        "allergies": "الحساسية والأمراض المزمنة",
+        "history": "سجل الزيارات",
+        "notes": "الملاحظات",
+        "labs": "نتائج المختبر"
+      },
+      "notProvided": "غير مذكور",
+      "loadingSection": "جارٍ تحميل الحساسية والأمراض المزمنة…",
+      "errorSection": "تعذّر تحميل الحساسية والأمراض المزمنة.",
+      "fields": {
+        "fullName": "الاسم الكامل",
+        "dateOfBirth": "تاريخ الميلاد",
+        "age": "العمر",
+        "gender": "الجنس",
+        "phone": "الهاتف",
+        "address": "العنوان",
+        "bloodType": "فصيلة الدم",
+        "emergencyContact": "جهة الاتصال في الطوارئ"
+      },
+      "gender": {
+        "Female": "أنثى",
+        "Male": "ذكر"
+      },
+      "bloodTypes": {
+        "APositive": "A+",
+        "ANegative": "A−",
+        "BPositive": "B+",
+        "BNegative": "B−",
+        "ABPositive": "AB+",
+        "ABNegative": "AB−",
+        "OPositive": "O+",
+        "ONegative": "O−"
+      },
+      "severity": {
+        "Mild": "خفيفة",
+        "Moderate": "متوسطة",
+        "Severe": "شديدة"
+      },
+      "allergiesTitle": "الحساسية",
+      "allergiesEmpty": "لا توجد حساسية معروفة.",
+      "allergyNotes": "ملاحظات",
+      "conditionsTitle": "الأمراض المزمنة",
+      "conditionsEmpty": "لا توجد أمراض مزمنة مسجلة.",
+      "conditionDiagnosisDate": "تاريخ التشخيص",
+      "history": {
+        "loading": "جارٍ تحميل سجل الزيارات…",
+        "errorTitle": "تعذّر تحميل سجل الزيارات.",
+        "empty": "لا توجد زيارات سابقة لهذا المريض.",
+        "emptyBeyond": "لا توجد زيارات في هذه الصفحة.",
+        "paginationLabel": "صفحات سجل الزيارات",
+        "visit": "زيارة",
+        "symptoms": "الأعراض",
+        "clinicalNotes": "الملاحظات الإكلينيكية",
+        "diagnoses": "التشخيصات",
+        "medications": "الأدوية",
+        "vitalSigns": "العلامات الحيوية",
+        "notes": "ملاحظات الزيارة",
+        "labResults": "نتائج المختبر",
+        "noneInGroup": "لا يوجد",
+        "openVisit": "فتح تفاصيل الزيارة",
+        "vitals": {
+          "bloodPressure": "ضغط الدم",
+          "heartRate": "معدل النبض",
+          "temperature": "درجة الحرارة",
+          "respiratoryRate": "معدل التنفس",
+          "weight": "الوزن",
+          "height": "الطول",
+          "spO2": "SpO₂"
+        }
+      }
+    },
+    "states": {
+      "identityTitle": "لم يتم اختيار مستخدم",
+      "identityHint": "استخدم شارة «التمثيل باسم» في بيئة التطوير للعمل كطبيب.",
+      "signInTitle": "مطلوب تسجيل الدخول",
+      "signInHint": "سجّل الدخول بحساب طبيب لعرض الحالة الطبية.",
+      "forbiddenTitle": "للأطباء فقط",
+      "forbiddenHint": "الحالة الطبية متاحة للأطباء فقط.",
+      "invalidPatientTitle": "رابط مريض غير صالح",
+      "invalidPatientHint": "لا يحتوي هذا العنوان على معرّف مريض صالح.",
+      "notFoundTitle": "المريض غير متاح",
+      "notFoundHint": "هذا المريض غير موجود أو ليس من مرضاك.",
+      "loadingTitle": "جارٍ تحميل الحالة الطبية…",
+      "searchingTitle": "جارٍ البحث عن المرضى…",
+      "errorHint": "فشل الطلب. تحقق من الاتصال ثم أعد المحاولة."
+    },
+    "errorKey": {
+      "network": "تعذّر الاتصال بالخادم.",
+      "invalidResponse": "استجابة غير متوقعة من الخادم.",
+      "identity": "تعذّر التحقق من هويتك.",
+      "forbidden": "لا تملك صلاحية عرض هذه البيانات.",
+      "notFound": "السجل المطلوب غير موجود.",
+      "badRequest": "الطلب غير صالح.",
+      "server": "حدث خطأ في الخادم. أعد المحاولة لاحقًا.",
+      "unknown": "حدث خطأ غير متوقع."
+    },
+    "pagination": {
+      "position": "صفحة {page} من {total}",
+      "previous": "السابق",
+      "next": "التالي"
+    },
+    "notes": {
+      "loading": "جارٍ تحميل الملاحظات…",
+      "errorTitle": "تعذّر تحميل الملاحظات.",
+      "empty": "لا توجد ملاحظات إكلينيكية لهذا المريض.",
+      "emptyBeyond": "لا توجد ملاحظات في هذه الصفحة.",
+      "paginationLabel": "صفحات الملاحظات",
+      "edited": "معدَّلة",
+      "link": "فتح تفاصيل الزيارة",
+      "unlinked": "غير مرتبطة بزيارة"
+    },
+    "labs": {
+      "loading": "جارٍ تحميل نتائج المختبر…",
+      "errorTitle": "تعذّر تحميل نتائج المختبر.",
+      "empty": "لا توجد نتائج مختبر لهذا المريض.",
+      "emptyBeyond": "لا توجد نتائج مختبر في هذه الصفحة.",
+      "paginationLabel": "صفحات نتائج المختبر",
+      "testDate": "تاريخ التحليل",
+      "referenceRange": "المعدل الطبيعي",
+      "link": "فتح تفاصيل الزيارة",
+      "unlinked": "غير مرتبطة بزيارة"
+    }
   }
 }
