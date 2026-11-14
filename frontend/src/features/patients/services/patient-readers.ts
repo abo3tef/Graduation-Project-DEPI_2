@@ -3,8 +3,10 @@ import type {PagedResult} from '@/types/paging';
 import type {
   AllergyResponse,
   ChronicConditionResponse,
+  PatientLabResult,
   PatientLookup,
   PatientMedicalProfileResponse,
+  PatientNote,
   PatientVisitResponse,
   VisitDiagnosis,
   VisitLabResult,
@@ -191,4 +193,41 @@ export function readVisit(value: unknown): PatientVisitResponse {
 
 export function readVisitPage(value: unknown): PagedResult<PatientVisitResponse> {
   return readPagedResult(value, readVisit);
+}
+
+export function readPatientNote(value: unknown): PatientNote {
+  const source = record(value);
+
+  return {
+    id: text(source.id),
+    visitId: nullableText(source.visitId),
+    doctorId: text(source.doctorId),
+    doctorName: text(source.doctorName),
+    noteContent: text(source.noteContent),
+    createdAtUtc: text(source.createdAtUtc),
+    updatedAtUtc: nullableText(source.updatedAtUtc)
+  };
+}
+
+export function readPatientLabResult(value: unknown): PatientLabResult {
+  const source = record(value);
+
+  return {
+    id: text(source.id),
+    visitId: nullableText(source.visitId),
+    testName: text(source.testName),
+    testDate: text(source.testDate),
+    value: number(source.value),
+    unit: text(source.unit),
+    referenceRange: nullableText(source.referenceRange),
+    notes: nullableText(source.notes)
+  };
+}
+
+export function readNotePage(value: unknown): PagedResult<PatientNote> {
+  return readPagedResult(value, readPatientNote);
+}
+
+export function readLabPage(value: unknown): PagedResult<PatientLabResult> {
+  return readPagedResult(value, readPatientLabResult);
 }

@@ -1,10 +1,18 @@
 import {apiRequest} from '@/lib/api';
 import type {PagedResult} from '@/types/paging';
-import {readMedicalProfile, readPatientLookups, readVisitPage} from './services/patient-readers';
+import {
+  readLabPage,
+  readMedicalProfile,
+  readNotePage,
+  readPatientLookups,
+  readVisitPage
+} from './services/patient-readers';
 import {PATIENT_SEARCH_LIMIT} from './validation';
 import type {
+  PatientLabResult,
   PatientLookup,
   PatientMedicalProfileResponse,
+  PatientNote,
   PatientVisitResponse
 } from './types';
 
@@ -67,4 +75,34 @@ export async function listPatientVisits(
   );
 
   return readVisitPage(data);
+}
+
+/** Every clinical note of the patient, visit-linked and unlinked, newest first (§3.3). */
+export async function listPatientNotes(
+  patientId: string,
+  pageNumber: number,
+  pageSize: number,
+  signal?: AbortSignal
+): Promise<PagedResult<PatientNote>> {
+  const data = await apiRequest<unknown>(
+    `${PATIENTS_BASE}/${encodeURIComponent(patientId)}/notes`,
+    {query: {pageNumber, pageSize}, signal}
+  );
+
+  return readNotePage(data);
+}
+
+/** Every lab result of the patient, visit-linked and unlinked, newest test first (§3.4). */
+export async function listPatientLabResults(
+  patientId: string,
+  pageNumber: number,
+  pageSize: number,
+  signal?: AbortSignal
+): Promise<PagedResult<PatientLabResult>> {
+  const data = await apiRequest<unknown>(
+    `${PATIENTS_BASE}/${encodeURIComponent(patientId)}/lab-results`,
+    {query: {pageNumber, pageSize}, signal}
+  );
+
+  return readLabPage(data);
 }

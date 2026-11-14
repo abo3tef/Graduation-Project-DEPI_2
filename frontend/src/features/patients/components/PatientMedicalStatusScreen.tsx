@@ -16,14 +16,17 @@ import {ErrorPanel, LoadingPanel, StatePanel} from './StatePanel';
 import {PatientProfile} from './PatientProfile';
 import {AllergyList, ConditionList} from './AllergyConditionLists';
 import {VisitHistorySection} from './VisitHistorySection';
+import {PatientNotesSection} from './PatientNotesSection';
+import {LabResultsSection} from './LabResultsSection';
 
-type TabId = 'profile' | 'allergies' | 'history';
+type TabId = 'profile' | 'allergies' | 'history' | 'notes' | 'labs';
 
 /**
- * The doctor-facing patient medical status screen: one page, three tabs —
- * profile, allergies & chronic conditions, and the paged visit history.
- * Nothing renders (and nothing is requested) until a doctor identity is ready.
- * The profile query serves both the profile and the allergies/conditions tab.
+ * The doctor-facing patient medical status screen: one page, five tabs —
+ * profile, allergies & chronic conditions, paged visit history, patient
+ * notes, and lab results (D-4). Nothing renders (and nothing is requested)
+ * until a doctor identity is ready. The profile query serves both the
+ * profile and the allergies/conditions tab.
  */
 export function PatientMedicalStatusScreen({patientId}: {patientId: string}) {
   const t = useTranslations('Patients');
@@ -84,7 +87,9 @@ export function PatientMedicalStatusScreen({patientId}: {patientId: string}) {
         tabs={[
           {id: 'profile', label: t('status.tabs.profile')},
           {id: 'allergies', label: t('status.tabs.allergies')},
-          {id: 'history', label: t('status.tabs.history')}
+          {id: 'history', label: t('status.tabs.history')},
+          {id: 'notes', label: t('status.tabs.notes')},
+          {id: 'labs', label: t('status.tabs.labs')}
         ]}
       >
         {(tabId) =>
@@ -92,8 +97,12 @@ export function PatientMedicalStatusScreen({patientId}: {patientId: string}) {
             <ProfilePanel profile={profile} />
           ) : tabId === 'allergies' ? (
             <AllergiesPanel profile={profile} />
-          ) : (
+          ) : tabId === 'history' ? (
             <VisitHistorySection patientId={patientId} />
+          ) : tabId === 'notes' ? (
+            <PatientNotesSection patientId={patientId} />
+          ) : (
+            <LabResultsSection patientId={patientId} />
           )
         }
       </Tabs>

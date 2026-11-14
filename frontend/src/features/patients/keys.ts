@@ -11,5 +11,9 @@ export const patientKeys = {
   profile: (actor: string, patientId: string) =>
     [...patientKeys.all(actor), 'profile', patientId] as const,
   history: (actor: string, patientId: string, pageNumber: number) =>
-    [...patientKeys.all(actor), 'history', patientId, pageNumber] as const
+    [...patientKeys.all(actor), 'history', patientId, pageNumber] as const,
+  notes: (actor: string, patientId: string, pageNumber: number) =>
+    [...patientKeys.all(actor), 'notes', patientId, pageNumber] as const,
+  labs: (actor: string, patientId: string, pageNumber: number) =>
+    [...patientKeys.all(actor), 'labs', patientId, pageNumber] as const
 };

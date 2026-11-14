@@ -672,7 +672,9 @@
       "tabs": {
         "profile": "Profile",
         "allergies": "Allergies & conditions",
-        "history": "Visit history"
+        "history": "Visit history",
+        "notes": "Notes",
+        "labs": "Lab results"
       },
       "notProvided": "Not provided",
       "loadingSection": "Loading allergies and conditions…",
@@ -768,6 +770,27 @@
       "position": "Page {page} of {total}",
       "previous": "Previous",
       "next": "Next"
+    },
+    "notes": {
+      "loading": "Loading notes…",
+      "errorTitle": "Notes could not be loaded.",
+      "empty": "No clinical notes for this patient yet.",
+      "emptyBeyond": "No notes on this page.",
+      "paginationLabel": "Notes pages",
+      "edited": "Edited",
+      "link": "Open visit details",
+      "unlinked": "Not linked to a visit"
+    },
+    "labs": {
+      "loading": "Loading lab results…",
+      "errorTitle": "Lab results could not be loaded.",
+      "empty": "No lab results for this patient yet.",
+      "emptyBeyond": "No lab results on this page.",
+      "paginationLabel": "Lab results pages",
+      "testDate": "Test date",
+      "referenceRange": "Reference range",
+      "link": "Open visit details",
+      "unlinked": "Not linked to a visit"
     }
   }
 }

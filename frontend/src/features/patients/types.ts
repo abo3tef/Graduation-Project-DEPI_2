@@ -102,3 +102,30 @@ export type PatientLookup = {
   readonly fullName: string;
   readonly phone: string | null;
 };
+
+/**
+ * One patient-level clinical note — visit-linked or unlinked (§3.3, F3-C3a).
+ * The content field is `noteContent` here, unlike a visit's child note
+ * (`content` in §3.2), so both contracts keep their own type.
+ */
+export type PatientNote = {
+  readonly id: string;
+  readonly visitId: string | null;
+  readonly doctorId: string;
+  readonly doctorName: string;
+  readonly noteContent: string;
+  readonly createdAtUtc: string;
+  readonly updatedAtUtc: string | null;
+};
+
+/** One patient-level laboratory result — visit-linked or unlinked (§3.4). */
+export type PatientLabResult = {
+  readonly id: string;
+  readonly visitId: string | null;
+  readonly testName: string;
+  readonly testDate: string;
+  readonly value: number;
+  readonly unit: string;
+  readonly referenceRange: string | null;
+  readonly notes: string | null;
+};
