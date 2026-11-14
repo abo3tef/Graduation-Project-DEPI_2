@@ -307,6 +307,233 @@ internal sealed class MedicalRecordStore : IMedicalRecordStore
         return new PagedResult<PatientLabResultData>(items, pageNumber, pageSize, totalCount);
     }
 
+    public async Task<PagedResult<PatientTimelineEventData>> ListTimelineAsync(
+        Guid patientId,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken)
+    {
+        // F3-C3b Q-12: one feed over four event sources. The sources live in
+        // different tables with different date columns (TestDate is a DATE, the
+        // others are instants), so a single portable SQL union order is not
+        // available. The composition is therefore exact-but-bounded: the
+        // database orders and limits each source independently (every fetch
+        // below is a column-projected, SQL-ordered top-(skip + pageSize)
+        // query), and the global merge over at most 4 × (skip + pageSize)
+        // materialized rows happens here. No source is ever loaded beyond its
+        // page prefix (AGENTS §3.1 — the heavy filtering/ordering stays in SQL).
+        var visitCount = await _db.MedicalVisits
+            .AsNoTracking()
+            .CountAsync(visit => visit.PatientId == patientId, cancellationToken);
+        var noteCount = await _db.MedicalNotes
+            .AsNoTracking()
+            .CountAsync(note => note.PatientId == patientId, cancellationToken);
+        var labResultCount = await _db.LaboratoryResults
+            .AsNoTracking()
+            .CountAsync(labResult => labResult.PatientId == patientId, cancellationToken);
+        var documentCount = await _db.MedicalDocuments
+            .AsNoTracking()
+            .CountAsync(document => document.PatientId == patientId, cancellationToken);
+
+        var totalCount = visitCount + noteCount + labResultCount + documentCount;
+        var skip = (pageNumber - 1) * pageSize;
+
+        if (skip >= totalCount)
+        {
+            return new PagedResult<PatientTimelineEventData>([], pageNumber, pageSize, totalCount);
+        }
+
+        var take = skip + pageSize;
+
+        var visits = await _db.MedicalVisits
+            .AsNoTracking()
+            .Where(visit => visit.PatientId == patientId)
+            .OrderByDescending(visit => visit.VisitDate)
+            .ThenByDescending(visit => visit.Id)
+            .Take(take)
+            .Select(visit => new PatientTimelineEventData(
+                visit.Id,
+                TimelineEventTypes.Visit,
+                visit.VisitDate,
+                visit.Id,
+                visit.DoctorId,
+                visit.Doctor.FullName,
+                visit.ChiefComplaint,
+                // Child counts are per-visit and patient-scoped, mirroring the
+                // defensive child filters used by the visit history query.
+                visit.Diagnoses.Count(diagnosis => diagnosis.PatientId == patientId),
+                visit.Medications.Count(medication => medication.PatientId == patientId),
+                visit.MedicalNotes.Count(note => note.PatientId == patientId),
+                visit.LaboratoryResults.Count(labResult => labResult.PatientId == patientId),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null))
+            .ToListAsync(cancellationToken);
+
+        var notes = await _db.MedicalNotes
+            .AsNoTracking()
+            .Where(note => note.PatientId == patientId)
+            .OrderByDescending(note => note.CreatedAtUtc)
+            .ThenByDescending(note => note.Id)
+            .Take(take)
+            .Select(note => new PatientTimelineEventData(
+                note.Id,
+                TimelineEventTypes.Note,
+                note.CreatedAtUtc,
+                note.VisitId,
+                note.DoctorId,
+                note.Doctor.FullName,
+                null,
+                0,
+                0,
+                0,
+                0,
+                note.NoteContent,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null))
+            .ToListAsync(cancellationToken);
+
+        // LaboratoryResult.TestDate is a DateOnly column; the projection stays
+        // column-direct (portable SQL) and the midnight-UTC instant is computed
+        // in CLR below, after materialization.
+        var labRows = await _db.LaboratoryResults
+            .AsNoTracking()
+            .Where(labResult => labResult.PatientId == patientId)
+            .OrderByDescending(labResult => labResult.TestDate)
+            .ThenByDescending(labResult => labResult.Id)
+            .Take(take)
+            .Select(labResult => new
+            {
+                labResult.Id,
+                labResult.VisitId,
+                labResult.TestName,
+                labResult.TestDate,
+                labResult.Value,
+                labResult.Unit
+            })
+            .ToListAsync(cancellationToken);
+
+        var labResults = labRows
+            .Select(row => new PatientTimelineEventData(
+                row.Id,
+                TimelineEventTypes.LabResult,
+                new DateTimeOffset(row.TestDate.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero),
+                row.VisitId,
+                null,
+                null,
+                null,
+                0,
+                0,
+                0,
+                0,
+                null,
+                row.TestName,
+                row.Value,
+                row.Unit,
+                null,
+                null,
+                null))
+            .ToArray();
+
+        var documents = await _db.MedicalDocuments
+            .AsNoTracking()
+            .Where(document => document.PatientId == patientId)
+            .OrderByDescending(document => document.UploadDate)
+            .ThenByDescending(document => document.Id)
+            .Take(take)
+            // Q-13: the location column is never projected, so it cannot reach
+            // any response (enforced by shape, not by serialization filtering).
+            .Select(document => new PatientDocumentData(
+                document.Id,
+                document.FileName,
+                document.Type,
+                document.UploadDate,
+                document.Description,
+                document.UploadedBy,
+                document.UploadedByDoctor != null ? document.UploadedByDoctor.FullName : null))
+            .ToListAsync(cancellationToken);
+
+        var documentEvents = documents
+            .Select(document => new PatientTimelineEventData(
+                document.Id,
+                TimelineEventTypes.Document,
+                document.UploadDateUtc,
+                null,
+                document.UploadedByDoctorId,
+                document.UploadedByDoctorName,
+                null,
+                0,
+                0,
+                0,
+                0,
+                null,
+                null,
+                null,
+                null,
+                document.FileName,
+                document.Type,
+                document.Description))
+            .ToArray();
+
+        var items = visits
+            .Concat(notes)
+            .Concat(labResults)
+            .Concat(documentEvents)
+            .OrderByDescending(@event => @event.OccurredAtUtc)
+            .ThenBy(@event => @event.EventType, StringComparer.Ordinal)
+            .ThenBy(@event => @event.Id)
+            .Skip(skip)
+            .Take(pageSize)
+            .ToArray();
+
+        return new PagedResult<PatientTimelineEventData>(items, pageNumber, pageSize, totalCount);
+    }
+
+    public async Task<PagedResult<PatientDocumentData>> ListDocumentsAsync(
+        Guid patientId,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken)
+    {
+        var query = _db.MedicalDocuments
+            .AsNoTracking()
+            .Where(document => document.PatientId == patientId);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var skip = (pageNumber - 1) * pageSize;
+
+        if (skip >= totalCount)
+        {
+            return new PagedResult<PatientDocumentData>([], pageNumber, pageSize, totalCount);
+        }
+
+        var items = await query
+            .OrderByDescending(document => document.UploadDate)
+            .ThenByDescending(document => document.Id)
+            .Skip(skip)
+            .Take(pageSize)
+            // Q-13: no location projection — the read model has no such field.
+            .Select(document => new PatientDocumentData(
+                document.Id,
+                document.FileName,
+                document.Type,
+                document.UploadDate,
+                document.Description,
+                document.UploadedBy,
+                document.UploadedByDoctor != null ? document.UploadedByDoctor.FullName : null))
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<PatientDocumentData>(items, pageNumber, pageSize, totalCount);
+    }
+
     /// <summary>Page row of the visit query, before the children are attached.</summary>
     private sealed record VisitHeaderData(
         Guid VisitId,

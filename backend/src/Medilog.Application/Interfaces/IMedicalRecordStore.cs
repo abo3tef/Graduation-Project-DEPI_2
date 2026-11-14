@@ -143,6 +143,70 @@ public sealed record PatientLabResultData(
     string? ReferenceRange,
     string? Notes);
 
+/// <summary>
+/// The timeline event discriminators (F3-C3b Q-12). The values are part of the
+/// API contract (`eventType` in §3.5) and also serve as the deterministic
+/// cross-source tie-breaker, compared with the ordinal string order:
+/// document &lt; lab_result &lt; note &lt; visit.
+/// </summary>
+public static class TimelineEventTypes
+{
+    public const string Visit = "visit";
+    public const string Note = "note";
+    public const string LabResult = "lab_result";
+    public const string Document = "document";
+}
+
+/// <summary>
+/// One event of the patient's medical timeline (Class Spec §4.2 getTimeline;
+/// F3-C3b Q-12/D-T1…D-T3). A flat projection of exactly one source — the fields
+/// not belonging to <see cref="EventType"/> carry their zero values and are
+/// mapped to the typed response payload by the service.
+/// </summary>
+/// <remarks>
+/// For lab results <see cref="OccurredAtUtc"/> is midnight UTC of the test date
+/// (the date column carries no time); this convention is documented in the API
+/// contract and is deterministic because the tie-breakers cover equal instants.
+/// </remarks>
+public sealed record PatientTimelineEventData(
+    Guid Id,
+    string EventType,
+    DateTimeOffset OccurredAtUtc,
+    Guid? VisitId,
+    Guid? DoctorId,
+    string? DoctorName,
+    // Visit payload (event type "visit" only).
+    string? ChiefComplaint,
+    int DiagnosesCount,
+    int MedicationsCount,
+    int NotesCount,
+    int LabResultsCount,
+    // Note payload (event type "note" only).
+    string? NoteContent,
+    // Lab payload (event type "lab_result" only).
+    string? TestName,
+    decimal? TestValue,
+    string? TestUnit,
+    // Document payload (event type "document" only). Deliberately no location.
+    string? FileName,
+    MedicalDocumentType? FileType,
+    string? DocumentDescription);
+
+/// <summary>
+/// The metadata of one medical document of the patient (Class Spec §4.11;
+/// F3-C3b Q-13). The read model deliberately has **no** location field: the
+/// storage path/URL of <c>medical_documents.location</c> must never leave the
+/// store (R-3 — enforced by shape, not by serialization filtering).
+/// </summary>
+public sealed record PatientDocumentData(
+    Guid Id,
+    string FileName,
+    MedicalDocumentType Type,
+    DateTimeOffset UploadDateUtc,
+    string? Description,
+    Guid? UploadedByDoctorId,
+    string? UploadedByDoctorName);
+
 /// Persistence port for the F3 medical-record read use cases. Implemented in
 
 /// Infrastructure so the Application layer stays free of EF Core. Read-only by
@@ -188,6 +252,28 @@ public interface IMedicalRecordStore
     /// newest test first (F3-C3a C-2).
     /// </summary>
     Task<PagedResult<PatientLabResultData>> ListLabResultsAsync(
+        Guid patientId,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// One page of the patient's medical timeline (F3-C3b Q-12): visits, notes,
+    /// lab results and document metadata in one feed, newest first
+    /// (<see cref="PatientTimelineEventData.OccurredAtUtc"/>) with the event
+    /// type and id as tie-breakers.
+    /// </summary>
+    Task<PagedResult<PatientTimelineEventData>> ListTimelineAsync(
+        Guid patientId,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// One page of the patient's medical document metadata (F3-C3b Q-13),
+    /// newest upload first. The read models carry no storage location.
+    /// </summary>
+    Task<PagedResult<PatientDocumentData>> ListDocumentsAsync(
         Guid patientId,
         int pageNumber,
         int pageSize,

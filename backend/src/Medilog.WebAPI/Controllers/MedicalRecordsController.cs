@@ -123,4 +123,54 @@ public sealed class MedicalRecordsController : ControllerBase
 
         return Ok(response);
     }
+
+    /// <summary>
+    /// Returns one page of the patient's medical timeline (F3-C3b): visits,
+    /// notes, lab results and document metadata in one chronological feed,
+    /// newest first with the event type and id as tie-breakers. Paging follows
+    /// the shared Q-04 contract.
+    /// </summary>
+    [HttpGet("timeline")]
+    [ProducesResponseType(typeof(PagedResult<PatientTimelineEventResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<PagedResult<PatientTimelineEventResponse>>> ListTimelineAsync(
+        Guid patientId,
+        [FromQuery(Name = "pageNumber")] int pageNumber = PagingDefaults.DefaultPageNumber,
+        [FromQuery(Name = "pageSize")] int pageSize = PagingDefaults.DefaultPageSize,
+        CancellationToken cancellationToken = default)
+    {
+        var response = await _medicalRecords.ListPatientTimelineAsync(
+            new ListPatientTimelineRequest(patientId, pageNumber, pageSize),
+            cancellationToken);
+
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Returns one page of the patient's medical document metadata (F3-C3b),
+    /// newest upload first. The response carries no storage location, path or
+    /// URL; file viewing/downloading is deferred until an approved secure
+    /// storage and file-serving flow exists.
+    /// </summary>
+    [HttpGet("documents")]
+    [ProducesResponseType(typeof(PagedResult<PatientDocumentResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<PagedResult<PatientDocumentResponse>>> ListDocumentsAsync(
+        Guid patientId,
+        [FromQuery(Name = "pageNumber")] int pageNumber = PagingDefaults.DefaultPageNumber,
+        [FromQuery(Name = "pageSize")] int pageSize = PagingDefaults.DefaultPageSize,
+        CancellationToken cancellationToken = default)
+    {
+        var response = await _medicalRecords.ListPatientDocumentsAsync(
+            new ListPatientDocumentsRequest(patientId, pageNumber, pageSize),
+            cancellationToken);
+
+        return Ok(response);
+    }
 }

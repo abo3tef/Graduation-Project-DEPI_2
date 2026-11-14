@@ -18,8 +18,10 @@ import {AllergyList, ConditionList} from './AllergyConditionLists';
 import {VisitHistorySection} from './VisitHistorySection';
 import {PatientNotesSection} from './PatientNotesSection';
 import {LabResultsSection} from './LabResultsSection';
+import {PatientTimelineSection} from './PatientTimelineSection';
+import {PatientDocumentsSection} from './PatientDocumentsSection';
 
-type TabId = 'profile' | 'allergies' | 'history' | 'notes' | 'labs';
+type TabId = 'profile' | 'allergies' | 'history' | 'notes' | 'labs' | 'timeline' | 'documents';
 
 /**
  * The doctor-facing patient medical status screen: one page, five tabs —
@@ -89,7 +91,9 @@ export function PatientMedicalStatusScreen({patientId}: {patientId: string}) {
           {id: 'allergies', label: t('status.tabs.allergies')},
           {id: 'history', label: t('status.tabs.history')},
           {id: 'notes', label: t('status.tabs.notes')},
-          {id: 'labs', label: t('status.tabs.labs')}
+          {id: 'labs', label: t('status.tabs.labs')},
+          {id: 'timeline', label: t('status.tabs.timeline')},
+          {id: 'documents', label: t('status.tabs.documents')}
         ]}
       >
         {(tabId) =>
@@ -101,8 +105,12 @@ export function PatientMedicalStatusScreen({patientId}: {patientId: string}) {
             <VisitHistorySection patientId={patientId} />
           ) : tabId === 'notes' ? (
             <PatientNotesSection patientId={patientId} />
-          ) : (
+          ) : tabId === 'labs' ? (
             <LabResultsSection patientId={patientId} />
+          ) : tabId === 'timeline' ? (
+            <PatientTimelineSection patientId={patientId} />
+          ) : (
+            <PatientDocumentsSection patientId={patientId} />
           )
         }
       </Tabs>

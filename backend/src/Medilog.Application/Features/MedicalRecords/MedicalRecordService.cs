@@ -22,6 +22,8 @@ public sealed class MedicalRecordService : IMedicalRecordService
     private readonly IValidator<GetMedicalHistoryRequest> _historyValidator;
     private readonly IValidator<ListPatientNotesRequest> _notesValidator;
     private readonly IValidator<ListPatientLabResultsRequest> _labResultsValidator;
+    private readonly IValidator<ListPatientTimelineRequest> _timelineValidator;
+    private readonly IValidator<ListPatientDocumentsRequest> _documentsValidator;
 
     public MedicalRecordService(
         IMedicalRecordStore store,
@@ -30,7 +32,9 @@ public sealed class MedicalRecordService : IMedicalRecordService
         IValidator<GetMedicalProfileRequest> profileValidator,
         IValidator<GetMedicalHistoryRequest> historyValidator,
         IValidator<ListPatientNotesRequest> notesValidator,
-        IValidator<ListPatientLabResultsRequest> labResultsValidator)
+        IValidator<ListPatientLabResultsRequest> labResultsValidator,
+        IValidator<ListPatientTimelineRequest> timelineValidator,
+        IValidator<ListPatientDocumentsRequest> documentsValidator)
     {
         _store = store;
         _currentUser = currentUser;
@@ -39,6 +43,8 @@ public sealed class MedicalRecordService : IMedicalRecordService
         _historyValidator = historyValidator;
         _notesValidator = notesValidator;
         _labResultsValidator = labResultsValidator;
+        _timelineValidator = timelineValidator;
+        _documentsValidator = documentsValidator;
     }
 
     public async Task<PatientMedicalProfileResponse> GetMedicalProfileAsync(
@@ -158,6 +164,62 @@ public sealed class MedicalRecordService : IMedicalRecordService
         return new PagedResult<PatientLabResultResponse>(items, page.Page, page.PageSize, page.TotalCount);
     }
 
+    public async Task<PagedResult<PatientTimelineEventResponse>> ListPatientTimelineAsync(
+        ListPatientTimelineRequest request,
+        CancellationToken cancellationToken)
+    {
+        // Same authorization order as every F3 read use case: the boundary
+        // decision happens before validation or persistence.
+        EnsureDoctorRole();
+
+        await RequestValidation.ValidateAsync(_timelineValidator, request, cancellationToken);
+
+        await RequireActiveDoctorAsync(cancellationToken);
+        await EnsurePatientAccessAsync(request.PatientId, cancellationToken);
+
+        var page = await _store.ListTimelineAsync(
+            request.PatientId,
+            request.PageNumber,
+            request.PageSize,
+            cancellationToken);
+
+        var items = page.Items
+            .Select(ToTimelineEventResponse)
+            .ToArray();
+
+        return new PagedResult<PatientTimelineEventResponse>(items, page.Page, page.PageSize, page.TotalCount);
+    }
+
+    public async Task<PagedResult<PatientDocumentResponse>> ListPatientDocumentsAsync(
+        ListPatientDocumentsRequest request,
+        CancellationToken cancellationToken)
+    {
+        EnsureDoctorRole();
+
+        await RequestValidation.ValidateAsync(_documentsValidator, request, cancellationToken);
+
+        await RequireActiveDoctorAsync(cancellationToken);
+        await EnsurePatientAccessAsync(request.PatientId, cancellationToken);
+
+        var page = await _store.ListDocumentsAsync(
+            request.PatientId,
+            request.PageNumber,
+            request.PageSize,
+            cancellationToken);
+
+        var items = page.Items
+            .Select(document => new PatientDocumentResponse(
+                document.Id,
+                document.FileName,
+                document.Type,
+                document.UploadDateUtc,
+                document.Description,
+                document.UploadedByDoctorName))
+            .ToArray();
+
+        return new PagedResult<PatientDocumentResponse>(items, page.Page, page.PageSize, page.TotalCount);
+    }
+
     /// <summary>
     /// The medical-data boundary: only doctors may read records, decided before
     /// validation or persistence (the store must observe zero calls for a
@@ -222,6 +284,69 @@ public sealed class MedicalRecordService : IMedicalRecordService
 
         return age;
     }
+
+    /// <summary>
+    /// Maps one flat timeline projection to the discriminated response
+    /// (F3-C3b Q-12/D-T1…D-T3): exactly one payload is set, matching the event
+    /// type. An unknown event type is a contract violation and fails loudly.
+    /// </summary>
+    private static PatientTimelineEventResponse ToTimelineEventResponse(PatientTimelineEventData data) =>
+        data.EventType switch
+        {
+            TimelineEventTypes.Visit => new(
+                data.Id,
+                data.EventType,
+                data.OccurredAtUtc,
+                data.VisitId,
+                new PatientTimelineVisitPayloadResponse(
+                    data.DoctorName ?? string.Empty,
+                    data.ChiefComplaint,
+                    data.DiagnosesCount,
+                    data.MedicationsCount,
+                    data.NotesCount,
+                    data.LabResultsCount),
+                null,
+                null,
+                null),
+            TimelineEventTypes.Note => new(
+                data.Id,
+                data.EventType,
+                data.OccurredAtUtc,
+                data.VisitId,
+                null,
+                new PatientTimelineNotePayloadResponse(
+                    data.DoctorName ?? string.Empty,
+                    data.NoteContent ?? string.Empty),
+                null,
+                null),
+            TimelineEventTypes.LabResult => new(
+                data.Id,
+                data.EventType,
+                data.OccurredAtUtc,
+                data.VisitId,
+                null,
+                null,
+                new PatientTimelineLabPayloadResponse(
+                    data.TestName ?? string.Empty,
+                    data.TestValue ?? 0m,
+                    data.TestUnit ?? string.Empty),
+                null),
+            TimelineEventTypes.Document => new(
+                data.Id,
+                data.EventType,
+                data.OccurredAtUtc,
+                data.VisitId,
+                null,
+                null,
+                null,
+                new PatientTimelineDocumentPayloadResponse(
+                    data.FileName ?? string.Empty,
+                    data.FileType ?? MedicalDocumentType.Pdf,
+                    data.DocumentDescription,
+                    data.DoctorName)),
+            _ => throw new InvalidOperationException(
+                $"Unknown timeline event type '{data.EventType}'.")
+        };
 
     // Deterministic response ordering (task file D-13). The enum values are
     // stored as their string labels in the database, so the severity/status

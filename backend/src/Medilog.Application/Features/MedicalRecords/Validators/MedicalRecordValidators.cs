@@ -39,3 +39,19 @@ public sealed class ListPatientLabResultsRequestValidator : PagedQueryValidator<
         RuleFor(request => request.PatientId).NotEmpty();
     }
 }
+
+public sealed class ListPatientTimelineRequestValidator : PagedQueryValidator<ListPatientTimelineRequest>
+{
+    public ListPatientTimelineRequestValidator()
+    {
+        RuleFor(request => request.PatientId).NotEmpty();
+    }
+}
+
+public sealed class ListPatientDocumentsRequestValidator : PagedQueryValidator<ListPatientDocumentsRequest>
+{
+    public ListPatientDocumentsRequestValidator()
+    {
+        RuleFor(request => request.PatientId).NotEmpty();
+    }
+}

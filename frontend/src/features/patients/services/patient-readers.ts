@@ -3,6 +3,8 @@ import type {PagedResult} from '@/types/paging';
 import type {
   AllergyResponse,
   ChronicConditionResponse,
+  PatientDocument,
+  PatientTimelineEvent,
   PatientLabResult,
   PatientLookup,
   PatientMedicalProfileResponse,
@@ -230,4 +232,52 @@ export function readNotePage(value: unknown): PagedResult<PatientNote> {
 
 export function readLabPage(value: unknown): PagedResult<PatientLabResult> {
   return readPagedResult(value, readPatientLabResult);
+}
+
+/** Validate the discriminated timeline payload and never trust backend-provided HTML. */
+export function readTimelineEvent(value: unknown): PatientTimelineEvent {
+  const source = record(value);
+  const eventType = text(source.eventType);
+  if (!['visit', 'note', 'lab_result', 'document'].includes(eventType)) fail();
+  const visit = source.visit == null ? null : record(source.visit);
+  const note = source.note == null ? null : record(source.note);
+  const labResult = source.labResult == null ? null : record(source.labResult);
+  const document = source.document == null ? null : record(source.document);
+  const active = [visit, note, labResult, document].filter(Boolean).length;
+  if (active !== 1 || (eventType === 'visit' && !visit) ||
+      (eventType === 'note' && !note) || (eventType === 'lab_result' && !labResult) ||
+      (eventType === 'document' && !document)) fail();
+  return {
+    id: text(source.id), eventType: eventType as PatientTimelineEvent['eventType'],
+    occurredAtUtc: text(source.occurredAtUtc), visitId: nullableText(source.visitId),
+    visit: visit ? {
+      doctorName: text(visit.doctorName), chiefComplaint: nullableText(visit.chiefComplaint),
+      diagnosesCount: number(visit.diagnosesCount), medicationsCount: number(visit.medicationsCount),
+      notesCount: number(visit.notesCount), labResultsCount: number(visit.labResultsCount)
+    } : null,
+    note: note ? {doctorName: text(note.doctorName), noteContent: text(note.noteContent)} : null,
+    labResult: labResult ? {testName: text(labResult.testName), value: number(labResult.value), unit: text(labResult.unit)} : null,
+    document: document ? {
+      fileName: text(document.fileName), fileType: text(document.fileType),
+      description: nullableText(document.description),
+      uploadedByDoctorName: nullableText(document.uploadedByDoctorName)
+    } : null
+  };
+}
+
+export function readPatientDocument(value: unknown): PatientDocument {
+  const source = record(value);
+  // Explicit projection: never transport an untrusted `location` field into the UI.
+  return {
+    id: text(source.id), fileName: text(source.fileName), type: text(source.type),
+    uploadDateUtc: text(source.uploadDateUtc), description: nullableText(source.description),
+    uploadedByDoctorName: nullableText(source.uploadedByDoctorName)
+  };
+}
+
+export function readTimelinePage(value: unknown): PagedResult<PatientTimelineEvent> {
+  return readPagedResult(value, readTimelineEvent);
+}
+export function readDocumentPage(value: unknown): PagedResult<PatientDocument> {
+  return readPagedResult(value, readPatientDocument);
 }

@@ -111,6 +111,67 @@ public sealed record PatientLabResultResponse(
     string? ReferenceRange,
     string? Notes);
 
+/// <summary>Summary payload of a timeline visit event (F3-C3b D-T1): header fields and child counts, never the full visit.</summary>
+public sealed record PatientTimelineVisitPayloadResponse(
+    string DoctorName,
+    string? ChiefComplaint,
+    int DiagnosesCount,
+    int MedicationsCount,
+    int NotesCount,
+    int LabResultsCount);
+
+/// <summary>Payload of a timeline note event (F3-C3b D-T2: full content).</summary>
+public sealed record PatientTimelineNotePayloadResponse(
+    string DoctorName,
+    string NoteContent);
+
+/// <summary>Payload of a timeline lab-result event.</summary>
+public sealed record PatientTimelineLabPayloadResponse(
+    string TestName,
+    decimal Value,
+    string Unit);
+
+/// <summary>
+/// Metadata payload of a timeline document event (F3-C3b Q-13). Deliberately
+/// carries no storage location, path or URL.
+/// </summary>
+public sealed record PatientTimelineDocumentPayloadResponse(
+    string FileName,
+    MedicalDocumentType FileType,
+    string? Description,
+    string? UploadedByDoctorName);
+
+/// <summary>
+/// One event of the patient's medical timeline (Class Spec §4.2 getTimeline;
+/// F3-C3b Q-12). Exactly one payload is non-null, matching
+/// <see cref="EventType"/> (<c>visit</c>, <c>note</c>, <c>lab_result</c>,
+/// <c>document</c>); <see cref="VisitId"/> carries the F4 deep-link target
+/// where the event belongs to a visit.
+/// </summary>
+public sealed record PatientTimelineEventResponse(
+    Guid Id,
+    string EventType,
+    DateTimeOffset OccurredAtUtc,
+    Guid? VisitId,
+    PatientTimelineVisitPayloadResponse? Visit,
+    PatientTimelineNotePayloadResponse? Note,
+    PatientTimelineLabPayloadResponse? LabResult,
+    PatientTimelineDocumentPayloadResponse? Document);
+
+/// <summary>
+/// The metadata of one medical document of the patient (Class Spec §4.11;
+/// F3-C3b Q-13). <b>No</b> storage location, path or URL exists on this
+/// response — file viewing/downloading is deferred until an approved secure
+/// storage and file-serving flow exists, and <c>upload()</c> is out of F3.
+/// </summary>
+public sealed record PatientDocumentResponse(
+    Guid Id,
+    string FileName,
+    MedicalDocumentType Type,
+    DateTimeOffset UploadDateUtc,
+    string? Description,
+    string? UploadedByDoctorName);
+
 /// <summary>
 /// One previous visit of the patient with its linked clinical records
 /// (Class Spec §4.3). Patient-level (unlinked) notes and lab results, documents

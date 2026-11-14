@@ -14,6 +14,10 @@ export const patientKeys = {
     [...patientKeys.all(actor), 'history', patientId, pageNumber] as const,
   notes: (actor: string, patientId: string, pageNumber: number) =>
     [...patientKeys.all(actor), 'notes', patientId, pageNumber] as const,
+  timeline: (actor: string, patientId: string, pageNumber: number) =>
+    [...patientKeys.all(actor), 'timeline', patientId, pageNumber] as const,
+  documents: (actor: string, patientId: string, pageNumber: number) =>
+    [...patientKeys.all(actor), 'documents', patientId, pageNumber] as const,
   labs: (actor: string, patientId: string, pageNumber: number) =>
     [...patientKeys.all(actor), 'labs', patientId, pageNumber] as const
 };
