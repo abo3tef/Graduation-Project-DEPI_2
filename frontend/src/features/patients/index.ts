@@ -1,4 +1,4 @@
-﻿// Public API for the patients feature.
-// Export feature components, hooks, services, stores and types here as they are implemented.
-export {};
-
+﻿// Public API for the patients feature (F3 doctor-facing medical status screens).
+// Route files import only these page-level components; everything else is internal.
+export {PatientFinder} from './components/PatientFinder';
+export {PatientMedicalStatusScreen} from './components/PatientMedicalStatusScreen';
