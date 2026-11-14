@@ -41,6 +41,7 @@ public static class DependencyInjection
         // Authentication use cases (F6-C1). Depend on infrastructure primitives registered by
         // AddInfrastructure; the raw password never leaves the process.
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<AuthTokenService>();
 
         return services;
     }

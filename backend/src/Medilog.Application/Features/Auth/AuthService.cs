@@ -1,13 +1,17 @@
 using FluentValidation;
+using Medilog.Application.Common;
 using Medilog.Application.Common.Abstractions;
 using Medilog.Application.Common.Exceptions;
 using Medilog.Application.Common.Validation;
 using Medilog.Application.Features.Auth.Contracts;
+using Medilog.Domain.Entities;
+using Medilog.Domain.Enums;
+using Microsoft.EntityFrameworkCore;
 
 namespace Medilog.Application.Features.Auth;
 
 /// <summary>
-/// Sign-in use case: verifies credentials, account state, and issues the access token.
+/// Sign-in, registration and email-verification use cases (F6-C1-T3/T4/T6).
 /// </summary>
 /// <remarks>
 /// <para>
@@ -19,24 +23,43 @@ namespace Medilog.Application.Features.Auth;
 /// Only the password check is expensive; account state is checked afterwards so an inactive or
 /// unverified account is only revealed to a caller who knows the correct password.
 /// </para>
+/// <para>
+/// New accounts are created inactive and unverified; confirming the email address activates them
+/// (Q-11). Registration returns no token, so the account cannot be used before verification.
+/// </para>
 /// </remarks>
 public sealed class AuthService : IAuthService
 {
     private readonly IApplicationDbContext _dbContext;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IAccessTokenIssuer _accessTokenIssuer;
+    private readonly AuthTokenService _authTokenService;
+    private readonly TimeProvider _clock;
     private readonly IValidator<LoginRequest> _loginValidator;
+    private readonly IValidator<RegisterRequest> _registerValidator;
+    private readonly IValidator<VerifyEmailRequest> _verifyEmailValidator;
+    private readonly IValidator<ResendVerificationRequest> _resendVerificationValidator;
 
     public AuthService(
         IApplicationDbContext dbContext,
         IPasswordHasher passwordHasher,
         IAccessTokenIssuer accessTokenIssuer,
-        IValidator<LoginRequest> loginValidator)
+        AuthTokenService authTokenService,
+        TimeProvider clock,
+        IValidator<LoginRequest> loginValidator,
+        IValidator<RegisterRequest> registerValidator,
+        IValidator<VerifyEmailRequest> verifyEmailValidator,
+        IValidator<ResendVerificationRequest> resendVerificationValidator)
     {
         _dbContext = dbContext;
         _passwordHasher = passwordHasher;
         _accessTokenIssuer = accessTokenIssuer;
+        _authTokenService = authTokenService;
+        _clock = clock;
         _loginValidator = loginValidator;
+        _registerValidator = registerValidator;
+        _verifyEmailValidator = verifyEmailValidator;
+        _resendVerificationValidator = resendVerificationValidator;
     }
 
     public async Task<AuthResponse> LoginAsync(LoginRequest request, CancellationToken cancellationToken)
@@ -67,5 +90,139 @@ public sealed class AuthService : IAuthService
             token.Token,
             token.ExpiresAtUtc,
             new AuthUserResponse(account.Id, account.FullName, account.Email, account.Role, account.DoctorId));
+    }
+
+    public async Task<AuthUserResponse> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken)
+    {
+        await RequestValidation.ValidateAsync(_registerValidator, request, cancellationToken);
+
+        var email = AuthRules.NormalizeEmail(request.Email);
+
+        if (await AuthRules.FindAccountAsync(_dbContext, email, cancellationToken) is not null)
+        {
+            throw new ConflictException(
+                AuthRules.EmailAlreadyRegisteredMessage,
+                ErrorCodes.AuthEmailAlreadyRegistered);
+        }
+
+        var passwordHash = _passwordHasher.Hash(request.Password);
+        var fullName = request.FullName.Trim();
+        Guid accountId;
+        UserType userType;
+
+        if (request.Role == UserRole.Doctor)
+        {
+            var doctor = new Doctor
+            {
+                FullName = fullName,
+                Email = email,
+                PasswordHash = passwordHash,
+                Phone = NormalizeOptional(request.Phone),
+                Specialization = NormalizeOptional(request.Specialization),
+                AccountStatus = AccountStatus.Inactive,
+                EmailVerifiedAtUtc = null,
+            };
+
+            _dbContext.Doctors.Add(doctor);
+            accountId = doctor.Id;
+            userType = UserType.Doctor;
+        }
+        else
+        {
+            var secretary = new Secretary
+            {
+                FullName = fullName,
+                Email = email,
+                PasswordHash = passwordHash,
+                Phone = NormalizeOptional(request.Phone),
+                AccountStatus = AccountStatus.Inactive,
+                EmailVerifiedAtUtc = null,
+            };
+
+            _dbContext.Secretaries.Add(secretary);
+            accountId = secretary.Id;
+            userType = UserType.Secretary;
+        }
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        // The account exists now, so a failure to send the email does not lose it: the user can
+        // request another link through resend-verification.
+        await _authTokenService.IssueEmailVerificationAsync(
+            accountId,
+            userType,
+            fullName,
+            email,
+            cancellationToken);
+
+        return new AuthUserResponse(
+            accountId,
+            fullName,
+            email,
+            request.Role,
+            request.Role == UserRole.Doctor ? accountId : null);
+    }
+
+    public async Task VerifyEmailAsync(VerifyEmailRequest request, CancellationToken cancellationToken)
+    {
+        await RequestValidation.ValidateAsync(_verifyEmailValidator, request, cancellationToken);
+
+        var token = await _authTokenService.RequireValidTokenAsync(
+            request.Token,
+            AuthTokenPurpose.EmailVerification,
+            cancellationToken);
+
+        var now = _clock.GetUtcNow();
+
+        var accountExists = await AuthRules.MarkEmailVerifiedAsync(
+            _dbContext,
+            token.UserId,
+            token.UserType,
+            now,
+            cancellationToken);
+
+        if (!accountExists)
+        {
+            // The account was removed after the link was sent; treat the token as invalid rather
+            // than confirming a token that protects nothing.
+            throw new AuthenticationFailedException(
+                "The link is invalid or has expired.",
+                ErrorCodes.AuthTokenInvalid);
+        }
+
+        token.ConsumedAtUtc = now;
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task ResendVerificationAsync(
+        ResendVerificationRequest request,
+        CancellationToken cancellationToken)
+    {
+        await RequestValidation.ValidateAsync(_resendVerificationValidator, request, cancellationToken);
+
+        var email = AuthRules.NormalizeEmail(request.Email);
+        var account = await AuthRules.FindAccountAsync(_dbContext, email, cancellationToken);
+
+        // Unknown address, already verified, or an administrator-created account: nothing to send.
+        // The caller always receives the same answer (AGENTS.md §5).
+        if (account is null || account.IsEmailVerified)
+        {
+            return;
+        }
+
+        await _authTokenService.IssueEmailVerificationAsync(
+            account.Id,
+            account.UserType,
+            account.FullName,
+            account.Email,
+            cancellationToken);
+    }
+
+    private static string? NormalizeOptional(string? value)
+    {
+        var trimmed = value?.Trim();
+
+        return string.IsNullOrEmpty(trimmed) ? null : trimmed;
     }
 }

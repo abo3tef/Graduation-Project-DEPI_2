@@ -27,6 +27,15 @@ internal sealed record AuthAccount(
 
     public bool IsEmailVerified => EmailVerifiedAtUtc.HasValue;
 
+    /// <summary>The account table this record came from, used by the one-time token table.</summary>
+    public UserType UserType => Role switch
+    {
+        UserRole.Doctor => UserType.Doctor,
+        UserRole.Secretary => UserType.Secretary,
+        UserRole.Admin => UserType.Admin,
+        _ => throw new ArgumentOutOfRangeException(nameof(Role), Role, "Unknown account role.")
+    };
+
     /// <summary>Doctors authenticate as themselves, so the claim equals the account id (D-35).</summary>
     public Guid? DoctorId => Role == UserRole.Doctor ? Id : null;
 }
@@ -42,6 +51,9 @@ internal static class AuthRules
 
     /// <summary>The only answer given for an unknown email or a wrong password.</summary>
     public const string InvalidCredentialsMessage = "Invalid email or password.";
+
+    /// <summary>The answer for a registration that reuses an existing email address (409).</summary>
+    public const string EmailAlreadyRegisteredMessage = "An account with this email address already exists.";
 
     /// <summary>
     /// A well-formed PBKDF2 hash (decision D-34) that matches no password. Verifying against it when
@@ -119,22 +131,87 @@ internal static class AuthRules
     /// </summary>
     /// <remarks>
     /// Called only after the password has been verified, so account state is never disclosed to
-    /// someone who does not already know the password.
+    /// someone who does not already know the password. Verification is reported before deactivation
+    /// because a freshly registered account is both unverified and inactive, and "verify your email"
+    /// is the action the user can actually take.
     /// </remarks>
     public static void EnsureCanSignIn(AuthAccount account)
     {
+        if (!account.IsEmailVerified)
+        {
+            throw new ForbiddenException(
+                "Verify your email address before signing in.",
+                ErrorCodes.AuthEmailUnverified);
+        }
+
         if (!account.IsActive)
         {
             throw new ForbiddenException(
                 "This account is inactive. Contact an administrator.",
                 ErrorCodes.AuthAccountInactive);
         }
+    }
 
-        if (!account.IsEmailVerified)
+    /// <summary>
+    /// Marks an account's email address as verified and activates it (Q-11).
+    /// </summary>
+    /// <returns><c>false</c> when the account no longer exists.</returns>
+    public static async Task<bool> MarkEmailVerifiedAsync(
+        IApplicationDbContext dbContext,
+        Guid userId,
+        UserType userType,
+        DateTimeOffset verifiedAtUtc,
+        CancellationToken cancellationToken)
+    {
+        switch (userType)
         {
-            throw new ForbiddenException(
-                "Verify your email address before signing in.",
-                ErrorCodes.AuthEmailUnverified);
+            case UserType.Doctor:
+            {
+                var doctor = await dbContext.Doctors
+                    .FirstOrDefaultAsync(entity => entity.Id == userId, cancellationToken);
+
+                if (doctor is null)
+                {
+                    return false;
+                }
+
+                doctor.EmailVerifiedAtUtc = verifiedAtUtc;
+                doctor.AccountStatus = AccountStatus.Active;
+                return true;
+            }
+
+            case UserType.Secretary:
+            {
+                var secretary = await dbContext.Secretaries
+                    .FirstOrDefaultAsync(entity => entity.Id == userId, cancellationToken);
+
+                if (secretary is null)
+                {
+                    return false;
+                }
+
+                secretary.EmailVerifiedAtUtc = verifiedAtUtc;
+                secretary.AccountStatus = AccountStatus.Active;
+                return true;
+            }
+
+            case UserType.Admin:
+            {
+                var admin = await dbContext.Admins
+                    .FirstOrDefaultAsync(entity => entity.Id == userId, cancellationToken);
+
+                if (admin is null)
+                {
+                    return false;
+                }
+
+                admin.EmailVerifiedAtUtc = verifiedAtUtc;
+                admin.AccountStatus = AccountStatus.Active;
+                return true;
+            }
+
+            default:
+                return false;
         }
     }
 }

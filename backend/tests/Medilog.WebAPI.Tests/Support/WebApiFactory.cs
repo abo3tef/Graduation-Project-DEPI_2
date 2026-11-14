@@ -30,15 +30,23 @@ public sealed class WebApiFactory : WebApplicationFactory<Program>
 
     private readonly string _databaseName = $"medilog-webapi-tests-{Guid.NewGuid():N}";
     private readonly bool _useTestAuthentication;
+    private readonly Action<IServiceCollection>? _configureTestServices;
 
     /// <param name="useTestAuthentication">
     /// <c>true</c> (default) replaces the authentication scheme with <see cref="TestAuthHandler"/>.
     /// <c>false</c> keeps the real JWT bearer handler, which is required by tests that must prove a
     /// token issued by <c>/api/auth</c> is accepted (F6-C1).
     /// </param>
-    public WebApiFactory(bool useTestAuthentication = true)
+    /// <param name="configureTestServices">
+    /// Optional extra registrations applied last, so a test can replace a port such as
+    /// <c>IEmailService</c> without changing the production pipeline.
+    /// </param>
+    public WebApiFactory(
+        bool useTestAuthentication = true,
+        Action<IServiceCollection>? configureTestServices = null)
     {
         _useTestAuthentication = useTestAuthentication;
+        _configureTestServices = configureTestServices;
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -67,21 +75,21 @@ public sealed class WebApiFactory : WebApplicationFactory<Program>
             services.AddDbContext<MedilogDbContext>(options =>
                 options.UseInMemoryDatabase(_databaseName));
 
-            if (!_useTestAuthentication)
+            if (_useTestAuthentication)
             {
-                return;
+                services
+                    .AddAuthentication(options =>
+                    {
+                        options.DefaultScheme = TestAuthHandler.SchemeName;
+                        options.DefaultAuthenticateScheme = TestAuthHandler.SchemeName;
+                        options.DefaultChallengeScheme = TestAuthHandler.SchemeName;
+                    })
+                    .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
+                        TestAuthHandler.SchemeName,
+                        _ => { });
             }
 
-            services
-                .AddAuthentication(options =>
-                {
-                    options.DefaultScheme = TestAuthHandler.SchemeName;
-                    options.DefaultAuthenticateScheme = TestAuthHandler.SchemeName;
-                    options.DefaultChallengeScheme = TestAuthHandler.SchemeName;
-                })
-                .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
-                    TestAuthHandler.SchemeName,
-                    _ => { });
+            _configureTestServices?.Invoke(services);
         });
     }
 

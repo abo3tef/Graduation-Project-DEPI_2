@@ -12,7 +12,7 @@ namespace Medilog.Application.Tests.Auth;
 
 /// <summary>
 /// Runs the real <see cref="AuthService"/> against a throwaway EF Core InMemory database, with the
-/// real PBKDF2 hasher and a recording token issuer.
+/// real PBKDF2 hasher, a recording token issuer and a recording email service.
 /// </summary>
 /// <remarks>
 /// The InMemory provider does not enforce the unique email indexes, so the per-table constraint is
@@ -33,7 +33,28 @@ internal sealed class AuthFixture : IDisposable
         Clock = new FakeTimeProvider(new DateTimeOffset(2026, 11, 14, 12, 0, 0, TimeSpan.Zero));
         Hasher = new PasswordHasher();
         TokenIssuer = new RecordingAccessTokenIssuer(Clock);
-        Service = new AuthService(DbContext, Hasher, TokenIssuer, new LoginRequestValidator());
+        Email = new RecordingEmailService();
+        LinkBuilder = new TestAuthLinkBuilder();
+        Lifetimes = new AuthTokenLifetimes();
+
+        TokenService = new AuthTokenService(
+            DbContext,
+            new SecureTokenGenerator(),
+            Email,
+            LinkBuilder,
+            Lifetimes,
+            Clock);
+
+        Service = new AuthService(
+            DbContext,
+            Hasher,
+            TokenIssuer,
+            TokenService,
+            Clock,
+            new LoginRequestValidator(),
+            new RegisterRequestValidator(),
+            new VerifyEmailRequestValidator(),
+            new ResendVerificationRequestValidator());
     }
 
     public MedilogDbContext DbContext { get; }
@@ -44,7 +65,28 @@ internal sealed class AuthFixture : IDisposable
 
     public RecordingAccessTokenIssuer TokenIssuer { get; }
 
+    public RecordingEmailService Email { get; }
+
+    public TestAuthLinkBuilder LinkBuilder { get; }
+
+    public AuthTokenLifetimes Lifetimes { get; }
+
+    public AuthTokenService TokenService { get; }
+
     public AuthService Service { get; }
+
+    /// <summary>The raw token from the most recent email, as the user would copy it from the link.</summary>
+    public string LastToken()
+    {
+        var message = Email.Messages[^1];
+        var query = new Uri(message.Body.Split('\n', StringSplitOptions.TrimEntries)
+            .First(line => line.StartsWith("https://", StringComparison.Ordinal)));
+
+        return Uri.UnescapeDataString(query.Query.Replace("?token=", string.Empty, StringComparison.Ordinal));
+    }
+
+    /// <summary>Address of the account that received the most recent email.</summary>
+    public string LastRecipient() => Email.Messages[^1].To;
 
     public Doctor AddDoctor(
         string email = "doctor@medilog.test",
@@ -55,7 +97,8 @@ internal sealed class AuthFixture : IDisposable
         var doctor = new Doctor
         {
             FullName = "Doctor Under Test",
-            Email = email,
+            // Production always stores the normalized form (D-43); the fixture mirrors that here.
+            Email = email.Trim().ToLowerInvariant(),
             PasswordHash = Hasher.Hash(password ?? Password),
             AccountStatus = status,
             EmailVerifiedAtUtc = verified ? Clock.GetUtcNow() : null,
@@ -76,7 +119,8 @@ internal sealed class AuthFixture : IDisposable
         var secretary = new Secretary
         {
             FullName = "Secretary Under Test",
-            Email = email,
+            // Production always stores the normalized form (D-43); the fixture mirrors that here.
+            Email = email.Trim().ToLowerInvariant(),
             PasswordHash = Hasher.Hash(password ?? Password),
             AccountStatus = status,
             EmailVerifiedAtUtc = verified ? Clock.GetUtcNow() : null,
@@ -97,7 +141,8 @@ internal sealed class AuthFixture : IDisposable
         var admin = new Admin
         {
             FullName = "Admin Under Test",
-            Email = email,
+            // Production always stores the normalized form (D-43); the fixture mirrors that here.
+            Email = email.Trim().ToLowerInvariant(),
             PasswordHash = Hasher.Hash(password ?? Password),
             AccountStatus = status,
             EmailVerifiedAtUtc = verified ? Clock.GetUtcNow() : null,
@@ -150,4 +195,33 @@ internal sealed class FakeTimeProvider : TimeProvider
     public override DateTimeOffset GetUtcNow() => UtcNow;
 
     public override TimeZoneInfo LocalTimeZone => TimeZoneInfo.Utc;
+}
+
+/// <summary>
+/// Captures transactional email instead of sending it, so tests can inspect the link and prove that
+/// no password appears in a message.
+/// </summary>
+internal sealed class RecordingEmailService : IEmailService
+{
+    public List<EmailMessage> Messages { get; } = [];
+
+    public Task SendAsync(EmailMessage message, CancellationToken cancellationToken)
+    {
+        Messages.Add(message);
+
+        return Task.CompletedTask;
+    }
+}
+
+/// <summary>A fixed, non-secret base URL so links are deterministic in tests.</summary>
+internal sealed class TestAuthLinkBuilder : IAuthLinkBuilder
+{
+    public const string BaseUrl = "https://app.medilog.test";
+
+    public string BuildEmailVerificationLink(string token) => Build("verify-email", token);
+
+    public string BuildPasswordResetLink(string token) => Build("reset-password", token);
+
+    private static string Build(string path, string token) =>
+        $"{BaseUrl}/{path}?token={Uri.EscapeDataString(token)}";
 }

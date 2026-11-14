@@ -1,14 +1,18 @@
+using Medilog.Application.Common;
 using Medilog.Application.Features.Auth.Contracts;
 using Medilog.Application.Features.Auth.Validation;
 
 namespace Medilog.Application.Tests.Validation;
 
 /// <summary>
-/// Validates the shape rules of the sign-in request (F6-C1-T10, AGENTS.md §3.2).
+/// Validates the shape rules of the authentication requests (F6-C1-T10, AGENTS.md §3.2).
 /// </summary>
 public sealed class AuthRequestValidatorTests
 {
     private readonly LoginRequestValidator _validator = new();
+    private readonly RegisterRequestValidator _registerValidator = new();
+    private readonly VerifyEmailRequestValidator _verifyEmailValidator = new();
+    private readonly ResendVerificationRequestValidator _resendValidator = new();
 
     [Fact]
     public void Valid_login_request_passes()
@@ -93,5 +97,176 @@ public sealed class AuthRequestValidatorTests
 
         // Assert
         Assert.False(result.IsValid);
+    }
+
+    [Fact]
+    public void Valid_doctor_registration_passes()
+    {
+        // Arrange
+        var request = new RegisterRequest(
+            "New Doctor",
+            "new.doctor@medilog.test",
+            "Valid#Passw0rd",
+            "0100000000",
+            UserRole.Doctor,
+            "Cardiology");
+
+        // Act
+        var result = _registerValidator.Validate(request);
+
+        // Assert
+        Assert.True(result.IsValid);
+    }
+
+    [Fact]
+    public void Valid_secretary_registration_passes_without_a_specialization()
+    {
+        // Arrange
+        var request = new RegisterRequest(
+            "New Secretary",
+            "new.secretary@medilog.test",
+            "Valid#Passw0rd",
+            null,
+            UserRole.Secretary,
+            null);
+
+        // Act
+        var result = _registerValidator.Validate(request);
+
+        // Assert
+        Assert.True(result.IsValid);
+    }
+
+    [Theory]
+    [InlineData(UserRole.Admin)]
+    public void Registration_rejects_an_admin_role(UserRole role)
+    {
+        // Arrange
+        var request = new RegisterRequest(
+            "Someone",
+            "someone@medilog.test",
+            "Valid#Passw0rd",
+            null,
+            role,
+            null);
+
+        // Act
+        var result = _registerValidator.Validate(request);
+
+        // Assert
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, failure => failure.PropertyName == nameof(RegisterRequest.Role));
+    }
+
+    [Fact]
+    public void Registration_rejects_a_secretary_with_a_specialization()
+    {
+        // Arrange
+        var request = new RegisterRequest(
+            "New Secretary",
+            "new.secretary@medilog.test",
+            "Valid#Passw0rd",
+            null,
+            UserRole.Secretary,
+            "Cardiology");
+
+        // Act
+        var result = _registerValidator.Validate(request);
+
+        // Assert
+        Assert.False(result.IsValid);
+        Assert.Contains(
+            result.Errors,
+            failure => failure.PropertyName == nameof(RegisterRequest.Specialization));
+    }
+
+    [Fact]
+    public void Registration_rejects_a_missing_full_name()
+    {
+        // Arrange
+        var request = new RegisterRequest(
+            "  ",
+            "new.doctor@medilog.test",
+            "Valid#Passw0rd",
+            null,
+            UserRole.Doctor,
+            null);
+
+        // Act
+        var result = _registerValidator.Validate(request);
+
+        // Assert
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, failure => failure.PropertyName == nameof(RegisterRequest.FullName));
+    }
+
+    [Fact]
+    public void Registration_rejects_an_overlong_phone_number()
+    {
+        // Arrange
+        var request = new RegisterRequest(
+            "New Doctor",
+            "new.doctor@medilog.test",
+            "Valid#Passw0rd",
+            new string('0', 31),
+            UserRole.Doctor,
+            null);
+
+        // Act
+        var result = _registerValidator.Validate(request);
+
+        // Assert
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, failure => failure.PropertyName == nameof(RegisterRequest.Phone));
+    }
+
+    [Fact]
+    public void Registration_rejects_a_password_of_exactly_128_plus_one_characters()
+    {
+        // Arrange: the maximum is 128 characters.
+        var request = new RegisterRequest(
+            "New Doctor",
+            "new.doctor@medilog.test",
+            "Aa1!" + new string('a', 125),
+            null,
+            UserRole.Doctor,
+            null);
+
+        // Act
+        var result = _registerValidator.Validate(request);
+
+        // Assert
+        Assert.False(result.IsValid);
+    }
+
+    [Fact]
+    public void Verification_request_requires_a_token()
+    {
+        // Arrange
+        var request = new VerifyEmailRequest(string.Empty);
+
+        // Act
+        var result = _verifyEmailValidator.Validate(request);
+
+        // Assert
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, failure => failure.PropertyName == nameof(VerifyEmailRequest.Token));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("  ")]
+    [InlineData("not-an-email")]
+    public void Resend_verification_rejects_an_invalid_email(string email)
+    {
+        // Arrange
+        var request = new ResendVerificationRequest(email);
+
+        // Act
+        var result = _resendValidator.Validate(request);
+
+        // Assert
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, failure => failure.PropertyName == nameof(ResendVerificationRequest.Email));
     }
 }

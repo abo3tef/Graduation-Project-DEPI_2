@@ -16,7 +16,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Layer registrations (once).
 builder.Services.AddApplication();
-builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddInfrastructure(builder.Configuration, builder.Environment.ContentRootPath);
 
 // The acting user is resolved server-side from the authenticated principal
 // (decision D-11). Until Q-07 lands, the implementation also accepts the
@@ -118,6 +118,18 @@ var app = builder.Build();
 // Fail fast: a missing or unknown Clinic:TimeZone stops the application at startup
 // instead of failing on the first appointment request.
 _ = app.Services.GetRequiredService<IClinicClock>();
+
+// Transactional email is required for registration and password recovery. Development and the
+// test host may use the file sink; every real environment must have SMTP configured, otherwise an
+// email would be silently written to disk instead of delivered (decision D-39).
+if (!app.Environment.IsDevelopment() &&
+    !app.Environment.IsEnvironment("Testing") &&
+    !app.Configuration.GetValue<bool>("Email:Enabled"))
+{
+    throw new InvalidOperationException(
+        "Email is disabled. Set Email:Enabled=true and configure Email:Host, Email:Port and " +
+        "Email:FromAddress outside Development.");
+}
 
 // HTTP request pipeline.
 app.UseExceptionHandler();

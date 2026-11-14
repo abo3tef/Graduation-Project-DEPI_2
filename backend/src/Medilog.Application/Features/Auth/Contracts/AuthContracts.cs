@@ -12,6 +12,34 @@ namespace Medilog.Application.Features.Auth.Contracts;
 public sealed record LoginRequest(string Email, string Password);
 
 /// <summary>
+/// A request to create a doctor or secretary account (FR-01, F6-C1-T4).
+/// </summary>
+/// <remarks>
+/// <see cref="Role"/> is a closed allow-list: only <see cref="UserRole.Doctor"/> and
+/// <see cref="UserRole.Secretary"/> are accepted, so an Admin can never be created this way
+/// (AGENTS.md §5). The account summary is returned without a token; the user must verify the email
+/// address first (Q-11).
+/// </remarks>
+public sealed record RegisterRequest(
+    string FullName,
+    string Email,
+    string Password,
+    string? Phone,
+    UserRole Role,
+    string? Specialization);
+
+/// <summary>
+/// Confirms the email address of a newly registered account with the token from the email link.
+/// </summary>
+public sealed record VerifyEmailRequest(string Token);
+
+/// <summary>
+/// Requests another verification email. The response is the same whether or not the account
+/// exists, so it cannot be used to enumerate accounts (AGENTS.md §5).
+/// </summary>
+public sealed record ResendVerificationRequest(string Email);
+
+/// <summary>
 /// The account summary returned alongside an access token.
 /// </summary>
 /// <remarks>
