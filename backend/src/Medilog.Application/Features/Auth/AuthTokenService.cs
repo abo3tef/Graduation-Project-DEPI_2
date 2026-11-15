@@ -23,8 +23,6 @@ namespace Medilog.Application.Features.Auth;
 /// </remarks>
 public sealed class AuthTokenService
 {
-    private const string InvalidTokenMessage = "The link is invalid or has expired.";
-
     private readonly IApplicationDbContext _dbContext;
     private readonly ISecureTokenGenerator _tokenGenerator;
     private readonly IEmailService _emailService;
@@ -110,7 +108,7 @@ public sealed class AuthTokenService
 
         if (token is null || token.ConsumedAtUtc is not null || token.ExpiresAtUtc <= _clock.GetUtcNow())
         {
-            throw new AuthenticationFailedException(InvalidTokenMessage, ErrorCodes.AuthTokenInvalid);
+            throw new AuthenticationFailedException(AuthRules.InvalidTokenMessage, ErrorCodes.AuthTokenInvalid);
         }
 
         return token;

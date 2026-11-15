@@ -48,4 +48,22 @@ public interface IAuthService
     /// to discover registered emails (AGENTS.md §5).
     /// </remarks>
     Task ResendVerificationAsync(ResendVerificationRequest request, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Starts password recovery by emailing a single-use reset link when the address has an account.
+    /// </summary>
+    /// <remarks>
+    /// Completes normally whether or not the address has an account, so the endpoint cannot be used
+    /// to discover registered emails (AGENTS.md §5).
+    /// </remarks>
+    Task ForgotPasswordAsync(ForgotPasswordRequest request, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Sets a new password with the single-use token from the emailed reset link.
+    /// </summary>
+    /// <exception cref="Common.Exceptions.AuthenticationFailedException">
+    /// The token is unknown, already used, expired or was issued for another purpose
+    /// (401, <c>auth.token_invalid</c>).
+    /// </exception>
+    Task ResetPasswordAsync(ResetPasswordRequest request, CancellationToken cancellationToken);
 }

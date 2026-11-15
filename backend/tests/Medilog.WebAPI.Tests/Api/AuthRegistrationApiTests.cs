@@ -168,7 +168,7 @@ public sealed class AuthRegistrationApiTests
         // Act
         var verify = await client.PostAsJsonAsync(
             VerifyEmailUrl,
-            new { token = ReadToken(email.Messages[^1]) });
+            new { token = AuthEmailReader.ReadToken(email.Messages[^1]) });
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, verify.StatusCode);
@@ -278,7 +278,7 @@ public sealed class AuthRegistrationApiTests
             role = "Doctor",
         });
 
-        var token = ReadToken(email.Messages[^1]);
+        var token = AuthEmailReader.ReadToken(email.Messages[^1]);
         var first = await client.PostAsJsonAsync(VerifyEmailUrl, new { token });
         Assert.Equal(HttpStatusCode.NoContent, first.StatusCode);
 
@@ -299,44 +299,4 @@ public sealed class AuthRegistrationApiTests
                 services.RemoveAll<IEmailService>();
                 services.AddSingleton<IEmailService>(email);
             });
-
-    /// <summary>Reads the raw token out of the emailed verification link.</summary>
-    private static string ReadToken(EmailMessage message)
-    {
-        var link = message.Body
-            .Split('\n', StringSplitOptions.TrimEntries)
-            .First(line => line.StartsWith("http", StringComparison.Ordinal));
-
-        var query = new Uri(link).Query;
-
-        return Uri.UnescapeDataString(
-            query.Replace("?token=", string.Empty, StringComparison.Ordinal));
-    }
-
-    /// <summary>Captures transactional email in memory instead of sending it.</summary>
-    private sealed class RecordingEmailService : IEmailService
-    {
-        private readonly List<EmailMessage> _messages = [];
-
-        public IReadOnlyList<EmailMessage> Messages
-        {
-            get
-            {
-                lock (_messages)
-                {
-                    return _messages.ToArray();
-                }
-            }
-        }
-
-        public Task SendAsync(EmailMessage message, CancellationToken cancellationToken)
-        {
-            lock (_messages)
-            {
-                _messages.Add(message);
-            }
-
-            return Task.CompletedTask;
-        }
-    }
 }

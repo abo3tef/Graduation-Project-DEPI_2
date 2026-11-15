@@ -11,7 +11,8 @@ using Microsoft.EntityFrameworkCore;
 namespace Medilog.Application.Features.Auth;
 
 /// <summary>
-/// Sign-in, registration and email-verification use cases (F6-C1-T3/T4/T6).
+/// Sign-in, registration, email-verification and password-recovery use cases
+/// (F6-C1-T3/T4/T6/T7).
 /// </summary>
 /// <remarks>
 /// <para>
@@ -39,6 +40,8 @@ public sealed class AuthService : IAuthService
     private readonly IValidator<RegisterRequest> _registerValidator;
     private readonly IValidator<VerifyEmailRequest> _verifyEmailValidator;
     private readonly IValidator<ResendVerificationRequest> _resendVerificationValidator;
+    private readonly IValidator<ForgotPasswordRequest> _forgotPasswordValidator;
+    private readonly IValidator<ResetPasswordRequest> _resetPasswordValidator;
 
     public AuthService(
         IApplicationDbContext dbContext,
@@ -49,7 +52,9 @@ public sealed class AuthService : IAuthService
         IValidator<LoginRequest> loginValidator,
         IValidator<RegisterRequest> registerValidator,
         IValidator<VerifyEmailRequest> verifyEmailValidator,
-        IValidator<ResendVerificationRequest> resendVerificationValidator)
+        IValidator<ResendVerificationRequest> resendVerificationValidator,
+        IValidator<ForgotPasswordRequest> forgotPasswordValidator,
+        IValidator<ResetPasswordRequest> resetPasswordValidator)
     {
         _dbContext = dbContext;
         _passwordHasher = passwordHasher;
@@ -60,6 +65,8 @@ public sealed class AuthService : IAuthService
         _registerValidator = registerValidator;
         _verifyEmailValidator = verifyEmailValidator;
         _resendVerificationValidator = resendVerificationValidator;
+        _forgotPasswordValidator = forgotPasswordValidator;
+        _resetPasswordValidator = resetPasswordValidator;
     }
 
     public async Task<AuthResponse> LoginAsync(LoginRequest request, CancellationToken cancellationToken)
@@ -186,7 +193,7 @@ public sealed class AuthService : IAuthService
             // The account was removed after the link was sent; treat the token as invalid rather
             // than confirming a token that protects nothing.
             throw new AuthenticationFailedException(
-                "The link is invalid or has expired.",
+                AuthRules.InvalidTokenMessage,
                 ErrorCodes.AuthTokenInvalid);
         }
 
@@ -217,6 +224,67 @@ public sealed class AuthService : IAuthService
             account.FullName,
             account.Email,
             cancellationToken);
+    }
+
+    public async Task ForgotPasswordAsync(
+        ForgotPasswordRequest request,
+        CancellationToken cancellationToken)
+    {
+        await RequestValidation.ValidateAsync(_forgotPasswordValidator, request, cancellationToken);
+
+        var email = AuthRules.NormalizeEmail(request.Email);
+        var account = await AuthRules.FindAccountAsync(_dbContext, email, cancellationToken);
+
+        // An unknown address is not an error and produces no email, so the response is identical
+        // for registered and unregistered emails (AGENTS.md §5).
+        if (account is null)
+        {
+            return;
+        }
+
+        // The mail goes to the address on the account, never to a caller-supplied one.
+        await _authTokenService.IssuePasswordResetAsync(
+            account.Id,
+            account.UserType,
+            account.FullName,
+            account.Email,
+            cancellationToken);
+    }
+
+    public async Task ResetPasswordAsync(
+        ResetPasswordRequest request,
+        CancellationToken cancellationToken)
+    {
+        await RequestValidation.ValidateAsync(_resetPasswordValidator, request, cancellationToken);
+
+        var token = await _authTokenService.RequireValidTokenAsync(
+            request.Token,
+            AuthTokenPurpose.PasswordReset,
+            cancellationToken);
+
+        var now = _clock.GetUtcNow();
+
+        // Only the hash is stored; the new password never leaves this method (D-34).
+        var passwordHash = _passwordHasher.Hash(request.NewPassword);
+
+        var accountExists = await AuthRules.SetPasswordHashAsync(
+            _dbContext,
+            token.UserId,
+            token.UserType,
+            passwordHash,
+            cancellationToken);
+
+        if (!accountExists)
+        {
+            // The account was removed after the link was sent; the token protects nothing now.
+            throw new AuthenticationFailedException(
+                AuthRules.InvalidTokenMessage,
+                ErrorCodes.AuthTokenInvalid);
+        }
+
+        token.ConsumedAtUtc = now;
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
     private static string? NormalizeOptional(string? value)

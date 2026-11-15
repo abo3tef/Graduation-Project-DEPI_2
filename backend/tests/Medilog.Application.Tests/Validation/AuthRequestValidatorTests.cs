@@ -13,6 +13,8 @@ public sealed class AuthRequestValidatorTests
     private readonly RegisterRequestValidator _registerValidator = new();
     private readonly VerifyEmailRequestValidator _verifyEmailValidator = new();
     private readonly ResendVerificationRequestValidator _resendValidator = new();
+    private readonly ForgotPasswordRequestValidator _forgotPasswordValidator = new();
+    private readonly ResetPasswordRequestValidator _resetPasswordValidator = new();
 
     [Fact]
     public void Valid_login_request_passes()
@@ -268,5 +270,71 @@ public sealed class AuthRequestValidatorTests
         // Assert
         Assert.False(result.IsValid);
         Assert.Contains(result.Errors, failure => failure.PropertyName == nameof(ResendVerificationRequest.Email));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("  ")]
+    [InlineData("not-an-email")]
+    public void Forgot_password_rejects_an_invalid_email(string email)
+    {
+        // Arrange
+        var request = new ForgotPasswordRequest(email);
+
+        // Act
+        var result = _forgotPasswordValidator.Validate(request);
+
+        // Assert
+        Assert.False(result.IsValid);
+        Assert.Contains(
+            result.Errors,
+            failure => failure.PropertyName == nameof(ForgotPasswordRequest.Email));
+    }
+
+    [Fact]
+    public void Reset_password_accepts_a_valid_token_and_a_policy_compliant_password()
+    {
+        // Arrange
+        var request = new ResetPasswordRequest("token-value", "Valid#Passw0rd");
+
+        // Act
+        var result = _resetPasswordValidator.Validate(request);
+
+        // Assert
+        Assert.True(result.IsValid);
+    }
+
+    [Fact]
+    public void Reset_password_requires_a_token()
+    {
+        // Arrange
+        var request = new ResetPasswordRequest("  ", "Valid#Passw0rd");
+
+        // Act
+        var result = _resetPasswordValidator.Validate(request);
+
+        // Assert
+        Assert.False(result.IsValid);
+        Assert.Contains(
+            result.Errors,
+            failure => failure.PropertyName == nameof(ResetPasswordRequest.Token));
+    }
+
+    [Theory]
+    [InlineData("short1!")]
+    [InlineData("NoSymbols1234")]
+    public void Reset_password_enforces_the_password_policy(string password)
+    {
+        // Arrange
+        var request = new ResetPasswordRequest("token-value", password);
+
+        // Act
+        var result = _resetPasswordValidator.Validate(request);
+
+        // Assert
+        Assert.False(result.IsValid);
+        Assert.Contains(
+            result.Errors,
+            failure => failure.PropertyName == nameof(ResetPasswordRequest.NewPassword));
     }
 }

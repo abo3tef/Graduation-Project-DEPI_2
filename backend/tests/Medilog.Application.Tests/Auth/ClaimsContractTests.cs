@@ -68,8 +68,11 @@ public sealed class ClaimsContractTests
         var issued = issuer.IssueAccessToken(Guid.NewGuid(), UserRole.Doctor, Guid.NewGuid());
         var handler = new JsonWebTokenHandler();
 
-        // Act
-        var withCorrectKey = await handler.ValidateTokenAsync(issued.Token, ValidationParameters(SigningKey));
+        // Act: this test is about the signature, so lifetime is not validated. Otherwise the fixed
+        // issue time makes the result depend on the calendar (expiry has its own test below).
+        var withCorrectKey = await handler.ValidateTokenAsync(
+            issued.Token,
+            ValidationParameters(SigningKey, validateLifetime: false));
         var withWrongKey = await handler.ValidateTokenAsync(
             issued.Token,
             ValidationParameters("another-signing-key-0123456789abcdef"));
@@ -138,13 +141,15 @@ public sealed class ClaimsContractTests
         AccessTokenMinutes = 1440,
     };
 
-    private static TokenValidationParameters ValidationParameters(string signingKey) => new()
+    private static TokenValidationParameters ValidationParameters(
+        string signingKey,
+        bool validateLifetime = true) => new()
     {
         ValidateIssuer = true,
         ValidIssuer = "medilog-tests",
         ValidateAudience = true,
         ValidAudience = "medilog-client",
-        ValidateLifetime = true,
+        ValidateLifetime = validateLifetime,
         ClockSkew = TimeSpan.Zero,
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey)),

@@ -40,6 +40,24 @@ public sealed record VerifyEmailRequest(string Token);
 public sealed record ResendVerificationRequest(string Email);
 
 /// <summary>
+/// Starts password recovery for an email address (FR-04, F6-C1-T7).
+/// </summary>
+/// <remarks>
+/// The response is the same whether or not the address has an account, so it cannot be used to
+/// discover registered emails (AGENTS.md §5).
+/// </remarks>
+public sealed record ForgotPasswordRequest(string Email);
+
+/// <summary>
+/// Completes password recovery with the single-use token from the emailed link (F6-C1-T7).
+/// </summary>
+/// <remarks>
+/// The new password goes through the same policy as registration. The token is consumed in the same
+/// transaction as the password change, so it cannot be replayed.
+/// </remarks>
+public sealed record ResetPasswordRequest(string Token, string NewPassword);
+
+/// <summary>
 /// The account summary returned alongside an access token.
 /// </summary>
 /// <remarks>

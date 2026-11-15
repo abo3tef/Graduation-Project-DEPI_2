@@ -54,7 +54,9 @@ internal sealed class AuthFixture : IDisposable
             new LoginRequestValidator(),
             new RegisterRequestValidator(),
             new VerifyEmailRequestValidator(),
-            new ResendVerificationRequestValidator());
+            new ResendVerificationRequestValidator(),
+            new ForgotPasswordRequestValidator(),
+            new ResetPasswordRequestValidator());
     }
 
     public MedilogDbContext DbContext { get; }

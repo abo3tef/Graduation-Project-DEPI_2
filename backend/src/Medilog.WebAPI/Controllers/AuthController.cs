@@ -94,4 +94,35 @@ public sealed class AuthController : ControllerBase
 
         return NoContent();
     }
+
+    /// <summary>
+    /// Starts password recovery. The response never reveals whether the address has an account
+    /// (AGENTS.md §5).
+    /// </summary>
+    [HttpPost("forgot-password")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status503ServiceUnavailable)]
+    public async Task<IActionResult> ForgotPasswordAsync(
+        [FromBody] ForgotPasswordRequest request,
+        CancellationToken cancellationToken)
+    {
+        await _authService.ForgotPasswordAsync(request, cancellationToken);
+
+        return NoContent();
+    }
+
+    /// <summary>Sets a new password with the token from the emailed reset link.</summary>
+    [HttpPost("reset-password")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> ResetPasswordAsync(
+        [FromBody] ResetPasswordRequest request,
+        CancellationToken cancellationToken)
+    {
+        await _authService.ResetPasswordAsync(request, cancellationToken);
+
+        return NoContent();
+    }
 }
