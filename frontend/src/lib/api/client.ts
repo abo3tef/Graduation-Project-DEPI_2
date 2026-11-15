@@ -13,12 +13,6 @@ export type ApiRequestOptions = {
   method?: HttpMethod;
   query?: Readonly<Record<string, QueryValue>>;
   body?: unknown;
-  /**
-   * Explicit bearer credential for this request. Used by callers that already hold
-   * a token (for example the development token panel); it is layered on top of the
-   * identity headers and wins if both name the same header.
-   */
-  token?: string | null;
   signal?: AbortSignal;
 };
 
@@ -59,8 +53,7 @@ function isAbortError(error: unknown, signal?: AbortSignal): boolean {
  * The only function that talks to the API. It:
  * - builds the URL and query string,
  * - sends JSON,
- * - asks the registered auth-headers providers for the caller's identity on every
- *   call (plus an optional explicit bearer token),
+ * - asks the registered auth-headers providers for the caller's identity on every call,
  * - turns error responses into `ApiError` (never leaking raw bodies to screens),
  * - turns connection failures into `ApiError` with status `0`.
  * Aborted requests are rethrown unchanged so React Query can handle them.
@@ -69,17 +62,13 @@ export async function apiRequest<T>(
   path: string,
   options: ApiRequestOptions = {}
 ): Promise<T> {
-  const {method = 'GET', query, body, token, signal} = options;
+  const {method = 'GET', query, body, signal} = options;
   const url = `${getApiBaseUrl()}${path}${query ? buildQueryString(query) : ''}`;
 
   const headers: Record<string, string> = {
     Accept: 'application/json',
     ...getAuthHeaders()
   };
-
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
 
   if (body !== undefined) {
     headers['Content-Type'] = 'application/json';

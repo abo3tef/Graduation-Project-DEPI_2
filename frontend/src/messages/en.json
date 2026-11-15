@@ -184,23 +184,8 @@
       "visitIdLabel": "Visit ID",
       "visitIdPlaceholder": "00000000-0000-0000-0000-000000000000",
       "invalidVisitId": "Enter a valid visit identifier.",
-      "tokenRequired": "Add a development token before opening a visit.",
       "openVisit": "Open visit",
       "createVisit": "Record a new visit"
-    },
-    "token": {
-      "title": "Development token",
-      "description": "Paste a JWT created with the 'dotnet user-jwts' command. It is kept in this browser tab only, is never logged, and this panel is hidden in production builds.",
-      "label": "Bearer token",
-      "placeholder": "eyJhbGciOi...",
-      "save": "Save token",
-      "clear": "Clear token",
-      "saved": "Token saved for this tab.",
-      "cleared": "Token cleared.",
-      "statusSet": "Token set",
-      "statusMissing": "No token",
-      "statusChecking": "Checking…",
-      "storageFailed": "This browser blocked storage, so the token could not be saved."
     },
     "visit": {
       "eyebrow": "Medical visit",
@@ -278,9 +263,6 @@
       "loading": "Loading visit…",
       "refreshing": "Refreshing…",
       "retry": "Try again",
-      "tokenTitle": "A token is required",
-      "tokenDescription": "Open this record after adding a development token in the medical-records workspace.",
-      "tokenRequiredNotice": "Add a development token to save this visit.",
       "unauthorizedTitle": "Your session is not valid",
       "unauthorizedDescription": "The token is missing or expired. Add a valid development token and try again.",
       "forbiddenTitle": "Access denied",
@@ -436,7 +418,6 @@
       "unknown": "An unexpected error occurred. Please try again."
     }
   },
-  "NotFound": {"title": "Page not found", "description": "The page you are looking for could not be found.", "backHome": "Back to home"},
   "Appointments": {
     "meta": {
       "listTitle": "Appointments — Medilog",

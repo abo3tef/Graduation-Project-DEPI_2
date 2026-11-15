@@ -9,13 +9,11 @@ import type {CreateDiagnosisRequest, UpdateDiagnosisRequest} from '../types';
 
 type CreateVariables = {
   payload: CreateDiagnosisRequest;
-  token: string;
 };
 
 type UpdateVariables = {
   diagnosisId: string;
   payload: UpdateDiagnosisRequest;
-  token: string;
 };
 
 /**
@@ -28,8 +26,7 @@ export function useCreateDiagnosisMutation(visitId: string) {
   const t = useTranslations('MedicalRecords.notifications');
 
   return useMutation({
-    mutationFn: ({payload, token}: CreateVariables) =>
-      createDiagnosis(visitId, payload, token),
+    mutationFn: ({payload}: CreateVariables) => createDiagnosis(visitId, payload),
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: medicalRecordKeys.visit(visitId)
@@ -47,8 +44,8 @@ export function useUpdateDiagnosisMutation(visitId: string) {
   const t = useTranslations('MedicalRecords.notifications');
 
   return useMutation({
-    mutationFn: ({diagnosisId, payload, token}: UpdateVariables) =>
-      updateDiagnosis(visitId, diagnosisId, payload, token),
+    mutationFn: ({diagnosisId, payload}: UpdateVariables) =>
+      updateDiagnosis(visitId, diagnosisId, payload),
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: medicalRecordKeys.visit(visitId)

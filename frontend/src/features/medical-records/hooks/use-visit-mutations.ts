@@ -9,12 +9,10 @@ import type {CreateMedicalVisitRequest, UpdateMedicalVisitRequest} from '../type
 
 type CreateVariables = {
   payload: CreateMedicalVisitRequest;
-  token: string;
 };
 
 type UpdateVariables = {
   payload: UpdateMedicalVisitRequest;
-  token: string;
 };
 
 /**
@@ -26,7 +24,7 @@ export function useCreateVisitMutation() {
   const t = useTranslations('MedicalRecords.notifications');
 
   return useMutation({
-    mutationFn: ({payload, token}: CreateVariables) => createMedicalVisit(payload, token),
+    mutationFn: ({payload}: CreateVariables) => createMedicalVisit(payload),
     onSuccess: (visit) => {
       queryClient.setQueryData(medicalRecordKeys.visit(visit.id), visit);
       notify.success(t('created'));
@@ -42,8 +40,7 @@ export function useUpdateVisitMutation(visitId: string) {
   const t = useTranslations('MedicalRecords.notifications');
 
   return useMutation({
-    mutationFn: ({payload, token}: UpdateVariables) =>
-      updateMedicalVisit(visitId, payload, token),
+    mutationFn: ({payload}: UpdateVariables) => updateMedicalVisit(visitId, payload),
     onSuccess: (visit) => {
       queryClient.setQueryData(medicalRecordKeys.visit(visit.id), visit);
       notify.success(t('updated'));
