@@ -50,6 +50,8 @@ public sealed class MedilogDbContext : DbContext, IApplicationDbContext
 
     public DbSet<Appointment> Appointments => Set<Appointment>();
 
+    public DbSet<Payment> Payments => Set<Payment>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(MedilogDbContext).Assembly);

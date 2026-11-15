@@ -635,6 +635,84 @@ namespace Medilog.Infrastructure.Persistence.Migrations
                     MySQLEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
                 });
 
+            modelBuilder.Entity("Medilog.Domain.Entities.Payment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)")
+                        .HasColumnName("id");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("amount");
+
+                    b.Property<Guid>("AppointmentId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("appointment_id");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("created_by");
+
+                    b.Property<Guid>("DoctorId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("doctor_id");
+
+                    b.Property<string>("Method")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("method");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("notes");
+
+                    b.Property<DateTime?>("PaidAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("paid_at_utc");
+
+                    b.Property<Guid>("PatientId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("patient_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("status");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AppointmentId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_payments_appointment_id");
+
+                    b.HasIndex("PatientId")
+                        .HasDatabaseName("ix_payments_patient_id");
+
+                    b.HasIndex("DoctorId", "PaidAtUtc")
+                        .HasDatabaseName("ix_payments_doctor_id_paid_at_utc");
+
+                    b.ToTable("payments", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_payments_amount_positive", "`amount` > 0");
+
+                            t.HasCheckConstraint("ck_payments_method", "`method` IN ('Cash', 'Card')");
+
+                            t.HasCheckConstraint("ck_payments_status", "`status` IN ('Pending', 'Partial', 'Paid')");
+                        });
+
+                    b.HasAnnotation("MySQL:Collation", "utf8mb4_0900_ai_ci");
+
+                    MySQLEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                });
+
             modelBuilder.Entity("Medilog.Domain.Entities.Secretary", b =>
                 {
                     b.Property<Guid>("Id")
@@ -964,6 +1042,36 @@ namespace Medilog.Infrastructure.Persistence.Migrations
                         .HasConstraintName("fk_patients_doctor");
 
                     b.Navigation("Doctor");
+                });
+
+            modelBuilder.Entity("Medilog.Domain.Entities.Payment", b =>
+                {
+                    b.HasOne("Medilog.Domain.Entities.Appointment", "Appointment")
+                        .WithMany()
+                        .HasForeignKey("AppointmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_payments_appointment");
+
+                    b.HasOne("Medilog.Domain.Entities.Doctor", "Doctor")
+                        .WithMany()
+                        .HasForeignKey("DoctorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_payments_doctor");
+
+                    b.HasOne("Medilog.Domain.Entities.Patient", "Patient")
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_payments_patient");
+
+                    b.Navigation("Appointment");
+
+                    b.Navigation("Doctor");
+
+                    b.Navigation("Patient");
                 });
 
             modelBuilder.Entity("Medilog.Domain.Entities.VitalSigns", b =>
