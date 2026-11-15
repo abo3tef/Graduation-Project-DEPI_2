@@ -4,7 +4,7 @@
 > Records *status, decisions, blockers, next steps*. It does **not** define rules (`AGENTS.md` does) and must **not** change approved scope, ownership, or acceptance criteria.
 > **Updated by:** the contributor at the end of each Cycle, through a PR reviewed by the Tech Lead. The AI only proposes the update (`ElwakeelBuild` → `done`).
 
-- **Last updated:** 2026-11-14
+- **Last updated:** 2026-11-15
 - **Final delivery:** 2026-11-15 (night)
 - **Tech Lead:** Abdullah
 - **Integration branch:** `main`
@@ -63,7 +63,7 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 | Cycle | Owner | Depends on | Status | Blocking open items |
 |-------|-------|-----------|--------|---------------------|
 | F6-C1 Auth backend | Shalaby | — | In review | Q-11, Q-12, Q-13, Q-14, Q-15 — answered (D-32…D-43); started 2026-11-14 (⚠ oversized, see §7) |
-| F6-C2 Auth frontend | Shalaby | F6-C1 | Approved | Q-13 |
+| F6-C2 Auth frontend | Shalaby | F6-C1 | In review | Q-13 |
 | F4v2-C1 Diagnosis delete backend | Shalaby | Phase 1 | Approved | — |
 | F4v2-C2 Diagnosis delete frontend | Shalaby | F4v2-C1 | Approved | — |
 | F7-C1 Payments backend | Habiba | F6-C1 (A) | Approved | Q-21 |
@@ -81,7 +81,7 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 
 | Member | Active Cycle | Branch | Status | Last update |
 |--------|--------------|--------|--------|-------------|
-| Shalaby | F6-C1 (Auth backend) | `feature/shalaby-auth` | In review | 2026-11-15 |
+| Shalaby | F6-C2 (Auth frontend) | `feature/shalaby-auth` | In review | 2026-11-15 |
 | Habiba | — | `feature/habiba-payments` | — | — |
 | Menna | — | `feature/menna-patients` | — | — |
 | Anton | — | `feature/anton-vitals` | — | — |
@@ -165,12 +165,13 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 | Cycle | Contributor | Date | Result | Report |
 |-------|-------------|------|--------|--------|
 | F6-C1 — Auth backend | Shalaby | 2026-11-15 | In review | `docs/reports/F6-C1.md` |
+| F6-C2 — Auth frontend | Shalaby | 2026-11-15 | In review | `docs/reports/F6-C2.md` |
 
 ## 11. Next Steps
 
 1. All 14 Phase 2 Cycle files are `Approved` (2026-11-14) here and in each file. The Tech Lead still records answers/defaults for Q-16 … Q-22 in §8 as each Cycle's `plan` starts; a blocking question without an answer or explicit default stops that Cycle before `build`. Q-11 … Q-15 are answered in §8.
-2. **Tech Lead review + merge of `feature/shalaby-auth`**, checkpoint A (`b3e4bd3`, `a941ba1`) first so the other features can test real roles; the rest of F6-C1 follows in the same PR. Auth contract for F6-C2: `backend/docs/api/AUTH_API.md`.
-3. Shalaby then starts **F6-C2** (frontend screens, central token handling, `DevTokenPanel` removal). Everyone else continues C1 `plan` in parallel.
+2. **Tech Lead review + merge of `feature/shalaby-auth`** (F6-C1 + F6-C2). Auth contract: `backend/docs/api/AUTH_API.md`; frontend execution report: `docs/reports/F6-C2.md`.
+3. Everyone else continues C1/C2 `plan` in parallel. F4-v2 is next for Shalaby after F6 is merged.
 4. Follow §4 milestones; update §5 and §6 after each `done`.
 5. Final week-end task list (F11-C2): full build/test, E2E role matrix, seed data, demo script.
 
@@ -183,3 +184,4 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 | 2026-11-14 | Basic data filled (Tech Lead: Abdullah, integration branch: `main`, DB: MySQL); all 14 Phase 2 Cycles set to `Approved` here and in their Cycle files; the "Draft cycles" blocker closed | Tech Lead |
 | 2026-11-14 | Q-11 … Q-15 recorded as approved F6 defaults; F6-C1 plan decisions D-32 … D-43 added to §8 (identity storage, auth-token table, PBKDF2, claims, lifetimes, error codes, seed, packages) | Shalaby (F6 owner) — Tech Lead confirms at PR |
 | 2026-11-15 | F6-C1 implemented on `feature/shalaby-auth` (checkpoint A → slice E) and moved to `In review`; execution report `docs/reports/F6-C1.md` added; Firebase/SMTP blocker narrowed to the live demo; MySQL blocker added | Shalaby (F6 owner) — Tech Lead review pending |
+| 2026-11-15 | F6-C2 implemented on `feature/shalaby-auth` (E1–E6 complete, all 4 quality gates green): session store + token handling, auth data layer + tests, 5 auth screens + route guards, Google Sign-In (Firebase JS SDK), DevTokenPanel removal; F6-C2 moved to `In review`; execution report `docs/reports/F6-C2.md` added | Shalaby (F6 owner) — Tech Lead review pending |
