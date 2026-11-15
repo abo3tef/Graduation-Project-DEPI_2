@@ -4,7 +4,7 @@ import {FiActivity} from 'react-icons/fi';
 import {useTranslations} from 'next-intl';
 import {ThemeToggle} from '@/components/layout/ThemeToggle';
 import {LocaleSwitcher} from '@/components/shared/LocaleSwitcher';
-import {DevIdentityChip} from '@/features/auth';
+import {SessionBadge} from '@/features/auth';
 import {Link, usePathname} from '@/i18n/navigation';
 
 const NAV_ITEMS = [
@@ -54,7 +54,7 @@ export function AppointmentsAppBar() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <DevIdentityChip />
+          <SessionBadge />
           <ThemeToggle />
           <LocaleSwitcher />
         </div>

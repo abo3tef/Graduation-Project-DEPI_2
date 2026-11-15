@@ -22,3 +22,9 @@ export type {AuthHeaders, AuthHeadersProvider} from './auth-headers';
 export {buildQueryString} from './query-string';
 export type {QueryValue} from './query-string';
 export {readPagedResult} from './paging';
+export {
+  notifyUnauthorized,
+  registerUnauthorizedHandler,
+  resetUnauthorizedHandlers
+} from './unauthorized-handler';
+export type {UnauthorizedHandler} from './unauthorized-handler';

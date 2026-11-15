@@ -11,8 +11,7 @@ import {
   page,
   PATIENTS,
   problem,
-  renderWithProviders,
-  SECRETARY_ID
+  renderWithProviders
 } from '../test/test-utils';
 import {BookingForm} from './BookingForm';
 
@@ -213,8 +212,7 @@ describe('BookingForm', () => {
       endTime: '09:30:00',
       reason: 'checkup'
     });
-    expect(call?.headers['X-User-Id']).toBe(SECRETARY_ID);
-    expect(call?.headers['X-User-Role']).toBe('Secretary');
+    expect(call?.headers.Authorization).toBe('Bearer token-Secretary');
     expect(notify.success).toHaveBeenCalledWith('Appointment booked.');
   });
 

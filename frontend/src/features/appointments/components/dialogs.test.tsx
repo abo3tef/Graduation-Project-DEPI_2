@@ -1,5 +1,6 @@
 import {fireEvent, screen, waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type {ComponentProps} from 'react';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import {resetAuthHeadersProviders} from '@/lib/api';
 import {
@@ -7,12 +8,21 @@ import {
   FakeApi,
   makeAppointment,
   problem,
-  renderWithProviders,
-  SECRETARY_ID
+  renderWithProviders
 } from '../test/test-utils';
 import {CancelDialog} from './CancelDialog';
 import {RescheduleDialog} from './RescheduleDialog';
 import {StatusDialog} from './StatusDialog';
+
+vi.mock('@/i18n/navigation', () => ({
+  Link: ({href, children, ...rest}: ComponentProps<'a'> & {href: string}) => (
+    <a href={href} {...rest}>
+      {children}
+    </a>
+  ),
+  useRouter: () => ({push: vi.fn(), replace: vi.fn()}),
+  usePathname: () => '/appointments'
+}));
 
 const notify = vi.hoisted(() => ({success: vi.fn(), error: vi.fn(), info: vi.fn(), warning: vi.fn()}));
 vi.mock('@/lib/utils/toast', () => ({notify}));
@@ -80,8 +90,7 @@ describe('CancelDialog', () => {
     await waitFor(() => expect(onClose).toHaveBeenCalled());
     const [call] = api.callsTo('POST', `/api/appointments/${appointment.id}/cancel`);
     expect(call?.body).toEqual({cancellationReason: 'Patient asked'});
-    expect(call?.headers['X-User-Id']).toBe(SECRETARY_ID);
-    expect(call?.headers['X-User-Role']).toBe('Secretary');
+    expect(call?.headers.Authorization).toBe('Bearer token-Secretary');
     expect(notify.success).toHaveBeenCalledWith('Appointment cancelled.');
   });
 

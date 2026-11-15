@@ -2,52 +2,23 @@
 
 import {useSyncExternalStore} from 'react';
 import {
-  getDevIdentity,
-  isDevIdentityEnabled,
-  subscribeDevIdentity,
-  type DevRole
-} from '../dev-identity/dev-identity';
+  getServerSessionState,
+  getSessionState,
+  subscribeSession,
+  type SessionUserRole
+} from '../session/session-store';
 
-export type ActingRole = DevRole;
+export type ActingRole = SessionUserRole;
 
 export type ActingIdentity =
   /** Not known yet (server render / first client render). */
   | {status: 'loading'; userId: null; role: null}
-  /** No identity available: the screens must not call the API. */
+  /** Nobody is signed in: the screens must not call the API. */
   | {status: 'none'; userId: null; role: null}
   | {status: 'ready'; userId: string; role: ActingRole};
 
 const LOADING: ActingIdentity = {status: 'loading', userId: null, role: null};
 const NONE: ActingIdentity = {status: 'none', userId: null, role: null};
-
-const subscribeNothing = () => () => undefined;
-
-/**
- * Who is acting. Today this is the temporary development identity; when real
- * authentication arrives only this hook changes, not the screens.
- */
-export function useActingIdentity(): ActingIdentity {
-  const hydrated = useSyncExternalStore(
-    subscribeNothing,
-    () => true,
-    () => false
-  );
-  const identity = useSyncExternalStore(
-    subscribeDevIdentity,
-    getDevIdentity,
-    () => null
-  );
-
-  if (!hydrated) {
-    return LOADING;
-  }
-
-  if (!isDevIdentityEnabled() || identity === null) {
-    return NONE;
-  }
-
-  return identityToState(identity.userId, identity.role);
-}
 
 const readyCache = new Map<string, ActingIdentity>();
 
@@ -62,4 +33,23 @@ function identityToState(userId: string, role: ActingRole): ActingIdentity {
   }
 
   return state;
+}
+
+/**
+ * Who is acting, derived from the signed-in session. Kept as the single identity source of the
+ * existing feature hooks (`useActor`, `useDoctorDashboard`) so those screens did not have to
+ * change when real authentication replaced the development identity.
+ */
+export function useActingIdentity(): ActingIdentity {
+  const state = useSyncExternalStore(
+    subscribeSession,
+    getSessionState,
+    getServerSessionState
+  );
+
+  if (state.status === 'authenticated' && state.session) {
+    return identityToState(state.session.user.id, state.session.user.role);
+  }
+
+  return state.status === 'anonymous' ? NONE : LOADING;
 }

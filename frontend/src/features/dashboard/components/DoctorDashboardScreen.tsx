@@ -4,7 +4,7 @@ import {useTranslations} from 'next-intl';
 import {FiActivity, FiAlertCircle, FiRefreshCw, FiUserCheck} from 'react-icons/fi';
 import {ThemeToggle} from '@/components/layout/ThemeToggle';
 import {LocaleSwitcher} from '@/components/shared/LocaleSwitcher';
-import {DevIdentityChip} from '@/features/auth';
+import {SessionBadge} from '@/features/auth';
 import {Link} from '@/i18n/navigation';
 import {useDoctorDashboard} from '../hooks/useDoctorDashboard';
 import {DashboardStatCards} from './DashboardStatCards';
@@ -39,7 +39,7 @@ export function DoctorDashboardScreen() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <DevIdentityChip />
+            <SessionBadge />
             <ThemeToggle />
             <LocaleSwitcher />
           </div>

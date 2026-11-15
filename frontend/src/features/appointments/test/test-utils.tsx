@@ -3,7 +3,7 @@ import {render, type RenderResult} from '@testing-library/react';
 import {NextIntlClientProvider} from 'next-intl';
 import type {ReactElement} from 'react';
 import {vi} from 'vitest';
-import {registerDevAuthHeaders, setDevIdentityForTests} from './dev-identity-helper';
+import {registerSessionAuth, resetSessionForTests, signInForTests} from './session-helper';
 import arMessages from '@/messages/ar.json';
 import enMessages from '@/messages/en.json';
 import type {Appointment} from '../types/appointment.types';
@@ -34,14 +34,18 @@ export function renderWithProviders(ui: ReactElement, locale: TestLocale = 'en')
   );
 }
 
-/** Acts as the given user: enables the dev identity and registers its headers with the API client. */
+/**
+ * Acts as the given user: seeds a signed-in session and publishes its bearer provider to the API
+ * client. `null` signs out, which is the state the screens must not call the API from.
+ */
 export function actAs(role: 'Secretary' | 'Doctor' | null, userId = role === 'Doctor' ? DOCTOR_ID : SECRETARY_ID) {
   vi.stubEnv('NEXT_PUBLIC_API_BASE_URL', 'http://api.test');
-  vi.stubEnv('NEXT_PUBLIC_DEV_IDENTITY', 'true');
-  vi.stubEnv('NEXT_PUBLIC_DEV_USER_ID', '');
-  vi.stubEnv('NEXT_PUBLIC_DEV_USER_ROLE', '');
-  setDevIdentityForTests(role === null ? null : {userId, role});
-  registerDevAuthHeaders();
+  registerSessionAuth();
+  resetSessionForTests();
+
+  if (role !== null) {
+    signInForTests(role, userId);
+  }
 }
 
 export type RecordedCall = {

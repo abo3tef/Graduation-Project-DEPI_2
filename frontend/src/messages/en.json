@@ -505,9 +505,7 @@
       "emptyTitle": "No appointments found",
       "emptyHint": "Change the filters or book a new appointment.",
       "identityTitle": "No acting user selected",
-      "identityHint": "This is a development build: use the “Acting as” button at the top to enter a user id and role (see backend/docs/dev/seed-dev-data.sql).",
-      "signInTitle": "Sign-in is not available yet",
-      "signInHint": "This screen needs a signed-in user. Sign-in will be enabled later."
+      "signInHint": "Sign in to continue."
     },
     "fields": {
       "patient": "Patient",
@@ -624,23 +622,116 @@
       "unknown": "An unexpected error occurred. Try again."
     }
   },
-  "DevIdentity": {
-    "acting": "Acting as {role} · {id}",
-    "set": "Set user (dev)",
-    "title": "Current user (development only)",
-    "description": "Authentication is not enabled yet. Enter the user id and role to send to the API in development.",
-    "userId": "User id",
-    "role": "Role",
-    "roles": {
-      "Secretary": "Secretary",
-      "Doctor": "Doctor"
+  "Auth": {
+    "meta": {
+      "loginTitle": "Sign in | Medilog",
+      "registerTitle": "Create an account | Medilog",
+      "verifyEmailTitle": "Verify your email | Medilog",
+      "forgotPasswordTitle": "Forgot password | Medilog",
+      "resetPasswordTitle": "Reset password | Medilog"
     },
-    "save": "Save",
-    "clear": "Clear",
-    "cancel": "Cancel",
+    "session": {
+      "signIn": "Sign in",
+      "signOut": "Sign out",
+      "expired": "Your session expired. Sign in again.",
+      "role": {
+        "Doctor": "Doctor",
+        "Secretary": "Secretary",
+        "Admin": "Administrator"
+      }
+    },
+    "common": {
+      "email": "Email",
+      "password": "Password",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm password",
+      "fullName": "Full name",
+      "phone": "Phone (optional)",
+      "specialization": "Specialization (optional)",
+      "role": "Role",
+      "submitting": "Please wait…",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password",
+      "backToLogin": "Back to sign in",
+      "required": "This field is required.",
+      "invalidEmail": "Enter a valid email address.",
+      "passwordPolicy": "Use 8 to 128 characters with an upper-case letter, a lower-case letter, a digit and a symbol.",
+      "passwordMismatch": "The passwords do not match.",
+      "unexpected": "Something went wrong. Try again."
+    },
+    "login": {
+      "title": "Sign in to Medilog",
+      "subtitle": "Use your clinic account to continue.",
+      "submit": "Sign in",
+      "forgot": "Forgot your password?",
+      "noAccount": "New to Medilog?",
+      "createAccount": "Create an account",
+      "google": "Continue with Google",
+      "googleNotConfigured": "Google sign-in is not configured in this build.",
+      "googleCancelled": "Google sign-in was cancelled.",
+      "googleFailed": "Google sign-in could not be completed.",
+      "expiredNotice": "Your session expired. Sign in again to continue."
+    },
+    "register": {
+      "title": "Create your account",
+      "subtitle": "Register as a doctor or a secretary. You confirm your email before the first sign-in.",
+      "roleHint": "Administrator accounts are created by an administrator.",
+      "submit": "Create account",
+      "haveAccount": "Already have an account?",
+      "signIn": "Sign in",
+      "checkEmailTitle": "Check your inbox",
+      "checkEmail": "We sent a verification link to {email}. Open it to activate the account, then sign in."
+    },
+    "verify": {
+      "title": "Verifying your email",
+      "description": "We are activating your account.",
+      "successTitle": "Email verified",
+      "success": "Your email is verified. You can sign in now.",
+      "failedTitle": "This link cannot be used",
+      "missingToken": "The link is incomplete. Open the newest link from your email.",
+      "resend": "Send a new link",
+      "resendNeedsEmail": "Enter the email address to resend the verification link.",
+      "resent": "If the address has a pending account, a new link is on its way.",
+      "goToLogin": "Go to sign in"
+    },
+    "forgot": {
+      "title": "Forgot your password?",
+      "subtitle": "Enter your email and we will send a reset link.",
+      "submit": "Send reset link",
+      "sentTitle": "Check your inbox",
+      "sent": "If an account exists for that address, a reset link is on its way."
+    },
+    "reset": {
+      "title": "Choose a new password",
+      "subtitle": "Set a new password for your account.",
+      "submit": "Save new password",
+      "successTitle": "Password changed",
+      "success": "Your password was changed. Sign in with the new password.",
+      "missingToken": "This reset link is incomplete. Request a new one.",
+      "requestNew": "Request a new link"
+    },
     "errors": {
-      "invalidId": "The id must be a valid GUID with hyphens.",
-      "invalidRole": "The role is not valid."
+      "invalidCredentials": "The email or password is incorrect.",
+      "emailUnverified": "Confirm your email address before signing in.",
+      "accountInactive": "This account is deactivated. Contact an administrator.",
+      "emailAlreadyRegistered": "An account already exists for this email.",
+      "tokenInvalid": "This link is invalid or has expired.",
+      "invalidGoogleToken": "Google sign-in is not available for this account.",
+      "googleNotConfigured": "Google sign-in is not configured.",
+      "notConfigured": "The server is not configured for sign-in yet.",
+      "validation": "Check the highlighted fields.",
+      "forbidden": "Your account cannot open this page.",
+      "network": "The server could not be reached.",
+      "server": "A server error occurred. Try again later.",
+      "unknown": "Something went wrong. Try again."
+    },
+    "guard": {
+      "loading": "Checking your session…",
+      "signedOutTitle": "Sign in required",
+      "signedOut": "Sign in to continue.",
+      "forbiddenTitle": "Not available for your account",
+      "forbidden": "This page belongs to another role.",
+      "goHome": "Go to your home page"
     }
   },
   "dashboard": {

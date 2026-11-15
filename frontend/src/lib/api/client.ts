@@ -4,6 +4,7 @@ import {
   createNetworkError,
   parseProblem
 } from './errors';
+import {notifyUnauthorized} from './unauthorized-handler';
 import {buildQueryString, type QueryValue} from './query-string';
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
@@ -106,6 +107,12 @@ export async function apiRequest<T>(
   }
 
   if (!response.ok) {
+    // The single sign-out hook: whoever owns the credential (the auth feature) decides what a
+    // rejected token means. Anonymous callers such as a failed login are unaffected there.
+    if (response.status === 401) {
+      notifyUnauthorized();
+    }
+
     const problem = isJsonResponse(response) ? await readJson(response) : undefined;
     throw parseProblem(response.status, problem);
   }
