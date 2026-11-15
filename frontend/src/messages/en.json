@@ -655,6 +655,8 @@
       "backToLogin": "Back to sign in",
       "required": "This field is required.",
       "invalidEmail": "Enter a valid email address.",
+      "tooLong": "This value is longer than the allowed limit.",
+      "invalid": "This value is not valid.",
       "passwordPolicy": "Use 8 to 128 characters with an upper-case letter, a lower-case letter, a digit and a symbol.",
       "passwordMismatch": "The passwords do not match.",
       "unexpected": "Something went wrong. Try again."
