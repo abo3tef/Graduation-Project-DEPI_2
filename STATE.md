@@ -62,7 +62,7 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 
 | Cycle | Owner | Depends on | Status | Blocking open items |
 |-------|-------|-----------|--------|---------------------|
-| F6-C1 Auth backend | Shalaby | — | Approved | Q-11, Q-12, Q-13, Q-14, Q-15 (⚠ oversized, see §7) |
+| F6-C1 Auth backend | Shalaby | — | In review | Q-11, Q-12, Q-13, Q-14, Q-15 — answered (D-32…D-43); started 2026-11-14 (⚠ oversized, see §7) |
 | F6-C2 Auth frontend | Shalaby | F6-C1 | Approved | Q-13 |
 | F4v2-C1 Diagnosis delete backend | Shalaby | Phase 1 | Approved | — |
 | F4v2-C2 Diagnosis delete frontend | Shalaby | F4v2-C1 | Approved | — |
@@ -81,7 +81,7 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 
 | Member | Active Cycle | Branch | Status | Last update |
 |--------|--------------|--------|--------|-------------|
-| Shalaby | — | `feature/shalaby-auth` | — | — |
+| Shalaby | F6-C1 (Auth backend) | `feature/shalaby-auth` | In review | 2026-11-15 |
 | Habiba | — | `feature/habiba-payments` | — | — |
 | Menna | — | `feature/menna-patients` | — | — |
 | Anton | — | `feature/anton-vitals` | — | — |
@@ -95,7 +95,7 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 | **F6-C1 is oversized** for one Cycle (login, register, email verification, reset, Google, SMTP, seed, tests). The 2-Cycle limit was set by the team; this exceeds the ElwakeelManage sizing rule | Delay blocks every other member's role testing | Checkpoint A (T1–T3 + seed) merged first; the rest of C1 follows in small commits; Tech Lead may move F4-v2 to another member |
 | Many Cycles touch the same shared files (Program.cs, DbContext, migrations, messages `ar/en`, API client) | Merge conflicts, broken migrations | Short-lived branches, rebase often on the integration branch, **one migration at a time** merged in the order of §4; the owner of the file is notified (AGENTS.md §9) |
 | Phase 1 decisions (payment model, doctor–patient access, patient status) exist only in code | Agents guess wrong rules | Record them in §8 first (F7-C1-T1 does this for payments) |
-| Firebase / SMTP need external accounts and secrets | F6 blocked on environment | Create the Firebase project and SMTP/dev mail account before F6-C1 starts; secrets in env/user-secrets only |
+| Firebase / SMTP need external accounts and secrets | Live Google sign-in and real email unverified until the accounts exist | F6-C1 is not blocked: the tests use a fake Firebase validator and the `.eml` dev sink; create the Firebase project and SMTP account before the demo; secrets in env/user-secrets only |
 | New packages (JWT bearer, SMTP client, Firebase JS SDK) | Unapproved dependencies | Each one approved in the `plan` of F6 and logged in §8 |
 
 ## 8. Decisions Log
@@ -155,22 +155,24 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 
 | Date | Blocker | Blocking | Owner |
 |------|---------|----------|-------|
-| 2026-11-14 | Firebase project + SMTP account/secrets not confirmed | F6 | Shalaby / Tech Lead |
+| 2026-11-14 | Firebase project + SMTP account/secrets not confirmed | F6 live demo only (no longer F6-C1: the automated checks use a fake Firebase validator and the `.eml` sink) | Shalaby / Tech Lead |
 | 2026-11-14 | `docs/PROJECT_OVERVIEW.md` missing | Session Start Kit | Tech Lead |
 | 2026-11-14 | Phase 1 decisions not written down (§8) | F7, F10, F11 | Tech Lead |
+| 2026-11-15 | No reachable MySQL instance while building F6-C1 | Applies/verifies the auth migration against a real database | Shalaby / Tech Lead |
 
 ## 10. Execution Reports
 
 | Cycle | Contributor | Date | Result | Report |
 |-------|-------------|------|--------|--------|
-| — | — | — | — | `docs/reports/<CycleId>.md` |
+| F6-C1 — Auth backend | Shalaby | 2026-11-15 | In review | `docs/reports/F6-C1.md` |
 
 ## 11. Next Steps
 
-1. All 14 Phase 2 Cycle files are `Approved` (2026-11-14) here and in each file. The Tech Lead still records answers/defaults for Q-16 … Q-22 in §8 as each Cycle's `plan` starts; a blocking question without an answer or explicit default stops that Cycle before `build`. Q-11 … Q-15 are answered in §8 and F6-C1 is in `plan`.
-2. Shalaby starts **F6-C1 checkpoint A** (T1–T3 + seed); everyone else starts C1 `plan` in parallel and builds once checkpoint A is merged.
-3. Follow §4 milestones; update §5 and §6 after each `done`.
-4. Final week-end task list (F11-C2): full build/test, E2E role matrix, seed data, demo script.
+1. All 14 Phase 2 Cycle files are `Approved` (2026-11-14) here and in each file. The Tech Lead still records answers/defaults for Q-16 … Q-22 in §8 as each Cycle's `plan` starts; a blocking question without an answer or explicit default stops that Cycle before `build`. Q-11 … Q-15 are answered in §8.
+2. **Tech Lead review + merge of `feature/shalaby-auth`**, checkpoint A (`b3e4bd3`, `a941ba1`) first so the other features can test real roles; the rest of F6-C1 follows in the same PR. Auth contract for F6-C2: `backend/docs/api/AUTH_API.md`.
+3. Shalaby then starts **F6-C2** (frontend screens, central token handling, `DevTokenPanel` removal). Everyone else continues C1 `plan` in parallel.
+4. Follow §4 milestones; update §5 and §6 after each `done`.
+5. Final week-end task list (F11-C2): full build/test, E2E role matrix, seed data, demo script.
 
 ## 12. Changelog
 
@@ -180,3 +182,4 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 | 2026-11-14 | Phase 1 marked merged; Phase 2 (F6–F11) added with owners, branches, 14 Draft Cycles, schedule, risks, decisions (Q-05, Q-06, Q-07, Q-10 partial, D-23) and open questions Q-11…Q-22 | AI draft — pending Tech Lead review |
 | 2026-11-14 | Basic data filled (Tech Lead: Abdullah, integration branch: `main`, DB: MySQL); all 14 Phase 2 Cycles set to `Approved` here and in their Cycle files; the "Draft cycles" blocker closed | Tech Lead |
 | 2026-11-14 | Q-11 … Q-15 recorded as approved F6 defaults; F6-C1 plan decisions D-32 … D-43 added to §8 (identity storage, auth-token table, PBKDF2, claims, lifetimes, error codes, seed, packages) | Shalaby (F6 owner) — Tech Lead confirms at PR |
+| 2026-11-15 | F6-C1 implemented on `feature/shalaby-auth` (checkpoint A → slice E) and moved to `In review`; execution report `docs/reports/F6-C1.md` added; Firebase/SMTP blocker narrowed to the live demo; MySQL blocker added | Shalaby (F6 owner) — Tech Lead review pending |
