@@ -734,6 +734,12 @@
       "forbiddenTitle": "Not available for your account",
       "forbidden": "This page belongs to another role.",
       "goHome": "Go to your home page"
+    },
+    "home": {
+      "signedIn": "Signed in as {name}.",
+      "openWorkspace": "Open my workspace",
+      "backHome": "Back to the home page",
+      "adminNotice": "Administration screens are scheduled for the next release. You can sign out from the account menu at the top."
     }
   },
   "dashboard": {

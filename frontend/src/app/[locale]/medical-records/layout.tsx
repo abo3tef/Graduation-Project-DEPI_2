@@ -2,6 +2,7 @@ import type {ReactNode} from 'react';
 import {FiArrowLeft} from 'react-icons/fi';
 import {getTranslations} from 'next-intl/server';
 import {Link} from '@/i18n/navigation';
+import {RequireRole} from '@/features/auth';
 
 type MedicalRecordsLayoutProps = {
   children: ReactNode;
@@ -30,7 +31,8 @@ export default async function MedicalRecordsLayout({
             {t('meta.shortLabel')}
           </span>
         </nav>
-        {children}
+        {/* Medical records are the doctor's area (D-C2-4); the secretariat can never read them. */}
+        <RequireRole roles={['Doctor']}>{children}</RequireRole>
       </div>
     </div>
   );

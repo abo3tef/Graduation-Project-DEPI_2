@@ -5,6 +5,12 @@
 // the locale providers.
 export {SessionBadge} from './components/SessionBadge';
 export {SessionExpiryWatcher} from './components/SessionExpiryWatcher';
+export {SignedInNotice} from './components/SignedInNotice';
+export {LoginForm} from './components/LoginForm';
+export {RegisterForm} from './components/RegisterForm';
+export {VerifyEmailScreen} from './components/VerifyEmailScreen';
+export {ForgotPasswordForm} from './components/ForgotPasswordForm';
+export {ResetPasswordForm} from './components/ResetPasswordForm';
 export {RequireRole} from './guards/RequireRole';
 export {useSession} from './hooks/useSession';
 export type {SessionView} from './hooks/useSession';

@@ -1,6 +1,6 @@
 'use client';
 
-import {useEffect, type ReactNode} from 'react';
+import {Suspense, useEffect, type ReactNode} from 'react';
 import {FiLock, FiUserX} from 'react-icons/fi';
 import {useTranslations} from 'next-intl';
 import {Link, usePathname, useRouter} from '@/i18n/navigation';
@@ -14,14 +14,20 @@ type RequireRoleProps = {
   children: ReactNode;
 };
 
-/**
- * UX-only protection for a signed-in area (AGENTS.md §5: the API still enforces access).
- *
- * - `loading`: renders a neutral placeholder, never the content.
- * - anonymous: redirects to `/login?next=<current path>` and keeps the placeholder until it lands.
- * - signed in with the wrong role: explains it and links to the role's own landing page.
- */
-export function RequireRole({roles, children}: RequireRoleProps) {
+function RequireRolePlaceholder() {
+  const t = useTranslations('Auth.guard');
+
+  return (
+    <GuardPanel
+      icon={<FiLock aria-hidden className="size-6" />}
+      title={t('signedOutTitle')}
+      message={t('loading')}
+      tone="neutral"
+    />
+  );
+}
+
+function RequireRoleContent({roles, children}: RequireRoleProps) {
   const session = useSession();
   const router = useRouter();
   const pathname = usePathname();
@@ -67,6 +73,21 @@ export function RequireRole({roles, children}: RequireRoleProps) {
   return <>{children}</>;
 }
 
+/**
+ * UX-only protection for a signed-in area (AGENTS.md §5: the API still enforces access).
+ *
+ * - `loading`: renders a neutral placeholder, never the content.
+ * - anonymous: redirects to `/login?next=<current path>` and keeps the placeholder until it lands.
+ * - signed in with the wrong role: explains it and links to the role's own landing page.
+ */
+export function RequireRole(props: RequireRoleProps) {
+  return (
+    <Suspense fallback={<RequireRolePlaceholder />}>
+      <RequireRoleContent {...props} />
+    </Suspense>
+  );
+}
+
 type GuardPanelProps = {
   icon: ReactNode;
   title: string;
@@ -77,7 +98,10 @@ type GuardPanelProps = {
 
 function GuardPanel({icon, title, message, tone, action}: GuardPanelProps) {
   return (
-    <main className="mx-auto flex w-[min(680px,calc(100%-32px))] flex-col items-center gap-3 py-16 text-center">
+    <section
+      aria-live="polite"
+      className="mx-auto flex w-[min(680px,calc(100%-32px))] flex-col items-center gap-3 py-16 text-center"
+    >
       <span
         className={
           tone === 'warning'
@@ -90,6 +114,6 @@ function GuardPanel({icon, title, message, tone, action}: GuardPanelProps) {
       <h1 className="text-lg font-bold text-foreground">{title}</h1>
       <p className="text-sm text-muted">{message}</p>
       {action}
-    </main>
+    </section>
   );
 }

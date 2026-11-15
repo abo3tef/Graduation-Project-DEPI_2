@@ -1,5 +1,6 @@
 import type {Metadata} from 'next';
 import {getTranslations} from 'next-intl/server';
+import {RequireRole} from '@/features/auth';
 import {DoctorDashboardScreen} from '@/features/dashboard';
 
 type PageProps = {
@@ -14,6 +15,9 @@ export async function generateMetadata({params}: PageProps): Promise<Metadata> {
 }
 
 export default function DoctorDashboardRoute() {
-  return <DoctorDashboardScreen />;
+  return (
+    <RequireRole roles={['Doctor']}>
+      <DoctorDashboardScreen />
+    </RequireRole>
+  );
 }
-
