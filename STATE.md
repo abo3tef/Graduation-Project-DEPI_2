@@ -72,7 +72,7 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 | F8-C2 Patients frontend + picker | Menna | F8-C1 | Approved | — |
 | F9-C1 Vital signs backend | Anton | F6-C1 (A) | Approved | Q-19 |
 | F9-C2 Vital signs frontend | Anton | F9-C1 | Approved | — |
-| F10-C1 Timeline backend | Merihan | F6-C1 (A), F9-C1 (vitals events) | Approved | Q-20 |
+| F10-C1 Timeline backend | Merihan | F6-C1 (A), F9-C1 (vitals events) | In review | Q-20 (proposed default in §8; VitalSigns events deferred to F10-C1-T4) |
 | F10-C2 Timeline frontend | Merihan | F10-C1 | Approved | — |
 | F11-C1 Admin backend | Abdullah | F6-C1 | Approved | Q-16, Q-22 |
 | F11-C2 Admin frontend + E2E integration | Abdullah | F11-C1, all C2 | Approved | — |
@@ -85,7 +85,7 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 | Habiba | — | `feature/habiba-payments` | — | — |
 | Menna | — | `feature/menna-patients` | — | — |
 | Anton | — | `feature/anton-vitals` | — | — |
-| Merihan | — | `feature/merihan-medical-profile` | — | — |
+| Merihan | F10-C1 | `feature/merihan-medical-profile` | In review | 2026-11-15 |
 | Abdullah | — | `feature/abdullah-admin-integration` | — | — |
 
 ## 7. Risks
@@ -147,7 +147,7 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 
 | Cycle | Contributor | Date | Result | Report |
 |-------|-------------|------|--------|--------|
-| — | — | — | — | `docs/reports/<CycleId>.md` |
+| F10-C1 | Merihan | 2026-11-15 | Build 0/0; Application 243/243, WebAPI 118/118; no model changes; MySQL not verified | `docs/reports/F10-C1.md` |
 
 ## 11. Next Steps
 
@@ -163,3 +163,5 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 | 2026-11-08 | Initial STATE.md (Phase 1 features, questions) | AI draft |
 | 2026-11-14 | Phase 1 marked merged; Phase 2 (F6–F11) added with owners, branches, 14 Draft Cycles, schedule, risks, decisions (Q-05, Q-06, Q-07, Q-10 partial, D-23) and open questions Q-11…Q-22 | AI draft — pending Tech Lead review |
 | 2026-11-14 | Basic data filled (Tech Lead: Abdullah, integration branch: `main`, DB: MySQL); all 14 Phase 2 Cycles set to `Approved` here and in their Cycle files; the “Draft cycles” blocker closed | Tech Lead |
+| 2026-11-15 | F10-C1 timeline backend implemented (Visit/Diagnosis/Medication/MedicalNote per Q-20; type + instant-window filters, deterministic ordering, data-source pagination; API + 27 tests; contract doc §3.3) — `In review`, uncommitted, VitalSigns events deferred to F10-C1-T4 until F9-C1 merges | AI draft — pending Merihan/Tech Lead review |
+| 2026-11-15 | F10-C1 review fixes applied (uncommitted): pagination-overflow guard (`long` skip, two-pass count→bounded fetch, clamped window; `pageNumber=int.MaxValue` → 200/empty/metadata), ordering contract corrected to the true ordinal type order (`Diagnosis` < `MedicalNote` < `Medication` < `Visit`) in the API doc/report/service remarks, GUID tie-break aligned to canonical string order (`Id.ToString()`, matching the SQL `char(36)` column) — 4 regression tests added | AI draft — pending Merihan/Tech Lead review |

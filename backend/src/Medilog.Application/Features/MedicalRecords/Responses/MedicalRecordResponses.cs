@@ -102,3 +102,11 @@ public sealed record MedicalVisitResponse(
     IReadOnlyList<VisitVitalSignsResponse> VitalSigns,
     IReadOnlyList<VisitNoteResponse> Notes,
     IReadOnlyList<VisitLabResultResponse> LabResults);
+
+public sealed record PatientTimelineEventResponse(
+    Guid Id,
+    string Type,
+    DateTimeOffset OccurredAt,
+    string Title,
+    string? Summary,
+    Guid? RelatedVisitId);

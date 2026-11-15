@@ -21,4 +21,11 @@ public interface IMedicalRecordService
     Task<PagedResult<MedicalVisitResponse>> GetMedicalHistoryAsync(
         GetMedicalHistoryRequest request,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Returns a filtered page of medical events for a patient.
+    /// </summary>
+    Task<PagedResult<PatientTimelineEventResponse>> GetPatientTimelineAsync(
+        GetPatientTimelineRequest request,
+        CancellationToken cancellationToken);
 }
