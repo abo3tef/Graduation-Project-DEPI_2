@@ -66,4 +66,24 @@ public interface IAuthService
     /// (401, <c>auth.token_invalid</c>).
     /// </exception>
     Task ResetPasswordAsync(ResetPasswordRequest request, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Signs in with a validated Firebase ID token for an existing, email-verified account.
+    /// </summary>
+    /// <remarks>
+    /// An unknown email is never turned into a new account (decision Q-12): registration is the only
+    /// way to create one. The role and doctor id always come from the stored account.
+    /// </remarks>
+    /// <exception cref="Common.Exceptions.AuthenticationFailedException">
+    /// The token is invalid or its email has no account (401, <c>auth.invalid_google_token</c>).
+    /// </exception>
+    /// <exception cref="Common.Exceptions.ForbiddenException">
+    /// The account is inactive or its email is not verified (403, Q-11).
+    /// </exception>
+    /// <exception cref="Common.Exceptions.NotConfiguredException">
+    /// Google sign-in is not configured (503, <c>auth.google_not_configured</c>).
+    /// </exception>
+    Task<AuthResponse> SignInWithGoogleAsync(
+        GoogleSignInRequest request,
+        CancellationToken cancellationToken);
 }

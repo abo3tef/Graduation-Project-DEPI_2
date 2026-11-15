@@ -58,6 +58,15 @@ public sealed record ForgotPasswordRequest(string Email);
 public sealed record ResetPasswordRequest(string Token, string NewPassword);
 
 /// <summary>
+/// Signs in with a Firebase ID token obtained by the Google button (F6-C1-T8, Q-12).
+/// </summary>
+/// <remarks>
+/// The request carries no role and no account data: the token is validated on the server and the
+/// identity, role and doctor id all come from the existing account.
+/// </remarks>
+public sealed record GoogleSignInRequest(string IdToken);
+
+/// <summary>
 /// The account summary returned alongside an access token.
 /// </summary>
 /// <remarks>

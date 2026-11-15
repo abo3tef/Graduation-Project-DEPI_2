@@ -15,6 +15,7 @@ public sealed class AuthRequestValidatorTests
     private readonly ResendVerificationRequestValidator _resendValidator = new();
     private readonly ForgotPasswordRequestValidator _forgotPasswordValidator = new();
     private readonly ResetPasswordRequestValidator _resetPasswordValidator = new();
+    private readonly GoogleSignInRequestValidator _googleSignInValidator = new();
 
     [Fact]
     public void Valid_login_request_passes()
@@ -336,5 +337,34 @@ public sealed class AuthRequestValidatorTests
         Assert.Contains(
             result.Errors,
             failure => failure.PropertyName == nameof(ResetPasswordRequest.NewPassword));
+    }
+
+    [Fact]
+    public void Google_sign_in_requires_an_id_token()
+    {
+        // Arrange
+        var request = new GoogleSignInRequest("  ");
+
+        // Act
+        var result = _googleSignInValidator.Validate(request);
+
+        // Assert
+        Assert.False(result.IsValid);
+        Assert.Contains(
+            result.Errors,
+            failure => failure.PropertyName == nameof(GoogleSignInRequest.IdToken));
+    }
+
+    [Fact]
+    public void Google_sign_in_accepts_a_token_value()
+    {
+        // Arrange: the validator only checks the shape; the token itself is validated separately.
+        var request = new GoogleSignInRequest("a.firebase.id.token");
+
+        // Act
+        var result = _googleSignInValidator.Validate(request);
+
+        // Assert
+        Assert.True(result.IsValid);
     }
 }

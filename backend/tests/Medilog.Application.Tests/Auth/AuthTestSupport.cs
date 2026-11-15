@@ -1,5 +1,6 @@
 using Medilog.Application.Common;
 using Medilog.Application.Common.Abstractions;
+using Medilog.Application.Common.Exceptions;
 using Medilog.Application.Features.Auth;
 using Medilog.Application.Features.Auth.Validation;
 using Medilog.Domain.Entities;
@@ -36,6 +37,7 @@ internal sealed class AuthFixture : IDisposable
         Email = new RecordingEmailService();
         LinkBuilder = new TestAuthLinkBuilder();
         Lifetimes = new AuthTokenLifetimes();
+        GoogleValidator = new FakeGoogleTokenValidator();
 
         TokenService = new AuthTokenService(
             DbContext,
@@ -51,12 +53,14 @@ internal sealed class AuthFixture : IDisposable
             TokenIssuer,
             TokenService,
             Clock,
+            GoogleValidator,
             new LoginRequestValidator(),
             new RegisterRequestValidator(),
             new VerifyEmailRequestValidator(),
             new ResendVerificationRequestValidator(),
             new ForgotPasswordRequestValidator(),
-            new ResetPasswordRequestValidator());
+            new ResetPasswordRequestValidator(),
+            new GoogleSignInRequestValidator());
     }
 
     public MedilogDbContext DbContext { get; }
@@ -74,6 +78,8 @@ internal sealed class AuthFixture : IDisposable
     public AuthTokenLifetimes Lifetimes { get; }
 
     public AuthTokenService TokenService { get; }
+
+    public FakeGoogleTokenValidator GoogleValidator { get; }
 
     public AuthService Service { get; }
 
@@ -226,4 +232,30 @@ internal sealed class TestAuthLinkBuilder : IAuthLinkBuilder
 
     private static string Build(string path, string token) =>
         $"{BaseUrl}/{path}?token={Uri.EscapeDataString(token)}";
+}
+
+/// <summary>
+/// Stands in for the Firebase token validator so the Google sign-in rules can be tested without a
+/// Firebase project or network access.
+/// </summary>
+internal sealed class FakeGoogleTokenValidator : IGoogleTokenValidator
+{
+    /// <summary>Identity returned for the next call. A null value simulates an invalid token.</summary>
+    public GoogleTokenIdentity? NextIdentity { get; set; }
+
+    public List<string> ReceivedTokens { get; } = [];
+
+    public Task<GoogleTokenIdentity> ValidateAsync(string idToken, CancellationToken cancellationToken)
+    {
+        ReceivedTokens.Add(idToken);
+
+        if (NextIdentity is null)
+        {
+            throw new AuthenticationFailedException(
+                "The Google sign-in token is not valid.",
+                ErrorCodes.AuthInvalidGoogleToken);
+        }
+
+        return Task.FromResult(NextIdentity);
+    }
 }

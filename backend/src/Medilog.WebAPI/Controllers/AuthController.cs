@@ -125,4 +125,26 @@ public sealed class AuthController : ControllerBase
 
         return NoContent();
     }
+
+    /// <summary>
+    /// Signs in with a Firebase ID token from the Google button (F6-C1-T8).
+    /// </summary>
+    /// <remarks>
+    /// The role is never taken from the request: only an existing, email-verified account with the
+    /// same address can sign in, and its stored role is what the token carries (Q-12).
+    /// </remarks>
+    [HttpPost("google")]
+    [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status503ServiceUnavailable)]
+    public async Task<ActionResult<AuthResponse>> GoogleSignInAsync(
+        [FromBody] GoogleSignInRequest request,
+        CancellationToken cancellationToken)
+    {
+        var response = await _authService.SignInWithGoogleAsync(request, cancellationToken);
+
+        return Ok(response);
+    }
 }

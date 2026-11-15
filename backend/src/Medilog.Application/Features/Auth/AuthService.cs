@@ -42,6 +42,8 @@ public sealed class AuthService : IAuthService
     private readonly IValidator<ResendVerificationRequest> _resendVerificationValidator;
     private readonly IValidator<ForgotPasswordRequest> _forgotPasswordValidator;
     private readonly IValidator<ResetPasswordRequest> _resetPasswordValidator;
+    private readonly IValidator<GoogleSignInRequest> _googleSignInValidator;
+    private readonly IGoogleTokenValidator _googleTokenValidator;
 
     public AuthService(
         IApplicationDbContext dbContext,
@@ -49,24 +51,28 @@ public sealed class AuthService : IAuthService
         IAccessTokenIssuer accessTokenIssuer,
         AuthTokenService authTokenService,
         TimeProvider clock,
+        IGoogleTokenValidator googleTokenValidator,
         IValidator<LoginRequest> loginValidator,
         IValidator<RegisterRequest> registerValidator,
         IValidator<VerifyEmailRequest> verifyEmailValidator,
         IValidator<ResendVerificationRequest> resendVerificationValidator,
         IValidator<ForgotPasswordRequest> forgotPasswordValidator,
-        IValidator<ResetPasswordRequest> resetPasswordValidator)
+        IValidator<ResetPasswordRequest> resetPasswordValidator,
+        IValidator<GoogleSignInRequest> googleSignInValidator)
     {
         _dbContext = dbContext;
         _passwordHasher = passwordHasher;
         _accessTokenIssuer = accessTokenIssuer;
         _authTokenService = authTokenService;
         _clock = clock;
+        _googleTokenValidator = googleTokenValidator;
         _loginValidator = loginValidator;
         _registerValidator = registerValidator;
         _verifyEmailValidator = verifyEmailValidator;
         _resendVerificationValidator = resendVerificationValidator;
         _forgotPasswordValidator = forgotPasswordValidator;
         _resetPasswordValidator = resetPasswordValidator;
+        _googleSignInValidator = googleSignInValidator;
     }
 
     public async Task<AuthResponse> LoginAsync(LoginRequest request, CancellationToken cancellationToken)
@@ -91,12 +97,7 @@ public sealed class AuthService : IAuthService
 
         AuthRules.EnsureCanSignIn(account);
 
-        var token = _accessTokenIssuer.IssueAccessToken(account.Id, account.Role, account.DoctorId);
-
-        return new AuthResponse(
-            token.Token,
-            token.ExpiresAtUtc,
-            new AuthUserResponse(account.Id, account.FullName, account.Email, account.Role, account.DoctorId));
+        return CreateSession(account);
     }
 
     public async Task<AuthUserResponse> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken)
@@ -285,6 +286,53 @@ public sealed class AuthService : IAuthService
         token.ConsumedAtUtc = now;
 
         await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<AuthResponse> SignInWithGoogleAsync(
+        GoogleSignInRequest request,
+        CancellationToken cancellationToken)
+    {
+        await RequestValidation.ValidateAsync(_googleSignInValidator, request, cancellationToken);
+
+        // Signature, issuer, audience and expiry are checked on the server; nothing from the
+        // request is trusted beyond the supplied token (Q-12).
+        var identity = await _googleTokenValidator.ValidateAsync(request.IdToken, cancellationToken);
+
+        if (!identity.EmailVerified)
+        {
+            // An address Google itself has not verified must never be used to reach an account.
+            throw new AuthenticationFailedException(
+                "Google sign-in is not available for this account.",
+                ErrorCodes.AuthInvalidGoogleToken);
+        }
+
+        var email = AuthRules.NormalizeEmail(identity.Email);
+        var account = await AuthRules.FindAccountAsync(_dbContext, email, cancellationToken);
+
+        if (account is null)
+        {
+            // No auto-creation: registration is the only way to get an account (Q-12).
+            throw new AuthenticationFailedException(
+                "Google sign-in is not available for this account.",
+                ErrorCodes.AuthInvalidGoogleToken);
+        }
+
+        AuthRules.EnsureCanSignIn(account);
+
+        return CreateSession(account);
+    }
+
+    /// <summary>
+    /// Issues the access token and account summary for an account that passed every check.
+    /// </summary>
+    private AuthResponse CreateSession(AuthAccount account)
+    {
+        var token = _accessTokenIssuer.IssueAccessToken(account.Id, account.Role, account.DoctorId);
+
+        return new AuthResponse(
+            token.Token,
+            token.ExpiresAtUtc,
+            new AuthUserResponse(account.Id, account.FullName, account.Email, account.Role, account.DoctorId));
     }
 
     private static string? NormalizeOptional(string? value)

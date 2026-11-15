@@ -77,6 +77,12 @@ public static class DependencyInjection
         services.AddSingleton<IAuthLinkBuilder, AuthLinkBuilder>();
         services.AddSingleton<IEmailService, EmailService>();
 
+        // Google Sign-In (F6-C1-T8, Q-12). The project id is public configuration; the signing
+        // certificates are fetched from Google by the validator.
+        services.AddSingleton(provider =>
+            FirebaseOptions.FromConfiguration(provider.GetRequiredService<IConfiguration>()));
+        services.AddSingleton<IGoogleTokenValidator, FirebaseGoogleTokenValidator>();
+
         // Development-only demo accounts (decision D-40). The host decides whether to call this.
         services.AddSingleton(provider =>
             SeedOptions.FromConfiguration(provider.GetRequiredService<IConfiguration>()));
