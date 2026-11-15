@@ -659,7 +659,8 @@
       "invalid": "This value is not valid.",
       "passwordPolicy": "Use 8 to 128 characters with an upper-case letter, a lower-case letter, a digit and a symbol.",
       "passwordMismatch": "The passwords do not match.",
-      "unexpected": "Something went wrong. Try again."
+      "unexpected": "Something went wrong. Try again.",
+      "or": "or"
     },
     "login": {
       "title": "Sign in to Medilog",

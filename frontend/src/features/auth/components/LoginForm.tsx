@@ -17,6 +17,7 @@ import {
 } from '../validation/auth.validation';
 import {AuthCard, FormAlert, SubmitButton} from './AuthCard';
 import {AuthField} from './AuthField';
+import {GoogleSignInButton} from './GoogleSignInButton';
 import {PasswordField} from './PasswordField';
 import {linkClassName} from './auth-styles';
 
@@ -98,6 +99,19 @@ export function LoginForm({next = null, expired = false}: LoginFormProps) {
     >
       {expired ? <FormAlert tone="info">{t('login.expiredNotice')}</FormAlert> : null}
       {formError ? <FormAlert>{formError}</FormAlert> : null}
+
+      <div className="mb-4">
+        <GoogleSignInButton next={next} onError={setFormError} />
+      </div>
+
+      <div className="relative my-4 flex items-center justify-center">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-border" />
+        </div>
+        <span className="relative bg-surface px-2 text-xs uppercase tracking-wider text-muted">
+          {common('or')}
+        </span>
+      </div>
 
       <form onSubmit={onSubmit} noValidate className="grid gap-4">
         <AuthField

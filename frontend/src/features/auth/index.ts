@@ -6,6 +6,7 @@
 export {SessionBadge} from './components/SessionBadge';
 export {SessionExpiryWatcher} from './components/SessionExpiryWatcher';
 export {SignedInNotice} from './components/SignedInNotice';
+export {GoogleSignInButton} from './components/GoogleSignInButton';
 export {LoginForm} from './components/LoginForm';
 export {RegisterForm} from './components/RegisterForm';
 export {VerifyEmailScreen} from './components/VerifyEmailScreen';
