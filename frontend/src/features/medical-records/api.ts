@@ -1,5 +1,6 @@
-import {request, requestVoid} from '@/lib/api';
-import {expectDiagnosis, expectMedicalVisit, expectMedication} from './guards';
+import {ApiError, readPagedResult, request, requestVoid} from '@/lib/api';
+import {DEFAULT_PAGE_SIZE, type PagedResult} from '@/types/paging';
+import {expectDiagnosis, expectMedicalVisit, expectMedication, expectVitalSigns} from './guards';
 import type {
   CreateDiagnosisRequest,
   CreateMedicalVisitRequest,
@@ -9,10 +10,56 @@ import type {
   MedicationResponse,
   UpdateDiagnosisRequest,
   UpdateMedicalVisitRequest,
-  UpdateMedicationRequest
+  UpdateMedicationRequest,
+  SaveVitalSignsRequest,
+  VitalSignsResponse
 } from './types';
 
 const BASE_PATH = '/api/medical-visits';
+
+function requireVitalSignsToken(token: string): void {
+  if (!token.trim()) {
+    throw new ApiError({kind: 'unauthorized', status: 401});
+  }
+}
+
+// Explicitly pick all seven fields: extra runtime properties cannot become ownership input.
+function vitalSignsBody(payload: SaveVitalSignsRequest): SaveVitalSignsRequest {
+  const {bloodPressure, heartRate, temperature, respiratoryRate, weight, height, spO2} = payload;
+  return {bloodPressure, heartRate, temperature, respiratoryRate, weight, height, spO2};
+}
+
+export async function listVitalSigns(
+  visitId: string, token: string, pageNumber = 1, pageSize = DEFAULT_PAGE_SIZE,
+  signal?: AbortSignal
+): Promise<PagedResult<VitalSignsResponse>> {
+  requireVitalSignsToken(token);
+  const data = await request<unknown>(`${BASE_PATH}/${encodeURIComponent(visitId)}/vital-signs`, {
+    token, signal, query: {pageNumber, pageSize}
+  });
+  return readPagedResult(data, expectVitalSigns);
+}
+
+export async function createVitalSigns(
+  visitId: string, payload: SaveVitalSignsRequest, token: string
+): Promise<VitalSignsResponse> {
+  requireVitalSignsToken(token);
+  const data = await request<unknown>(`${BASE_PATH}/${encodeURIComponent(visitId)}/vital-signs`, {
+    method: 'POST', body: vitalSignsBody(payload), token
+  });
+  return expectVitalSigns(data);
+}
+
+export async function updateVitalSigns(
+  visitId: string, vitalSignsId: string, payload: SaveVitalSignsRequest, token: string
+): Promise<VitalSignsResponse> {
+  requireVitalSignsToken(token);
+  const data = await request<unknown>(
+    `${BASE_PATH}/${encodeURIComponent(visitId)}/vital-signs/${encodeURIComponent(vitalSignsId)}`,
+    {method: 'PUT', body: vitalSignsBody(payload), token}
+  );
+  return expectVitalSigns(data);
+}
 
 export async function getMedicalVisit(
   visitId: string,

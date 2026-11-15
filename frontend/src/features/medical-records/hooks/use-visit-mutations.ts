@@ -6,6 +6,20 @@ import {notify} from '@/lib/utils/toast';
 import {createMedicalVisit, updateMedicalVisit} from '../api';
 import {medicalRecordKeys} from '../keys';
 import type {CreateMedicalVisitRequest, UpdateMedicalVisitRequest} from '../types';
+import {ApiError} from '@/lib/api';
+import {readDevToken} from '../use-dev-token';
+import {readCredentialScope} from '../credential-scope';
+
+function captureScope({token}: {token: string}): number {
+  if (!token.trim() || token !== readDevToken()) {
+    throw new ApiError({kind: 'unauthorized', status: 401});
+  }
+  return readCredentialScope();
+}
+
+function isCurrentScope(token: string, scope: number | undefined): boolean {
+  return token === readDevToken() && scope === readCredentialScope();
+}
 
 type CreateVariables = {
   payload: CreateMedicalVisitRequest;
@@ -26,12 +40,15 @@ export function useCreateVisitMutation() {
   const t = useTranslations('MedicalRecords.notifications');
 
   return useMutation({
+    onMutate: captureScope,
     mutationFn: ({payload, token}: CreateVariables) => createMedicalVisit(payload, token),
-    onSuccess: (visit) => {
-      queryClient.setQueryData(medicalRecordKeys.visit(visit.id), visit);
+    onSuccess: (visit, variables, scope) => {
+      if (scope === undefined || !isCurrentScope(variables.token, scope)) return;
+      queryClient.setQueryData(medicalRecordKeys.visitDetail(visit.id, scope), visit);
       notify.success(t('created'));
     },
-    onError: () => {
+    onError: (_error, variables, scope) => {
+      if (scope === undefined || !isCurrentScope(variables.token, scope)) return;
       notify.error(t('saveFailed'));
     }
   });
@@ -42,13 +59,16 @@ export function useUpdateVisitMutation(visitId: string) {
   const t = useTranslations('MedicalRecords.notifications');
 
   return useMutation({
+    onMutate: captureScope,
     mutationFn: ({payload, token}: UpdateVariables) =>
       updateMedicalVisit(visitId, payload, token),
-    onSuccess: (visit) => {
-      queryClient.setQueryData(medicalRecordKeys.visit(visit.id), visit);
+    onSuccess: (visit, variables, scope) => {
+      if (scope === undefined || !isCurrentScope(variables.token, scope)) return;
+      queryClient.setQueryData(medicalRecordKeys.visitDetail(visit.id, scope), visit);
       notify.success(t('updated'));
     },
-    onError: () => {
+    onError: (_error, variables, scope) => {
+      if (!isCurrentScope(variables.token, scope)) return;
       notify.error(t('saveFailed'));
     }
   });

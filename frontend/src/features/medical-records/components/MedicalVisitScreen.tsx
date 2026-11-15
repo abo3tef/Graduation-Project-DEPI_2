@@ -13,6 +13,7 @@ import {DevTokenPanel} from './DevTokenPanel';
 import {DiagnosisSection} from './DiagnosisSection';
 import {MedicationSection} from './MedicationSection';
 import {VisitDetails} from './VisitDetails';
+import {VitalSignsSection} from './VitalSignsSection';
 
 type MedicalVisitScreenProps = {
   visitId: string;
@@ -102,6 +103,7 @@ export function MedicalVisitScreen({visitId}: MedicalVisitScreenProps) {
         ) : null}
       </div>
       <VisitDetails visit={query.data} />
+      <VitalSignsSection visitId={query.data.id} />
       <DiagnosisSection visitId={query.data.id} diagnoses={query.data.diagnoses} />
       <MedicationSection
         visitId={query.data.id}

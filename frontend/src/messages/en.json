@@ -163,6 +163,45 @@
     "project": "Graduation project"
   },
   "MedicalRecords": {
+    "vitalSigns": {
+      "title": "Vital signs",
+      "bloodPressureUnit": "mmHg",
+      "orderingNote": "Measurements recorded for this visit.",
+      "loading": "Loading vital signs…",
+      "refreshing": "Refreshing vital signs…",
+      "empty": "No vital signs on this page.",
+      "errorTitle": "Could not load vital signs",
+      "retry": "Retry",
+      "recordCount": "{count, plural, =0 {No records} one {# record} other {# records}}",
+      "recordLabel": "Measurement record {number}",
+      "notProvided": "Not provided",
+      "pagination": "Vital signs pages",
+      "pagePosition": "Page {page} of {total}",
+      "previous": "Previous",
+      "next": "Next",
+      "createTitle": "Add vital signs",
+      "editTitle": "Edit vital signs",
+      "createSubmit": "Save vital signs",
+      "editSubmit": "Update vital signs",
+      "saving": "Saving…",
+      "saved": "Vital signs saved.",
+      "saveFailed": "Vital signs could not be saved.",
+      "fields": {
+        "bloodPressure": "Blood pressure", "heartRate": "Heart rate", "temperature": "Temperature",
+        "respiratoryRate": "Respiratory rate", "spO2": "Oxygen saturation", "weight": "Weight", "height": "Height"
+      },
+      "units": {
+        "bloodPressure": "Systolic/diastolic (mmHg)", "heartRate": "bpm", "temperature": "°C",
+        "respiratoryRate": "breaths/min", "spO2": "%", "weight": "kg", "height": "cm"
+      },
+      "validation": {
+        "serverRejected": "This measurement was rejected. Check the value and try again.",
+        "atLeastOne": "Enter at least one measurement.",
+        "bloodPressureInvalid": "Use systolic/diastolic: systolic 50–300, diastolic 20–200, with systolic greater than diastolic (maximum 20 characters).",
+        "range": "Enter a number between {min} and {max}.",
+        "integer": "Enter a whole number."
+      }
+    },
     "meta": {
       "title": "Medical records",
       "description": "Record a visit, its diagnoses and its prescribed medications for your patients.",

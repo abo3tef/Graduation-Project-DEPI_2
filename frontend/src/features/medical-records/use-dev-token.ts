@@ -2,6 +2,7 @@
 
 import {useCallback, useSyncExternalStore} from 'react';
 import {registerAuthHeadersProvider} from '@/lib/api';
+import {advanceCredentialScope, readCredentialScope} from './credential-scope';
 
 /**
  * Development-only token bridge (D-28).
@@ -75,6 +76,7 @@ export function readDevToken(): string | null {
 
 export type DevTokenState = {
   token: string | null;
+  credentialScope: number;
   hasToken: boolean;
   /** False during SSR/hydration so the UI can show a neutral state instead of flashing. */
   isReady: boolean;
@@ -93,6 +95,7 @@ export function useDevToken(): DevTokenState {
 
   const saveToken = useCallback((value: string): boolean => {
     const trimmed = value.trim();
+    const previousToken = getSnapshot();
 
     try {
       if (trimmed.length === 0) {
@@ -103,6 +106,9 @@ export function useDevToken(): DevTokenState {
         cachedToken = trimmed;
       }
 
+      if (previousToken !== cachedToken) {
+        advanceCredentialScope();
+      }
       emit();
       return true;
     } catch {
@@ -112,6 +118,7 @@ export function useDevToken(): DevTokenState {
   }, []);
 
   const clearToken = useCallback((): void => {
+    const previousToken = getSnapshot();
     try {
       window.sessionStorage.removeItem(STORAGE_KEY);
     } catch {
@@ -119,10 +126,13 @@ export function useDevToken(): DevTokenState {
     }
 
     cachedToken = null;
+    if (previousToken !== null) {
+      advanceCredentialScope();
+    }
     emit();
   }, []);
 
-  return {token, hasToken: token !== null, isReady, saveToken, clearToken};
+  return {token, credentialScope: readCredentialScope(), hasToken: token !== null, isReady, saveToken, clearToken};
 }
 
 // Publish the development bearer token through the shared API transport (P0-C3):

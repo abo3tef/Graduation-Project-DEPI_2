@@ -163,6 +163,45 @@
     "project": "مشروع تخرج"
   },
   "MedicalRecords": {
+    "vitalSigns": {
+      "title": "العلامات الحيوية",
+      "bloodPressureUnit": "ملم زئبق",
+      "orderingNote": "القياسات المسجّلة لهذه الزيارة.",
+      "loading": "جارٍ تحميل العلامات الحيوية…",
+      "refreshing": "جارٍ تحديث العلامات الحيوية…",
+      "empty": "لا توجد علامات حيوية في هذه الصفحة.",
+      "errorTitle": "تعذر تحميل العلامات الحيوية",
+      "retry": "إعادة المحاولة",
+      "recordCount": "عدد السجلات: {count}",
+      "recordLabel": "سجل قياس {number}",
+      "notProvided": "غير مُسجّل",
+      "pagination": "صفحات العلامات الحيوية",
+      "pagePosition": "الصفحة {page} من {total}",
+      "previous": "السابق",
+      "next": "التالي",
+      "createTitle": "إضافة العلامات الحيوية",
+      "editTitle": "تعديل العلامات الحيوية",
+      "createSubmit": "حفظ العلامات الحيوية",
+      "editSubmit": "تحديث العلامات الحيوية",
+      "saving": "جارٍ الحفظ…",
+      "saved": "تم حفظ العلامات الحيوية.",
+      "saveFailed": "تعذر حفظ العلامات الحيوية.",
+      "fields": {
+        "bloodPressure": "ضغط الدم", "heartRate": "معدل ضربات القلب", "temperature": "درجة الحرارة",
+        "respiratoryRate": "معدل التنفس", "spO2": "تشبع الأكسجين", "weight": "الوزن", "height": "الطول"
+      },
+      "units": {
+        "bloodPressure": "انقباضي/انبساطي (ملم زئبق)", "heartRate": "نبضة/دقيقة", "temperature": "°C",
+        "respiratoryRate": "نفس/دقيقة", "spO2": "%", "weight": "كجم", "height": "سم"
+      },
+      "validation": {
+        "serverRejected": "تم رفض هذا القياس. تحقّق من القيمة وحاول مرة أخرى.",
+        "atLeastOne": "أدخل قياسًا واحدًا على الأقل.",
+        "bloodPressureInvalid": "استخدم انقباضي/انبساطي: الانقباضي 50–300 والانبساطي 20–200، ويجب أن يكون الانقباضي أكبر من الانبساطي (بحد أقصى 20 حرفًا).",
+        "range": "أدخل رقمًا بين {min} و{max}.",
+        "integer": "أدخل عددًا صحيحًا."
+      }
+    },
     "meta": {
       "title": "السجلات الطبية",
       "description": "سجّل الزيارة وتشخيصاتها والوصفة الدوائية لمرضاك.",
