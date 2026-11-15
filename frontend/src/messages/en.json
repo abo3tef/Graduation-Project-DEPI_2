@@ -186,6 +186,13 @@
       "invalidVisitId": "Enter a valid visit identifier.",
       "tokenRequired": "Add a development token before opening a visit.",
       "openVisit": "Open visit",
+      "openPatientTitle": "Open a patient medical profile",
+      "openPatientHint": "Paste the patient identifier to review their medical profile and timeline.",
+      "patientIdLabel": "Patient ID",
+      "patientIdPlaceholder": "00000000-0000-0000-0000-000000000000",
+      "invalidPatientId": "Enter a valid patient identifier.",
+      "patientTokenRequired": "Add a development token before opening a patient profile.",
+      "openPatient": "Open patient profile",
       "createVisit": "Record a new visit"
     },
     "token": {
@@ -329,6 +336,100 @@
       "medicationDeleted": "The medication was deleted.",
       "medicationSaveFailed": "The medication could not be saved.",
       "medicationDeleteFailed": "The medication could not be deleted."
+    }
+  },
+  "MedicalTimeline": {
+    "title": "Patient medical timeline",
+    "profile": {
+      "eyebrow": "Patient medical history",
+      "pageTitle": "Patient medical profile",
+      "pageDescription": "Review the patient's profile, allergies, chronic conditions, and medical timeline.",
+      "title": "Medical profile",
+      "loading": "Loading the patient medical profile…",
+      "refreshing": "Refreshing the patient profile…",
+      "tokenTitle": "A token is required",
+      "tokenDescription": "Open the medical records workspace first and add a development token there.",
+      "notProvided": "Not provided",
+      "demographics": "Demographics",
+      "contact": "Contact information",
+      "dateOfBirth": "Date of birth",
+      "age": "Age",
+      "gender": "Gender",
+      "bloodType": "Blood type",
+      "phone": "Phone",
+      "address": "Address",
+      "emergencyContact": "Emergency contact",
+      "allergies": "Allergies",
+      "emptyAllergies": "No allergies are recorded.",
+      "chronicConditions": "Chronic conditions",
+      "emptyChronicConditions": "No chronic conditions are recorded.",
+      "name": "Name",
+      "severity": "Severity",
+      "description": "Description",
+      "notes": "Notes",
+      "diagnosisDate": "Diagnosis date",
+      "status": "Status"
+    },
+    "event": {
+      "notProvided": "Not provided",
+      "typeLabel": "Event type",
+      "titleLabel": "Title",
+      "occurredAtLabel": "Occurred at",
+      "summaryLabel": "Summary",
+      "relatedVisitLabel": "Related visit",
+      "relatedVisitIdLabel": "Related visit ID",
+      "openRelatedVisit": "Open related visit",
+      "detailsButton": "Details of {title}",
+      "types": {
+        "visit": "Visit",
+        "diagnosis": "Diagnosis",
+        "medication": "Medication",
+        "medicalNote": "Clinical note"
+      }
+    },
+    "filters": {
+      "title": "Filters",
+      "type": "Event type",
+      "typeOptions": {
+        "all": "All event types",
+        "visit": "Visits",
+        "diagnosis": "Diagnoses",
+        "medication": "Medications",
+        "medicalNote": "Clinical notes"
+      },
+      "from": "From",
+      "to": "To",
+      "invalidRange": "The From instant must be before the To instant.",
+      "reset": "Reset filters"
+    },
+    "pagination": {
+      "label": "Timeline pages",
+      "previous": "Previous",
+      "next": "Next",
+      "position": "Page {page} of {total}"
+    },
+    "list": {
+      "emptyTitle": "No timeline events yet",
+      "emptyDescription": "Visits, diagnoses, medications and clinical notes appear here as they are recorded.",
+      "emptyFilteredTitle": "No events match these filters",
+      "emptyFilteredDescription": "Try widening the date range or clearing the event type filter."
+    },
+    "states": {
+      "loading": "Loading the medical timeline…",
+      "refreshing": "Refreshing…",
+      "retry": "Try again",
+      "tokenTitle": "A token is required",
+      "tokenDescription": "Open the medical records workspace first and add a development token there.",
+      "unauthorizedTitle": "Your session is not valid",
+      "unauthorizedDescription": "The token is missing or expired. Add a valid development token and try again.",
+      "forbiddenTitle": "Access denied",
+      "forbiddenDescription": "Only the treating doctor can open this patient's medical timeline.",
+      "notFoundTitle": "Patient not found",
+      "notFoundDescription": "This patient does not exist or is outside your workspace.",
+      "networkTitle": "The server is unreachable",
+      "networkDescription": "Check the API address and your connection, then try again.",
+      "serverTitle": "Something went wrong",
+      "serverDescription": "The server could not complete the request. Please try again."
     }
   },
   "NotFound": {

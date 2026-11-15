@@ -15,6 +15,7 @@ const STORAGE_KEY = 'medilog.dev-token';
 const listeners = new Set<() => void>();
 
 let cachedToken: string | null | undefined;
+let tokenRevision = 0;
 
 function readStoredToken(): string | null {
   if (typeof window === 'undefined') {
@@ -35,6 +36,10 @@ function getSnapshot(): string | null {
   }
 
   return cachedToken;
+}
+
+function getTokenRevisionSnapshot(): number {
+  return tokenRevision;
 }
 
 function getServerSnapshot(): string | null {
@@ -75,6 +80,8 @@ export function readDevToken(): string | null {
 
 export type DevTokenState = {
   token: string | null;
+  /** Non-secret revision used to isolate query caches when the credential changes. */
+  tokenRevision: number;
   hasToken: boolean;
   /** False during SSR/hydration so the UI can show a neutral state instead of flashing. */
   isReady: boolean;
@@ -84,6 +91,11 @@ export type DevTokenState = {
 
 export function useDevToken(): DevTokenState {
   const token = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const currentTokenRevision = useSyncExternalStore(
+    subscribe,
+    getTokenRevisionSnapshot,
+    () => 0
+  );
   // `false` during SSR/hydration, `true` afterwards — without a setState-in-effect cascade.
   const isReady = useSyncExternalStore(
     subscribeToNothing,
@@ -95,12 +107,18 @@ export function useDevToken(): DevTokenState {
     const trimmed = value.trim();
 
     try {
+      const previousToken = getSnapshot();
+
       if (trimmed.length === 0) {
         window.sessionStorage.removeItem(STORAGE_KEY);
         cachedToken = null;
       } else {
         window.sessionStorage.setItem(STORAGE_KEY, trimmed);
         cachedToken = trimmed;
+      }
+
+      if (previousToken !== cachedToken) {
+        tokenRevision += 1;
       }
 
       emit();
@@ -112,6 +130,8 @@ export function useDevToken(): DevTokenState {
   }, []);
 
   const clearToken = useCallback((): void => {
+    const previousToken = getSnapshot();
+
     try {
       window.sessionStorage.removeItem(STORAGE_KEY);
     } catch {
@@ -119,10 +139,20 @@ export function useDevToken(): DevTokenState {
     }
 
     cachedToken = null;
+    if (previousToken !== null) {
+      tokenRevision += 1;
+    }
     emit();
   }, []);
 
-  return {token, hasToken: token !== null, isReady, saveToken, clearToken};
+  return {
+    token,
+    tokenRevision: currentTokenRevision,
+    hasToken: token !== null,
+    isReady,
+    saveToken,
+    clearToken
+  };
 }
 
 // Publish the development bearer token through the shared API transport (P0-C3):

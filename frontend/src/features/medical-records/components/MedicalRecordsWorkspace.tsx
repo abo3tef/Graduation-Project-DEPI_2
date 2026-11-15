@@ -1,7 +1,7 @@
 'use client';
 
 import {useState, type FormEvent} from 'react';
-import {FiArrowRight, FiClipboard, FiPlusCircle} from 'react-icons/fi';
+import {FiArrowRight, FiClipboard, FiPlusCircle, FiUser} from 'react-icons/fi';
 import {useTranslations} from 'next-intl';
 import {Link, useRouter} from '@/i18n/navigation';
 import {DevTokenPanel} from './DevTokenPanel';
@@ -20,6 +20,8 @@ export function MedicalRecordsWorkspace() {
   const {token, isReady} = useDevToken();
   const [visitId, setVisitId] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [patientId, setPatientId] = useState('');
+  const [patientError, setPatientError] = useState<string | null>(null);
 
   const hasToken = isReady && token !== null;
 
@@ -35,6 +37,20 @@ export function MedicalRecordsWorkspace() {
 
     setError(null);
     router.push(`/medical-records/visits/${trimmed}`);
+  }
+
+  function handlePatientSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const trimmed = patientId.trim();
+
+    if (!isGuid(trimmed)) {
+      setPatientError(t('invalidPatientId'));
+      return;
+    }
+
+    setPatientError(null);
+    router.push(`/medical-records/patients/${trimmed}`);
   }
 
   return (
@@ -57,65 +73,127 @@ export function MedicalRecordsWorkspace() {
       </header>
 
       <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <section
-          aria-labelledby="open-visit-title"
-          className="rounded-2xl border border-border bg-surface p-5 sm:p-6"
-        >
-          <h2
-            id="open-visit-title"
-            className="flex items-center gap-2 text-sm font-bold"
+        <div className="flex flex-col gap-6">
+          <section
+            aria-labelledby="open-visit-title"
+            className="rounded-2xl border border-border bg-surface p-5 sm:p-6"
           >
-            <FiClipboard aria-hidden className="size-4 text-brand" />
-            {t('openVisitTitle')}
-          </h2>
-          <p className="mt-2 text-sm leading-relaxed text-muted">
-            {t('openVisitHint')}
-          </p>
-
-          <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-3">
-            <label className="text-sm font-medium" htmlFor="open-visit-id">
-              {t('visitIdLabel')}
-            </label>
-            <input
-              id="open-visit-id"
-              type="text"
-              dir="ltr"
-              autoComplete="off"
-              spellCheck={false}
-              value={visitId}
-              onChange={(event) => {
-                setVisitId(event.target.value);
-
-                if (error) {
-                  setError(null);
-                }
-              }}
-              aria-invalid={error !== null}
-              aria-describedby={error ? 'open-visit-error' : undefined}
-              placeholder={t('visitIdPlaceholder')}
-              className="w-full rounded-xl border border-border bg-background px-3 py-2 font-mono text-sm text-foreground outline-none transition-colors focus:border-brand focus:ring-2 focus:ring-brand/30"
-            />
-
-            {error ? (
-              <p id="open-visit-error" role="alert" className="text-sm text-danger">
-                {error}
-              </p>
-            ) : null}
-
-            {isReady && !hasToken ? (
-              <p className="text-xs text-muted">{t('tokenRequired')}</p>
-            ) : null}
-
-            <button
-              type="submit"
-              disabled={!hasToken}
-              className="inline-flex w-fit items-center gap-2 rounded-xl bg-brand px-4 py-2 text-sm font-bold text-[#06211f] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+            <h2
+              id="open-visit-title"
+              className="flex items-center gap-2 text-sm font-bold"
             >
-              {t('openVisit')}
-              <FiArrowRight aria-hidden className="size-4 rtl:rotate-180" />
-            </button>
-          </form>
-        </section>
+              <FiClipboard aria-hidden className="size-4 text-brand" />
+              {t('openVisitTitle')}
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-muted">
+              {t('openVisitHint')}
+            </p>
+
+            <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-3">
+              <label className="text-sm font-medium" htmlFor="open-visit-id">
+                {t('visitIdLabel')}
+              </label>
+              <input
+                id="open-visit-id"
+                type="text"
+                dir="ltr"
+                autoComplete="off"
+                spellCheck={false}
+                value={visitId}
+                onChange={(event) => {
+                  setVisitId(event.target.value);
+
+                  if (error) {
+                    setError(null);
+                  }
+                }}
+                aria-invalid={error !== null}
+                aria-describedby={error ? 'open-visit-error' : undefined}
+                placeholder={t('visitIdPlaceholder')}
+                className="w-full rounded-xl border border-border bg-background px-3 py-2 font-mono text-sm text-foreground outline-none transition-colors focus:border-brand focus:ring-2 focus:ring-brand/30"
+              />
+
+              {error ? (
+                <p id="open-visit-error" role="alert" className="text-sm text-danger">
+                  {error}
+                </p>
+              ) : null}
+
+              {isReady && !hasToken ? (
+                <p className="text-xs text-muted">{t('tokenRequired')}</p>
+              ) : null}
+
+              <button
+                type="submit"
+                disabled={!hasToken}
+                className="inline-flex w-fit items-center gap-2 rounded-xl bg-brand px-4 py-2 text-sm font-bold text-[#06211f] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {t('openVisit')}
+                <FiArrowRight aria-hidden className="size-4 rtl:rotate-180" />
+              </button>
+            </form>
+          </section>
+
+          <section
+            aria-labelledby="open-patient-title"
+            className="rounded-2xl border border-border bg-surface p-5 sm:p-6"
+          >
+            <h2
+              id="open-patient-title"
+              className="flex items-center gap-2 text-sm font-bold"
+            >
+              <FiUser aria-hidden className="size-4 text-brand" />
+              {t('openPatientTitle')}
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-muted">
+              {t('openPatientHint')}
+            </p>
+
+            <form onSubmit={handlePatientSubmit} className="mt-4 flex flex-col gap-3">
+              <label className="text-sm font-medium" htmlFor="open-patient-id">
+                {t('patientIdLabel')}
+              </label>
+              <input
+                id="open-patient-id"
+                type="text"
+                dir="ltr"
+                autoComplete="off"
+                spellCheck={false}
+                value={patientId}
+                onChange={(event) => {
+                  setPatientId(event.target.value);
+
+                  if (patientError) {
+                    setPatientError(null);
+                  }
+                }}
+                aria-invalid={patientError !== null}
+                aria-describedby={patientError ? 'open-patient-error' : undefined}
+                placeholder={t('patientIdPlaceholder')}
+                className="w-full rounded-xl border border-border bg-background px-3 py-2 font-mono text-sm text-foreground outline-none transition-colors focus:border-brand focus:ring-2 focus:ring-brand/30"
+              />
+
+              {patientError ? (
+                <p id="open-patient-error" role="alert" className="text-sm text-danger">
+                  {patientError}
+                </p>
+              ) : null}
+
+              {isReady && !hasToken ? (
+                <p className="text-xs text-muted">{t('patientTokenRequired')}</p>
+              ) : null}
+
+              <button
+                type="submit"
+                disabled={!hasToken}
+                className="inline-flex w-fit items-center gap-2 rounded-xl bg-brand px-4 py-2 text-sm font-bold text-[#06211f] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {t('openPatient')}
+                <FiArrowRight aria-hidden className="size-4 rtl:rotate-180" />
+              </button>
+            </form>
+          </section>
+        </div>
 
         <DevTokenPanel />
       </div>
