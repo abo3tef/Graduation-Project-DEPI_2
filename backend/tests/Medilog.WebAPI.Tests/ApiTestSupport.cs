@@ -38,6 +38,7 @@ internal sealed class ApiFactory : WebApplicationFactory<Program>
             configuration.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["Auth:AllowHeaderIdentity"] = _headerIdentityEnabled ? "true" : "false",
+                ["Seed:Enabled"] = "false",
                 ["ConnectionStrings:DefaultConnection"] = "Server=unused;Database=unused;User=unused;Password=unused"
             }));
 
@@ -68,6 +69,7 @@ internal sealed class RealClockFactory : WebApplicationFactory<Program>
             configuration.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["Clinic:TimeZone"] = _timeZone,
+                ["Seed:Enabled"] = "false",
                 ["ConnectionStrings:DefaultConnection"] = "Server=unused;Database=unused;User=unused;Password=unused"
             }));
     }

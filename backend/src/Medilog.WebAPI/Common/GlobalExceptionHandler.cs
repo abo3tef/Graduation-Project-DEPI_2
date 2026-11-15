@@ -101,6 +101,18 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
                 "The request conflicts with the current state.",
                 e.Code,
                 e.Message),
+            AuthenticationFailedException e => ApiProblem.Create(
+                httpContext,
+                StatusCodes.Status401Unauthorized,
+                "Authentication failed.",
+                e.Code,
+                e.Message),
+            NotConfiguredException e => ApiProblem.Create(
+                httpContext,
+                StatusCodes.Status503ServiceUnavailable,
+                "The service is not configured for this operation.",
+                e.Code,
+                e.Message),
             DomainException e => ApiProblem.Create(
                 httpContext,
                 StatusCodes.Status400BadRequest,

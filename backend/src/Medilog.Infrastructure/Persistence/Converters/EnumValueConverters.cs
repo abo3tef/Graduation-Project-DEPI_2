@@ -38,6 +38,14 @@ internal static class EnumValueConverters
         value => AppointmentStatusToLabel(value),
         value => AppointmentStatusFromLabel(value));
 
+    public static readonly ValueConverter<UserType, string> UserTypeConverter = new(
+        value => UserTypeToLabel(value),
+        value => UserTypeFromLabel(value));
+
+    public static readonly ValueConverter<AuthTokenPurpose, string> AuthTokenPurposeConverter = new(
+        value => AuthTokenPurposeToLabel(value),
+        value => AuthTokenPurposeFromLabel(value));
+
     private static string AccountStatusToLabel(AccountStatus value) => value switch
     {
         AccountStatus.Active => "Active",
@@ -160,5 +168,35 @@ internal static class EnumValueConverters
         "Cancelled" => AppointmentStatus.Cancelled,
         "No-Show" => AppointmentStatus.NoShow,
         _ => throw new ArgumentOutOfRangeException(nameof(value), value, "Unknown appointment status.")
+    };
+
+    private static string UserTypeToLabel(UserType value) => value switch
+    {
+        UserType.Doctor => "Doctor",
+        UserType.Secretary => "Secretary",
+        UserType.Admin => "Admin",
+        _ => throw new ArgumentOutOfRangeException(nameof(value), value, "Unknown user type.")
+    };
+
+    private static UserType UserTypeFromLabel(string value) => value switch
+    {
+        "Doctor" => UserType.Doctor,
+        "Secretary" => UserType.Secretary,
+        "Admin" => UserType.Admin,
+        _ => throw new ArgumentOutOfRangeException(nameof(value), value, "Unknown user type.")
+    };
+
+    private static string AuthTokenPurposeToLabel(AuthTokenPurpose value) => value switch
+    {
+        AuthTokenPurpose.EmailVerification => "EmailVerification",
+        AuthTokenPurpose.PasswordReset => "PasswordReset",
+        _ => throw new ArgumentOutOfRangeException(nameof(value), value, "Unknown auth token purpose.")
+    };
+
+    private static AuthTokenPurpose AuthTokenPurposeFromLabel(string value) => value switch
+    {
+        "EmailVerification" => AuthTokenPurpose.EmailVerification,
+        "PasswordReset" => AuthTokenPurpose.PasswordReset,
+        _ => throw new ArgumentOutOfRangeException(nameof(value), value, "Unknown auth token purpose.")
     };
 }

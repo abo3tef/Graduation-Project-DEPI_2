@@ -48,6 +48,10 @@ public sealed class MedilogDbContext : DbContext, IApplicationDbContext
 
     public DbSet<Secretary> Secretaries => Set<Secretary>();
 
+    public DbSet<Admin> Admins => Set<Admin>();
+
+    public DbSet<AuthToken> AuthTokens => Set<AuthToken>();
+
     public DbSet<Appointment> Appointments => Set<Appointment>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

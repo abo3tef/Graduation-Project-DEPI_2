@@ -35,6 +35,31 @@ public static class ErrorCodes
 
     public const string Unauthorized = "auth.unauthorized";
 
+    /// <summary>Login failed: the email is unknown or the password is wrong (identical answer).</summary>
+    public const string AuthInvalidCredentials = "auth.invalid_credentials";
+
+    /// <summary>The account exists but its email address is not verified yet (403, Q-11).</summary>
+    public const string AuthEmailUnverified = "auth.email_unverified";
+
+    /// <summary>The account was deactivated by an administrator (403, Q-11).</summary>
+    public const string AuthAccountInactive = "auth.account_inactive";
+
+    /// <summary>Registration was refused because the email already has an account (409).</summary>
+    public const string AuthEmailAlreadyRegistered = "auth.email_already_registered";
+
+    /// <summary>A verification or reset token is unknown, already used or expired (401).</summary>
+    public const string AuthTokenInvalid = "auth.token_invalid";
+
+    /// <summary>The Firebase ID token could not be validated (401, Q-12).</summary>
+    public const string AuthInvalidGoogleToken = "auth.invalid_google_token";
+
+    /// <summary>Google Sign-In was attempted while Firebase is not configured (503, Q-12).</summary>
+    public const string AuthGoogleNotConfigured = "auth.google_not_configured";
+
+    /// <summary>Authentication cannot run because required configuration or secrets are missing (503).</summary>
+    public const string AuthNotConfigured = "auth.not_configured";
+
+
     public const string MethodNotAllowed = "request.method_not_allowed";
 
     public const string UnsupportedMediaType = "request.unsupported_media_type";

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -21,11 +22,46 @@ namespace Medilog.WebAPI.Tests.Support;
 /// </remarks>
 public sealed class WebApiFactory : WebApplicationFactory<Program>
 {
+    /// <summary>
+    /// Non-secret test signing key. The real key is never committed; a test host only needs any
+    /// key of at least 32 bytes to exercise the real issuer and validator.
+    /// </summary>
+    public const string TestSigningKey = "medilog-integration-test-signing-key-0123456789";
+
     private readonly string _databaseName = $"medilog-webapi-tests-{Guid.NewGuid():N}";
+    private readonly bool _useTestAuthentication;
+    private readonly Action<IServiceCollection>? _configureTestServices;
+
+    /// <param name="useTestAuthentication">
+    /// <c>true</c> (default) replaces the authentication scheme with <see cref="TestAuthHandler"/>.
+    /// <c>false</c> keeps the real JWT bearer handler, which is required by tests that must prove a
+    /// token issued by <c>/api/auth</c> is accepted (F6-C1).
+    /// </param>
+    /// <param name="configureTestServices">
+    /// Optional extra registrations applied last, so a test can replace a port such as
+    /// <c>IEmailService</c> without changing the production pipeline.
+    /// </param>
+    public WebApiFactory(
+        bool useTestAuthentication = true,
+        Action<IServiceCollection>? configureTestServices = null)
+    {
+        _useTestAuthentication = useTestAuthentication;
+        _configureTestServices = configureTestServices;
+    }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
+
+        builder.ConfigureAppConfiguration((_, configuration) =>
+            configuration.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Jwt:Issuer"] = "medilog-tests",
+                ["Jwt:Audience"] = "medilog-tests-client",
+                ["Jwt:SigningKey"] = TestSigningKey,
+                ["Jwt:AccessTokenMinutes"] = "1440",
+                ["Seed:Enabled"] = "false",
+            }));
 
         builder.ConfigureTestServices(services =>
         {
@@ -39,16 +75,21 @@ public sealed class WebApiFactory : WebApplicationFactory<Program>
             services.AddDbContext<MedilogDbContext>(options =>
                 options.UseInMemoryDatabase(_databaseName));
 
-            services
-                .AddAuthentication(options =>
-                {
-                    options.DefaultScheme = TestAuthHandler.SchemeName;
-                    options.DefaultAuthenticateScheme = TestAuthHandler.SchemeName;
-                    options.DefaultChallengeScheme = TestAuthHandler.SchemeName;
-                })
-                .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
-                    TestAuthHandler.SchemeName,
-                    _ => { });
+            if (_useTestAuthentication)
+            {
+                services
+                    .AddAuthentication(options =>
+                    {
+                        options.DefaultScheme = TestAuthHandler.SchemeName;
+                        options.DefaultAuthenticateScheme = TestAuthHandler.SchemeName;
+                        options.DefaultChallengeScheme = TestAuthHandler.SchemeName;
+                    })
+                    .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
+                        TestAuthHandler.SchemeName,
+                        _ => { });
+            }
+
+            _configureTestServices?.Invoke(services);
         });
     }
 
