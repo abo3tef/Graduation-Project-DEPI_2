@@ -1,14 +1,15 @@
 # Medilog — Entity Relationship Diagram (ERD)
 
 > Status: **implemented** persistence foundation.
-> Source of truth: the generated migration
+> Source of truth: the generated migrations
 > `src/Medilog.Infrastructure/Persistence/Migrations/20261109211333_InitialCreate.cs`
-> and its generated SQL. The diagram below describes the model that EF Core
+> `src/Medilog.Infrastructure/Persistence/Migrations/20261115000221_AddPayments.cs`
+> and their generated SQL. The diagram below describes the model that EF Core
 > actually produces, not an idealized design.
 
 ## 1. Scope
 
-The database contains **13 domain tables** plus **one pure association table**:
+The database contains **14 domain tables** plus **one pure association table**:
 
 | # | Domain class | Table |
 |---|---|---|
@@ -25,6 +26,7 @@ The database contains **13 domain tables** plus **one pure association table**:
 | 11 | `MedicalDocument` | `medical_documents` |
 | 12 | `Secretary` | `secretaries` |
 | 13 | `Appointment` | `appointments` |
+| 14 | `Payment` | `payments` |
 | — | `Doctor` ↔ `Secretary` join | `doctor_secretaries` |
 
 There are no extra domain entities. Medical-history tables are never
@@ -88,6 +90,20 @@ erDiagram
         string status "varchar(20) NOT NULL, CHECK"
         text notes "NULL"
         text cancellation_reason "NULL"
+        datetime created_at_utc "datetime(6) NOT NULL"
+    }
+
+    payments {
+        guid id PK
+        guid appointment_id FK "-> appointments.id, unique"
+        guid patient_id FK "-> patients.id"
+        guid doctor_id FK "-> doctors.id"
+        decimal amount "decimal(18,2) NOT NULL"
+        string method "varchar(20) NOT NULL, CHECK"
+        string status "varchar(20) NOT NULL, CHECK"
+        datetime paid_at_utc "datetime(6) NULL"
+        string notes "varchar(500) NULL"
+        guid created_by "NOT NULL, no FK (polymorphic)"
         datetime created_at_utc "datetime(6) NOT NULL"
     }
 
@@ -202,6 +218,9 @@ erDiagram
     patients ||--o{ medical_documents : "has"
 
     appointments |o--o| medical_visits : "produces (composite FK, optional)"
+    appointments ||--o| payments : "is billed by (one payment)"
+    patients ||--o{ payments : "pays"
+    doctors ||--o{ payments : "earns"
     medical_visits ||--o{ diagnoses : "records (composite FK)"
     medical_visits ||--o{ medications : "prescribes (composite FK)"
     medical_visits ||--o{ vital_signs : "measures"
@@ -234,6 +253,7 @@ Every table has a single-column primary key on `id` (type `char(36)`), except
 | `secretaries` | `uq_secretaries_email (email)` | One account per email. |
 | `medical_visits` | `uq_medical_visits_appointment_id (appointment_id)` | At most one visit per appointment. Multiple `NULL`s are allowed by MySQL. |
 | `medical_visits` | `IX_medical_visits_appointment_id_patient_id_doctor_id (appointment_id, patient_id, doctor_id)` | EF-generated unique index for the optional one-to-one composite FK. Also allows multiple `NULL`s. |
+| `payments` | `ux_payments_appointment_id (appointment_id)` | One payment per appointment (Q-21). |
 
 ### Foreign keys and delete behavior
 
@@ -261,6 +281,9 @@ Every table has a single-column primary key on `id` (type `char(36)`), except
 | `fk_medical_notes_visit` | `medical_notes.(visit_id, patient_id)` → `medical_visits.(id, patient_id)` | `RESTRICT` |
 | `fk_medical_documents_patient` | `medical_documents.patient_id` → `patients.id` | `RESTRICT` |
 | `fk_medical_documents_doctor` | `medical_documents.uploaded_by` → `doctors.id` | `RESTRICT` |
+| `fk_payments_appointment` | `payments.appointment_id` → `appointments.id` | `RESTRICT` |
+| `fk_payments_patient` | `payments.patient_id` → `patients.id` | `RESTRICT` |
+| `fk_payments_doctor` | `payments.doctor_id` → `doctors.id` | `RESTRICT` |
 
 No foreign key uses `SET NULL`, and no medical relationship cascades. The only
 cascades are on the `doctor_secretaries` association rows, where deleting a
@@ -270,6 +293,10 @@ records.
 `appointments.created_by` deliberately has **no** foreign key because it is a
 polymorphic reference to either a doctor or a secretary. Referential integrity
 for this column must be enforced in the application flow.
+
+`payments.created_by` also has **no** foreign key for the same reason: it records
+the doctor or secretary who took the payment. Referential integrity for this
+column is enforced in the application flow.
 
 ### Check constraints
 
@@ -284,6 +311,9 @@ for this column must be enforced in the application flow.
 | `ck_medical_documents_type` | `type IN ('PDF','JPG','JPEG','PNG')` |
 | `ck_appointments_status` | `status IN ('Scheduled','Confirmed','Completed','Cancelled','No-Show')` |
 | `ck_appointments_end_time_after_start_time` | `end_time IS NULL OR end_time > start_time` |
+| `ck_payments_status` | `status IN ('Pending','Partial','Paid')` |
+| `ck_payments_method` | `method IN ('Cash','Card')` |
+| `ck_payments_amount_positive` | `amount > 0` |
 
 ## 4. Relationship notes
 
@@ -316,6 +346,15 @@ appointment for a different patient or doctor. Because `appointment_id` is
 `NULL`-able, MySQL allows any number of visits with no appointment while still
 enforcing uniqueness for non-null values.
 
+### Appointment → Payment (one-to-one)
+
+`payments.appointment_id` is `NOT NULL` and has the unique index
+`ux_payments_appointment_id`, so an appointment can be billed at most once.
+`patient_id` and `doctor_id` are copied from the appointment when the payment is
+created; all three foreign keys are `RESTRICT`, so a billed appointment, patient,
+or doctor cannot be deleted while the payment exists. Partial collection is the
+`Partial` status of the single row, not extra rows.
+
 ### Visit children (diagnoses, medications, notes, lab results)
 
 These rows carry `patient_id`, which is shared by two relationships:
@@ -345,6 +384,8 @@ integers, and each relevant column has a `CHECK` constraint:
 | `ChronicConditionStatus` | `Active`, `Controlled`, `Resolved` |
 | `MedicalDocumentType` | `PDF`, `JPG`, `JPEG`, `PNG` |
 | `AppointmentStatus` | `Scheduled`, `Confirmed`, `Completed`, `Cancelled`, `No-Show` |
+| `PaymentMethod` | `Cash`, `Card` |
+| `PaymentStatus` | `Pending`, `Partial`, `Paid` |
 
 ## 6. Time representation
 
@@ -357,6 +398,7 @@ integers, and each relevant column has a `CHECK` constraint:
 | `appointments.appointment_date` | `DateOnly` | `date` | Clinic-local wall-clock date. |
 | `appointments.start_time` | `TimeOnly` | `time(0)` | Clinic-local wall-clock time. |
 | `appointments.end_time` | `TimeOnly?` | `time(0)` | Clinic-local wall-clock time. |
+| `payments.paid_at_utc` | `DateTimeOffset?` | `datetime(6)` | UTC instant when the payment reached `Paid`; `NULL` otherwise. |
 
 The clinic timezone is **not** stored in the database in this scope. Converting
 an appointment's local date/time to a UTC instant requires an application-level
@@ -368,14 +410,14 @@ constraints.
 The model and SQL were produced from the real EF Core model, not drawn by hand:
 
 ```bash
-cd backend
-dotnet ef migrations script 0 InitialCreate \
+dotnet ef migrations script 0 \
   --project src/Medilog.Infrastructure \
   --startup-project src/Medilog.Infrastructure
 ```
 
-The generated script contains 14 application tables, 22 explicit foreign keys,
-14 `CHARACTER SET utf8mb4` clauses, 14 `COLLATE utf8mb4_0900_ai_ci` clauses, no
-`MATCH` token, and `ON DELETE RESTRICT` on every medical relationship. The
+The generated script contains 15 application tables, 25 explicit foreign keys,
+15 `CHARACTER SET utf8mb4` clauses, 15 `COLLATE utf8mb4_0900_ai_ci` clauses, no
+`MATCH` token, and `ON DELETE RESTRICT` on every medical and payment relationship.
+The
 local MySQL round-trip was **not** executed because no MySQL server, Docker, or
 WSL distribution is available in the build environment.

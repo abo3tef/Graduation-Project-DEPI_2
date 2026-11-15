@@ -66,7 +66,7 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 | F6-C2 Auth frontend | Shalaby | F6-C1 | Approved | Q-13 |
 | F4v2-C1 Diagnosis delete backend | Shalaby | Phase 1 | Approved | — |
 | F4v2-C2 Diagnosis delete frontend | Shalaby | F4v2-C1 | Approved | — |
-| F7-C1 Payments backend | Habiba | F6-C1 (A) | Approved | Q-21 |
+| F7-C1 Payments backend | Habiba | F6-C1 (A) | In review | — |
 | F7-C2 Payments frontend + dashboard | Habiba | F7-C1 | Approved | Q-21 |
 | F8-C1 Patients backend | Menna | F6-C1 (A) | Approved | Q-17, Q-18 |
 | F8-C2 Patients frontend + picker | Menna | F8-C1 | Approved | — |
@@ -82,7 +82,7 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 | Member | Active Cycle | Branch | Status | Last update |
 |--------|--------------|--------|--------|-------------|
 | Shalaby | — | `feature/shalaby-auth` | — | — |
-| Habiba | — | `feature/habiba-payments` | — | — |
+| Habiba | F7-C1 | `feature/habiba-payments` | In review | 2026-11-15 |
 | Menna | — | `feature/menna-patients` | — | — |
 | Anton | — | `feature/anton-vitals` | — | — |
 | Merihan | — | `feature/merihan-medical-profile` | — | — |
@@ -110,11 +110,11 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 | 2026-11-14 | **Q-10:** Code First approved; Phase 2 branch names per §3; DB engine = **MySQL** and integration branch = **`main`** (recorded in the header) | Team |
 | 2026-11-14 | **D-23:** hard delete for entry correction by the owning doctor (diagnosis delete, F4-v2) | Team |
 | 2026-11-14 | Phase 2 scope F6–F11, owners, 2-Cycle rule (C1 backend, C2 frontend + integration), delivery 2026-11-15 night | Team |
+| 2026-11-15 | **Q-01 / Q-21:** one Payment per Appointment (unique `appointment_id`); fields `patient_id`, `doctor_id`, `amount decimal(18,2)` (0 < amount <= 1,000,000), `method` (`Cash`\|`Card`), `status` (`Pending`\|`Partial`\|`Paid`), `paid_at_utc`, `notes` <= 500, `created_by` (no FK), `created_at_utc`. Transitions `Pending->Partial`, `Pending->Paid`, `Partial->Paid`; `Paid` is final; `POST` always creates `Pending`; `Paid` is immutable (`409 payment.paid_final`). Revenue = `SUM(amount) WHERE status = 'Paid' AND doctor_id = @doctorId`. Payable picker excludes `Cancelled`/`No-Show` and already-billed appointments. Doctor: own payments; secretary: assigned doctors; out-of-scope -> 404. | Habiba (F7-C1), confirmed by Tech Lead 2026-11-15 |
 
 ### Phase 1 decisions implemented in code but not written down (Tech Lead must record the actual rule — agents must not guess)
 | ID | Topic | Record by |
 |----|-------|-----------|
-| Q-01 / Q-21 | Payment model (what a payment attaches to, partial payments, methods, statuses, allowed status changes, revenue attribution) | F7-C1-T1, confirmed by Tech Lead |
 | Q-02 | Doctor–patient access relationship | Tech Lead |
 | Q-03 | Meaning of "patient status" (F3) and "patients' statuses today" (F5) | Tech Lead |
 | Q-08 | Medical entities in scope for F3/F4 | Tech Lead |
@@ -141,13 +141,13 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 |------|---------|----------|-------|
 | 2026-11-14 | Firebase project + SMTP account/secrets not confirmed | F6 | Shalaby / Tech Lead |
 | 2026-11-14 | `docs/PROJECT_OVERVIEW.md` missing | Session Start Kit | Tech Lead |
-| 2026-11-14 | Phase 1 decisions not written down (§8) | F7, F10, F11 | Tech Lead |
+| 2026-11-14 | Phase 1 decisions not written down (§8) | F10, F11 | Tech Lead |
 
 ## 10. Execution Reports
 
 | Cycle | Contributor | Date | Result | Report |
 |-------|-------------|------|--------|--------|
-| — | — | — | — | `docs/reports/<CycleId>.md` |
+| F7-C1 | Habiba | 2026-11-15 | Done for approved scope (AC-4 dashboard deferred); build clean; 421/421 tests | `docs/reports/F7-C1.md` |
 
 ## 11. Next Steps
 
@@ -163,3 +163,4 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 | 2026-11-08 | Initial STATE.md (Phase 1 features, questions) | AI draft |
 | 2026-11-14 | Phase 1 marked merged; Phase 2 (F6–F11) added with owners, branches, 14 Draft Cycles, schedule, risks, decisions (Q-05, Q-06, Q-07, Q-10 partial, D-23) and open questions Q-11…Q-22 | AI draft — pending Tech Lead review |
 | 2026-11-14 | Basic data filled (Tech Lead: Abdullah, integration branch: `main`, DB: MySQL); all 14 Phase 2 Cycles set to `Approved` here and in their Cycle files; the “Draft cycles” blocker closed | Tech Lead |
+| 2026-11-15 | F7-C1 payments backend implemented and in review; Q-01/Q-21 payment model recorded; payable picker excludes Cancelled/No-Show | Habiba |

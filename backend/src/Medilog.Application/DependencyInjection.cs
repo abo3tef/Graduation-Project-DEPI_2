@@ -3,6 +3,7 @@ using FluentValidation;
 using Medilog.Application.Features.Appointments;
 using Medilog.Application.Features.Dashboard;
 using Medilog.Application.Features.MedicalRecords;
+using Medilog.Application.Features.Payments;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Medilog.Application;
@@ -36,6 +37,9 @@ public static class DependencyInjection
 
         // Doctor dashboard service (F5).
         services.AddScoped<IDoctorDashboardService, DoctorDashboardService>();
+
+        // Payment use cases (F7). Requires an ICurrentUser, which the WebAPI host provides.
+        services.AddScoped<IPaymentService, PaymentService>();
 
         return services;
     }

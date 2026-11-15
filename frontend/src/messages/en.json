@@ -339,7 +339,6 @@
   "Payments": {
     "title": "Payments",
     "subtitle": "Record patient payments and track collection status.",
-    "prototypeNotice": "Prototype: the data shown is fake and is not saved after you refresh the page.",
     "actions": {
       "record": "Record payment",
       "cancel": "Cancel",
@@ -366,7 +365,8 @@
       "method": "Method",
       "status": "Status",
       "paidAt": "Recorded on",
-      "actions": "Actions"
+      "actions": "Actions",
+      "final": "Paid — no further changes"
     },
     "results": {
       "count": "{count, plural, =0 {No results} one {1 result} other {# results}}"
@@ -400,6 +400,7 @@
       "appointmentLabel": "Appointment",
       "appointmentPlaceholder": "Select an appointment",
       "appointmentLoading": "Loading appointments...",
+      "appointmentsError": "Could not load the appointments available for payment.",
       "noAppointments": "There are no appointments available for payment right now.",
       "amountLabel": "Amount",
       "amountPlaceholder": "0.00",
@@ -407,6 +408,8 @@
       "notesLabel": "Notes (optional)",
       "notesPlaceholder": "Add a note about this payment",
       "notesCounter": "{count} / {max}",
+      "recordAsPaidLabel": "Mark as fully paid now",
+      "recordAsPaidHint": "The payment is recorded as pending. Tick this to record it as paid immediately.",
       "submit": "Record payment",
       "errors": {
         "appointmentRequired": "Select an appointment.",
@@ -414,25 +417,44 @@
         "amountInvalid": "Enter a valid amount.",
         "amountOutOfRange": "The amount must be between {min} and {max}.",
         "methodRequired": "Select a payment method.",
-        "notesTooLong": "Notes exceed the allowed length ({max} characters)."
+        "notesTooLong": "Notes exceed the allowed length ({max} characters).",
+        "invalid": "This value is not valid."
       }
     },
     "statusDialog": {
       "title": "Update payment status",
       "description": "Choose the new status for the payment of {patient}.",
       "label": "New status",
+      "currentStatus": "Current status",
+      "finalDescription": "This payment is already paid and cannot be changed.",
       "submit": "Update"
     },
     "toast": {
       "created": "Payment recorded successfully.",
-      "statusUpdated": "Payment status updated."
+      "createdPaid": "Payment recorded and marked as paid.",
+      "statusUpdated": "Payment status updated.",
+      "partiallyRecorded": "The payment was saved as pending, but marking it paid failed. Review it in the list."
     },
     "errors": {
-      "NETWORK": "Could not connect. Check your connection and try again.",
-      "INVALID_INPUT": "Some of the data is not valid. Review it and try again.",
-      "APPOINTMENT_NOT_FOUND": "The selected appointment does not exist.",
-      "APPOINTMENT_ALREADY_PAID": "A payment has already been recorded for this appointment.",
-      "PAYMENT_NOT_FOUND": "The requested payment does not exist.",
+      "network": "Could not connect. Check your connection and try again.",
+      "invalidResponse": "The server returned an unexpected response.",
+      "identity": "Your account is not active or could not be verified.",
+      "unauthorized": "Your session has expired. Sign in again to continue.",
+      "forbidden": "You do not have permission to manage payments.",
+      "notFound": "The requested payment or appointment does not exist.",
+      "validation": "Some of the data is not valid. Review it and try again.",
+      "appointmentNotFound": "The selected appointment does not exist.",
+      "alreadyExists": "A payment has already been recorded for this appointment.",
+      "paymentNotFound": "The requested payment does not exist.",
+      "paidFinal": "A paid payment cannot be changed.",
+      "invalidTransition": "That status change is not allowed for this payment.",
+      "invalidAmount": "The amount is not valid.",
+      "invalidMethod": "The payment method is not valid.",
+      "notesTooLong": "The notes are longer than the allowed length.",
+      "missingReference": "A required reference is missing.",
+      "badRequest": "Some of the data is not valid. Review it and try again.",
+      "conflict": "The payment was changed by another user. Reload and try again.",
+      "server": "A server error occurred. Please try again later.",
       "unknown": "An unexpected error occurred. Please try again."
     }
   },
