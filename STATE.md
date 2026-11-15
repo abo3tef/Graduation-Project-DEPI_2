@@ -4,7 +4,7 @@
 > Records *status, decisions, blockers, next steps*. It does **not** define rules (`AGENTS.md` does) and must **not** change approved scope, ownership, or acceptance criteria.
 > **Updated by:** the contributor at the end of each Cycle, through a PR reviewed by the Tech Lead. The AI only proposes the update (`ElwakeelBuild` → `done`).
 
-- **Last updated:** 2026-11-14
+- **Last updated:** 2026-11-15
 - **Final delivery:** 2026-11-15 (night)
 - **Tech Lead:** Abdullah
 - **Integration branch:** `main`
@@ -42,7 +42,7 @@ Commands: `plan → build → review → done`. A Cycle can be built only when i
 | F7 | Payments Backend & Integration | Habiba | `feature/habiba-payments` | F7-C1, F7-C2 |
 | F8 | Patient Management & Search | Menna | `feature/menna-patients` | F8-C1, F8-C2 |
 | F9 | Vital Signs & Visit Enhancements | Anton | `feature/anton-vitals` | F9-C1, F9-C2 |
-| F10 | Patient Medical Profile & Timeline Integration | Merihan | `feature/merihan-medical-profile` | F10-C1, F10-C2 |
+| F10 | Patient Medical Profile & Timeline Integration | Merihan | `feature/mrehan-medical-profile` | F10-C1, F10-C2 |
 | F11 | Admin Dashboard & Full E2E Integration | Abdullah | `feature/abdullah-admin-integration` | F11-C1, F11-C2 |
 
 Cycle files: `docs/tasks/<Feature>/<CycleId>.md`. Rule: **C1 = Backend + DB + tests; C2 = Frontend + integration.**
@@ -73,7 +73,7 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 | F9-C1 Vital signs backend | Anton | F6-C1 (A) | Approved | Q-19 |
 | F9-C2 Vital signs frontend | Anton | F9-C1 | Approved | — |
 | F10-C1 Timeline backend | Merihan | F6-C1 (A), F9-C1 (vitals events) | In review | Q-20 (proposed default in §8; VitalSigns events deferred to F10-C1-T4) |
-| F10-C2 Timeline frontend | Merihan | F10-C1 | Approved | — |
+| F10-C2 Timeline frontend | Merihan | F10-C1 | In review | Manual Doctor/Secretary/cross-doctor verification; live-data and visual RTL checks |
 | F11-C1 Admin backend | Abdullah | F6-C1 | Approved | Q-16, Q-22 |
 | F11-C2 Admin frontend + E2E integration | Abdullah | F11-C1, all C2 | Approved | — |
 
@@ -85,7 +85,7 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 | Habiba | — | `feature/habiba-payments` | — | — |
 | Menna | — | `feature/menna-patients` | — | — |
 | Anton | — | `feature/anton-vitals` | — | — |
-| Merihan | F10-C1 | `feature/merihan-medical-profile` | In review | 2026-11-15 |
+| Merihan | F10-C2 | `feature/mrehan-medical-profile` | In review | 2026-11-15 |
 | Abdullah | — | `feature/abdullah-admin-integration` | — | — |
 
 ## 7. Risks
@@ -148,6 +148,7 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 | Cycle | Contributor | Date | Result | Report |
 |-------|-------------|------|--------|--------|
 | F10-C1 | Merihan | 2026-11-15 | Build 0/0; Application 243/243, WebAPI 118/118; no model changes; MySQL not verified | `docs/reports/F10-C1.md` |
+| F10-C2 | Merihan | 2026-11-15 | Frontend implementation pushed in `a2e60e7`; typecheck/lint/build passed; 316 tests across 20 files; manual role, live-data, and visual RTL verification pending | `docs/reports/F10-C2.md` |
 
 ## 11. Next Steps
 
@@ -165,3 +166,4 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 | 2026-11-14 | Basic data filled (Tech Lead: Abdullah, integration branch: `main`, DB: MySQL); all 14 Phase 2 Cycles set to `Approved` here and in their Cycle files; the “Draft cycles” blocker closed | Tech Lead |
 | 2026-11-15 | F10-C1 timeline backend implemented (Visit/Diagnosis/Medication/MedicalNote per Q-20; type + instant-window filters, deterministic ordering, data-source pagination; API + 27 tests; contract doc §3.3) — `In review`, uncommitted, VitalSigns events deferred to F10-C1-T4 until F9-C1 merges | AI draft — pending Merihan/Tech Lead review |
 | 2026-11-15 | F10-C1 review fixes applied (uncommitted): pagination-overflow guard (`long` skip, two-pass count→bounded fetch, clamped window; `pageNumber=int.MaxValue` → 200/empty/metadata), ordering contract corrected to the true ordinal type order (`Diagnosis` < `MedicalNote` < `Medication` < `Visit`) in the API doc/report/service remarks, GUID tie-break aligned to canonical string order (`Id.ToString()`, matching the SQL `char(36)` column) — 4 regression tests added | AI draft — pending Merihan/Tech Lead review |
+| 2026-11-15 | F10-C2 frontend implementation pushed as `a2e60e7`; documentation/report added with typecheck, lint, production build and 316/316 tests recorded as passed; manual Doctor/Secretary/cross-doctor, live-data, and visual RTL acceptance checks remain pending | Contributor report — pending review |
