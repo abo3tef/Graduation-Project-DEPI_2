@@ -58,7 +58,8 @@ function getDateFormatter(locale: string, kind: DateFormatKind): Intl.DateTimeFo
 }
 
 const DATE_ONLY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
-const TIME_ONLY_PATTERN = /^(\d{2}):(\d{2})$/;
+/** `HH:mm` or `HH:mm:ss`, the two shapes the API serves for times. */
+const TIME_ONLY_PATTERN = /^(\d{2}):(\d{2})(?::\d{2})?$/;
 
 
 function parseDate(value: string): Date | null {
@@ -71,13 +72,25 @@ function parseDate(value: string): Date | null {
 }
 
 
-export function formatDate(value: string, locale: string): string {
+export function formatDate(value: string | null | undefined, locale: string): string {
+  if (!value) {
+    return FALLBACK;
+  }
+
   const date = parseDate(value);
   return date ? getDateFormatter(locale, 'date').format(date) : FALLBACK;
 }
 
 
-export function formatDateTime(value: string, locale: string): string {
+/** `paidAt` is null until the payment reaches `Paid`, so null renders as a dash. */
+export function formatDateTime(
+  value: string | null | undefined,
+  locale: string
+): string {
+  if (!value) {
+    return FALLBACK;
+  }
+
   const date = parseDate(value);
   return date ? getDateFormatter(locale, 'dateTime').format(date) : FALLBACK;
 }

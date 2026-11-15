@@ -10,14 +10,17 @@ import {useTranslations} from 'next-intl';
 import {useCallback} from 'react';
 import {notify} from '@/lib/utils/toast';
 import {
+  getPaymentErrorKey,
+  isRetryablePaymentError
+} from '../services/payment-errors';
+import {
   createPayment,
-  isPaymentServiceError,
+  isPaymentPartiallyRecordedError,
   listPayableAppointments,
   listPayments,
   updatePaymentStatus
 } from '../services/payments.service';
 import type {PaymentFilters} from '../types/payment.types';
-
 
 export const paymentKeys = {
   all: ['payments'] as const,
@@ -27,48 +30,42 @@ export const paymentKeys = {
     [...paymentKeys.all, 'payable-appointments'] as const
 };
 
-
-function shouldRetry(failureCount: number, error: unknown): boolean {
-  return (
-    isPaymentServiceError(error) &&
-    error.code === 'NETWORK' &&
-    failureCount < 1
-  );
+function retryOnce(failureCount: number, error: unknown): boolean {
+  return isRetryablePaymentError(error) && failureCount < 1;
 }
 
-
+/** Translated message for any payment failure (by API code, then status). */
 export function usePaymentErrorMessage() {
   const t = useTranslations('Payments.errors');
 
   return useCallback(
-    (error: unknown): string =>
-      isPaymentServiceError(error) ? t(error.code) : t('unknown'),
+    (error: unknown): string => t(getPaymentErrorKey(error)),
     [t]
   );
 }
 
-
+/**
+ * Payments are server-scoped by the token, so the query is always sent and the
+ * API answers `401`/`403` when the session or role is wrong.
+ */
 export function usePayments(filters: PaymentFilters) {
   return useQuery({
     queryKey: paymentKeys.list(filters),
-    queryFn: () => listPayments(filters),
-    
+    queryFn: ({signal}) => listPayments(filters, signal),
     placeholderData: keepPreviousData,
-    retry: shouldRetry
+    retry: retryOnce
   });
 }
-
 
 export function usePayableAppointments(enabled: boolean) {
   return useQuery({
     queryKey: paymentKeys.payableAppointments(),
-    queryFn: listPayableAppointments,
+    queryFn: ({signal}) => listPayableAppointments(signal),
     enabled,
     staleTime: 0,
-    retry: shouldRetry
+    retry: retryOnce
   });
 }
-
 
 export function useCreatePayment() {
   const queryClient = useQueryClient();
@@ -77,12 +74,17 @@ export function useCreatePayment() {
 
   return useMutation({
     mutationFn: createPayment,
-    onSuccess: async () => {
-      notify.success(t('created'));
-      
+    onSuccess: async (_payment, variables) => {
+      notify.success(t(variables.recordAsPaid ? 'createdPaid' : 'created'));
       await queryClient.invalidateQueries({queryKey: paymentKeys.all});
     },
-    onError: (error) => {
+    onError: async (error) => {
+      if (isPaymentPartiallyRecordedError(error)) {
+        notify.warning(t('partiallyRecorded'));
+        await queryClient.invalidateQueries({queryKey: paymentKeys.all});
+        return;
+      }
+
       notify.error(getErrorMessage(error));
     }
   });
@@ -97,7 +99,7 @@ export function useUpdatePaymentStatus() {
     mutationFn: updatePaymentStatus,
     onSuccess: async () => {
       notify.success(t('statusUpdated'));
-      await queryClient.invalidateQueries({queryKey: paymentKeys.lists()});
+      await queryClient.invalidateQueries({queryKey: paymentKeys.all});
     },
     onError: (error) => {
       notify.error(getErrorMessage(error));
