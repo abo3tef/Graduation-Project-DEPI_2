@@ -45,4 +45,7 @@ public sealed record MedicalVisitResponse(
     string? Symptoms,
     string? ClinicalNotes,
     IReadOnlyList<DiagnosisResponse> Diagnoses,
-    IReadOnlyList<MedicationResponse> Medications);
+    IReadOnlyList<MedicationResponse> Medications)
+{
+    public IReadOnlyList<Responses.VisitVitalSignsResponse> VitalSigns { get; init; } = [];
+}

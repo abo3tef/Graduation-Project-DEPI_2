@@ -105,6 +105,7 @@ public sealed class MedicalVisitService : IMedicalVisitService
             .AsNoTracking()
             .Include(candidate => candidate.Diagnoses)
             .Include(candidate => candidate.Medications)
+            .Include(candidate => candidate.VitalSigns)
             .FirstOrDefaultAsync(
                 candidate => candidate.Id == visitId && candidate.DoctorId == doctorId,
                 cancellationToken)
@@ -125,6 +126,7 @@ public sealed class MedicalVisitService : IMedicalVisitService
         var visit = await _dbContext.MedicalVisits
             .Include(candidate => candidate.Diagnoses)
             .Include(candidate => candidate.Medications)
+            .Include(candidate => candidate.VitalSigns)
             .FirstOrDefaultAsync(
                 candidate => candidate.Id == visitId && candidate.DoctorId == doctorId,
                 cancellationToken)
