@@ -1,43 +1,33 @@
 'use client';
 
+import {useState} from 'react';
 import {useTranslations} from 'next-intl';
+import {FiPlus} from 'react-icons/fi';
 import {ThemeToggle} from '@/components/layout/ThemeToggle';
 import {LocaleSwitcher} from '@/components/shared/LocaleSwitcher';
 import {usePaymentFilters} from '../hooks/usePaymentFilters';
-import {
-  usePaymentErrorMessage,
-  usePayments,
-  useUpdatePaymentStatus
-} from '../hooks/usePayments';
-import {PAYMENT_STATUSES} from '../types/payment.types';
+import {usePaymentErrorMessage, usePayments} from '../hooks/usePayments';
 import type {Payment} from '../types/payment.types';
 import {PaymentFilters} from './PaymentFilters';
+import {PaymentFormDialog} from './PaymentFormDialog';
 import {PaymentsPagination} from './PaymentsPagination';
+import {PaymentStatusDialog} from './PaymentStatusDialog';
 import {PaymentsTable} from './PaymentsTable';
 
 /**
- * TEMPORARY preview page content.
- * It only wires the finished pieces together so they can be seen in the browser.
- * It is replaced by `PaymentsView` (file 15), which adds the dialogs.
+ * Payments screen: real payment list with filters, paging, a create dialog and
+ * the allowed status transitions. Data is scoped by the API from the token.
  */
 export function PaymentsPreview() {
   const t = useTranslations('Payments');
   const controller = usePaymentFilters();
   const query = usePayments(controller.filters);
-  const updateStatus = useUpdatePaymentStatus();
   const getErrorMessage = usePaymentErrorMessage();
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [statusPayment, setStatusPayment] = useState<Payment | null>(null);
 
   const payments = query.data?.items ?? [];
   const isEmpty = !query.isPending && !query.isError && payments.length === 0;
-
-  // TEMPORARY: cycles the status so the hooks and the toast can be tested.
-  function handleChangeStatus(payment: Payment) {
-    const index = PAYMENT_STATUSES.indexOf(payment.status);
-    const next =
-      PAYMENT_STATUSES[(index + 1) % PAYMENT_STATUSES.length] ?? payment.status;
-
-    updateStatus.mutate({id: payment.id, status: next});
-  }
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-5 px-4 py-6 sm:px-6 lg:px-8">
@@ -49,18 +39,19 @@ export function PaymentsPreview() {
           <p className="mt-1 text-sm text-muted">{t('subtitle')}</p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setIsFormOpen(true)}
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-transparent bg-brand px-4 text-sm font-bold text-[#06211f] transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+          >
+            <FiPlus aria-hidden="true" className="size-4" />
+            {t('actions.record')}
+          </button>
           <LocaleSwitcher />
           <ThemeToggle />
         </div>
       </header>
-
-      <p
-        role="note"
-        className="rounded-xl border border-brand/30 bg-brand-soft px-4 py-3 text-sm font-semibold text-brand [:root[data-theme=light]_&]:text-brand-strong"
-      >
-        {t('prototypeNotice')}
-      </p>
 
       <PaymentFilters controller={controller} />
 
@@ -103,7 +94,16 @@ export function PaymentsPreview() {
             >
               {t('actions.clearFilters')}
             </button>
-          ) : null}
+          ) : (
+            <button
+              type="button"
+              onClick={() => setIsFormOpen(true)}
+              className="mt-4 inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-transparent bg-brand px-5 text-sm font-bold text-[#06211f] transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            >
+              <FiPlus aria-hidden="true" className="size-4" />
+              {t('actions.record')}
+            </button>
+          )}
         </div>
       ) : (
         <>
@@ -112,7 +112,7 @@ export function PaymentsPreview() {
             isLoading={query.isPending}
             isFetching={query.isFetching && !query.isPending}
             pageSize={controller.filters.pageSize}
-            onChangeStatus={handleChangeStatus}
+            onChangeStatus={setStatusPayment}
           />
 
           {query.data ? (
@@ -125,6 +125,12 @@ export function PaymentsPreview() {
           ) : null}
         </>
       )}
+
+      <PaymentFormDialog open={isFormOpen} onClose={() => setIsFormOpen(false)} />
+      <PaymentStatusDialog
+        payment={statusPayment}
+        onClose={() => setStatusPayment(null)}
+      />
     </main>
   );
 }

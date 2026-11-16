@@ -5,6 +5,7 @@ using Medilog.Infrastructure.Email;
 using Medilog.Infrastructure.Persistence.Appointments;
 using Medilog.Infrastructure.Persistence.Context;
 using Medilog.Infrastructure.Persistence.MedicalRecords;
+using Medilog.Infrastructure.Persistence.Payments;
 using Medilog.Infrastructure.Persistence.Seed;
 using Medilog.Infrastructure.Security;
 using Medilog.Infrastructure.Time;
@@ -52,6 +53,7 @@ public static class DependencyInjection
         // Appointment persistence port (Application-owned) and clinic clock.
         services.AddScoped<IAppointmentStore, AppointmentStore>();
         services.AddScoped<IMedicalRecordStore, MedicalRecordStore>();
+        services.AddScoped<IPaymentStore, PaymentStore>();
         services.TryAddSingleton(TimeProvider.System);
         services.AddSingleton<IClinicClock, ClinicClock>();
 

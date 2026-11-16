@@ -4,6 +4,7 @@ import {useLocale, useTranslations} from 'next-intl';
 import {FiEdit2} from 'react-icons/fi';
 import type {Payment} from '../types/payment.types';
 import {formatCurrency, formatDate, formatDateTime} from '../utils/formatters';
+import {nextStatuses} from '../utils/payment-rules';
 import {PaymentStatusBadge} from './PaymentStatusBadge';
 
 const COLUMNS = [
@@ -134,15 +135,19 @@ export function PaymentsTable({
                   {formatDateTime(payment.paidAt, locale)}
                 </td>
                 <td className="px-4 py-3 text-end">
-                  <button
-                    type="button"
-                    onClick={() => onChangeStatus(payment)}
-                    aria-label={`${t('actions.changeStatus')} — ${payment.patientName}`}
-                    className={`${ACTION_BUTTON_CLASSES} h-9 px-3 text-xs`}
-                  >
-                    <FiEdit2 aria-hidden="true" className="size-3.5" />
-                    {t('actions.changeStatus')}
-                  </button>
+                  {nextStatuses(payment.status).length > 0 ? (
+                    <button
+                      type="button"
+                      onClick={() => onChangeStatus(payment)}
+                      aria-label={`${t('actions.changeStatus')} — ${payment.patientName}`}
+                      className={`${ACTION_BUTTON_CLASSES} h-9 px-3 text-xs`}
+                    >
+                      <FiEdit2 aria-hidden="true" className="size-3.5" />
+                      {t('actions.changeStatus')}
+                    </button>
+                  ) : (
+                    <span className="text-xs text-muted">{t('table.final')}</span>
+                  )}
                 </td>
               </tr>
             ))}
@@ -194,15 +199,21 @@ export function PaymentsTable({
               </p>
             ) : null}
 
-            <button
-              type="button"
-              onClick={() => onChangeStatus(payment)}
-              aria-label={`${t('actions.changeStatus')} — ${payment.patientName}`}
-              className={`${ACTION_BUTTON_CLASSES} mt-4 h-11 w-full px-4 text-sm`}
-            >
-              <FiEdit2 aria-hidden="true" className="size-4" />
-              {t('actions.changeStatus')}
-            </button>
+            {nextStatuses(payment.status).length > 0 ? (
+              <button
+                type="button"
+                onClick={() => onChangeStatus(payment)}
+                aria-label={`${t('actions.changeStatus')} — ${payment.patientName}`}
+                className={`${ACTION_BUTTON_CLASSES} mt-4 h-11 w-full px-4 text-sm`}
+              >
+                <FiEdit2 aria-hidden="true" className="size-4" />
+                {t('actions.changeStatus')}
+              </button>
+            ) : (
+              <p className="mt-4 rounded-xl border border-border bg-surface-2/40 px-4 py-3 text-center text-xs text-muted">
+                {t('table.final')}
+              </p>
+            )}
           </li>
         ))}
       </ul>

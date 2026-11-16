@@ -4,6 +4,7 @@ using Medilog.Application.Features.Appointments;
 using Medilog.Application.Features.Auth;
 using Medilog.Application.Features.Dashboard;
 using Medilog.Application.Features.MedicalRecords;
+using Medilog.Application.Features.Payments;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Medilog.Application;
@@ -42,6 +43,9 @@ public static class DependencyInjection
         // AddInfrastructure; the raw password never leaves the process.
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<AuthTokenService>();
+
+        // Payment use cases (F7). Requires an ICurrentUser, which the WebAPI host provides.
+        services.AddScoped<IPaymentService, PaymentService>();
 
         return services;
     }

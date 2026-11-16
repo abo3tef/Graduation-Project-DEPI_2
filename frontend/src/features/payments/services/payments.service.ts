@@ -1,199 +1,125 @@
-import {MAX_PAGE_SIZE} from '@/types/paging';
+import {apiRequest} from '@/lib/api';
 import type {PagedResult} from '@/types/paging';
 import {
-  PAYMENT_AMOUNT_MAX,
-  PAYMENT_AMOUNT_MIN,
-  PAYMENT_NOTES_MAX_LENGTH,
-  isPaymentMethod,
-  isPaymentStatus
+  PAYABLE_APPOINTMENTS_LIMIT,
+  type CreatePaymentInput,
+  type Payment,
+  type PaymentAppointmentOption,
+  type PaymentFilters,
+  type UpdatePaymentStatusInput
 } from '../types/payment.types';
-import type {
-  CreatePaymentInput,
-  Payment,
-  PaymentAppointmentOption,
-  PaymentFilters,
-  UpdatePaymentStatusInput
-} from '../types/payment.types';
-import {MOCK_APPOINTMENTS, MOCK_PAYMENTS} from './payments.mock';
+import {toApiPaymentMethod, toApiPaymentStatus} from './payment-enums';
+import {
+  readPayment,
+  readPaymentPage,
+  readPayableAppointments
+} from './payment-readers';
 
+const BASE_PATH = '/api/payments';
 
+/**
+ * The create request always produces a `Pending` payment. When the user asked
+ * for "fully paid now", the follow-up status call may fail after the payment
+ * already exists; the dialog reports that the payment was saved as pending.
+ */
+export class PaymentPartiallyRecordedError extends Error {
+  readonly payment: Payment;
+  readonly causeError: unknown;
 
-export type PaymentErrorCode =
-  | 'NETWORK'
-  | 'INVALID_INPUT'
-  | 'APPOINTMENT_NOT_FOUND'
-  | 'APPOINTMENT_ALREADY_PAID'
-  | 'PAYMENT_NOT_FOUND';
-
-export class PaymentServiceError extends Error {
-  readonly code: PaymentErrorCode;
-
-  constructor(code: PaymentErrorCode) {
-    super(code);
-    this.name = 'PaymentServiceError';
-    this.code = code;
+  constructor(payment: Payment, causeError: unknown) {
+    super('The payment was recorded as pending but could not be marked as paid.');
+    this.name = 'PaymentPartiallyRecordedError';
+    this.payment = payment;
+    this.causeError = causeError;
   }
 }
 
-export function isPaymentServiceError(
+export function isPaymentPartiallyRecordedError(
   error: unknown
-): error is PaymentServiceError {
-  return error instanceof PaymentServiceError;
+): error is PaymentPartiallyRecordedError {
+  return error instanceof PaymentPartiallyRecordedError;
 }
 
-
-const MOCK_LATENCY_MS = 400;
-
-
-const SHOULD_FAIL = process.env.NEXT_PUBLIC_PAYMENTS_MOCK_FAIL === 'true';
-
-
-let store: readonly Payment[] = MOCK_PAYMENTS;
-let nextPaymentNumber = MOCK_PAYMENTS.length + 1;
-
-async function simulateRequest(): Promise<void> {
-  await new Promise<void>((resolve) => setTimeout(resolve, MOCK_LATENCY_MS));
-
-  if (SHOULD_FAIL) {
-    throw new PaymentServiceError('NETWORK');
-  }
+function searchQuery(search: string | undefined): string | undefined {
+  const trimmed = search?.trim() ?? '';
+  return trimmed === '' ? undefined : trimmed;
 }
 
-
-function normalize(value: string): string {
-  return value.trim().toLocaleLowerCase();
-}
-
-function clampInteger(value: number, min: number, max: number): number {
-  if (!Number.isFinite(value)) {
-    return min;
-  }
-
-  return Math.min(Math.max(Math.trunc(value), min), max);
+function notesBody(notes: string | undefined): string | null {
+  const trimmed = notes?.trim() ?? '';
+  return trimmed === '' ? null : trimmed;
 }
 
 export async function listPayments(
-  filters: PaymentFilters
+  filters: PaymentFilters,
+  signal?: AbortSignal
 ): Promise<PagedResult<Payment>> {
-  await simulateRequest();
-
-  const pageSize = clampInteger(filters.pageSize, 1, MAX_PAGE_SIZE);
-  const search = normalize(filters.search ?? '');
-
-  const filtered = store.filter((payment) => {
-    if (filters.status && filters.status !== 'all' && payment.status !== filters.status) {
-      return false;
-    }
-
-    if (filters.method && filters.method !== 'all' && payment.method !== filters.method) {
-      return false;
-    }
-
-    if (search === '') {
-      return true;
-    }
-
-    return (
-      normalize(payment.patientName).includes(search) ||
-      normalize(payment.id).includes(search) ||
-      normalize(payment.appointmentId).includes(search)
-    );
+  const data = await apiRequest<unknown>(BASE_PATH, {
+    query: {
+      search: searchQuery(filters.search),
+      status:
+        filters.status && filters.status !== 'all'
+          ? toApiPaymentStatus(filters.status)
+          : undefined,
+      method:
+        filters.method && filters.method !== 'all'
+          ? toApiPaymentMethod(filters.method)
+          : undefined,
+      pageNumber: filters.page,
+      pageSize: filters.pageSize
+    },
+    signal
   });
 
-  
-  const sorted = [...filtered].sort((a, b) => {
-    const byDate = b.paidAt.localeCompare(a.paidAt);
-    return byDate !== 0 ? byDate : b.id.localeCompare(a.id);
+  return readPaymentPage(data);
+}
+
+export async function listPayableAppointments(
+  signal?: AbortSignal
+): Promise<readonly PaymentAppointmentOption[]> {
+  const data = await apiRequest<unknown>(`${BASE_PATH}/payable-appointments`, {
+    query: {limit: PAYABLE_APPOINTMENTS_LIMIT},
+    signal
   });
 
-  const totalCount = sorted.length;
-  const totalPages = Math.ceil(totalCount / pageSize);
-  const page = totalPages === 0 ? 1 : clampInteger(filters.page, 1, totalPages);
-  const start = (page - 1) * pageSize;
-
-  return {
-    items: sorted.slice(start, start + pageSize),
-    page,
-    pageSize,
-    totalCount,
-    totalPages
-  };
+  return readPayableAppointments(data);
 }
 
+export async function createPayment(
+  input: CreatePaymentInput
+): Promise<Payment> {
+  const data = await apiRequest<unknown>(BASE_PATH, {
+    method: 'POST',
+    body: {
+      appointmentId: input.appointmentId,
+      amount: input.amount,
+      method: toApiPaymentMethod(input.method),
+      notes: notesBody(input.notes)
+    }
+  });
+  const created = readPayment(data);
 
-export async function listPayableAppointments(): Promise<
-  readonly PaymentAppointmentOption[]
-> {
-  await simulateRequest();
-
-  const paidAppointmentIds = new Set(store.map((payment) => payment.appointmentId));
-
-  return MOCK_APPOINTMENTS.filter((appointment) => !paidAppointmentIds.has(appointment.id));
-}
-
-
-export async function createPayment(input: CreatePaymentInput): Promise<Payment> {
-  await simulateRequest();
-
-  const notes = input.notes?.trim();
-
-  const isValid =
-    Number.isFinite(input.amount) &&
-    input.amount >= PAYMENT_AMOUNT_MIN &&
-    input.amount <= PAYMENT_AMOUNT_MAX &&
-    isPaymentMethod(input.method) &&
-    (notes === undefined || notes.length <= PAYMENT_NOTES_MAX_LENGTH);
-
-  if (!isValid) {
-    throw new PaymentServiceError('INVALID_INPUT');
+  if (!input.recordAsPaid || created.status === 'paid') {
+    return created;
   }
 
-  const appointment = MOCK_APPOINTMENTS.find((item) => item.id === input.appointmentId);
-
-  if (!appointment) {
-    throw new PaymentServiceError('APPOINTMENT_NOT_FOUND');
+  try {
+    return await updatePaymentStatus({id: created.id, status: 'paid'});
+  } catch (error) {
+    throw new PaymentPartiallyRecordedError(created, error);
   }
-
-  if (store.some((payment) => payment.appointmentId === appointment.id)) {
-    throw new PaymentServiceError('APPOINTMENT_ALREADY_PAID');
-  }
-
-  const payment: Payment = {
-    id: `pay-${String(nextPaymentNumber).padStart(3, '0')}`,
-    patientName: appointment.patientName,
-    appointmentId: appointment.id,
-    appointmentDate: appointment.appointmentDate,
-    amount: input.amount,
-    method: input.method,
-    
-    status: 'paid',
-    paidAt: new Date().toISOString(),
-    ...(notes ? {notes} : {})
-  };
-
-  nextPaymentNumber += 1;
-  store = [payment, ...store];
-
-  return payment;
 }
 
 export async function updatePaymentStatus(
   input: UpdatePaymentStatusInput
 ): Promise<Payment> {
-  await simulateRequest();
+  const data = await apiRequest<unknown>(
+    `${BASE_PATH}/${encodeURIComponent(input.id)}/status`,
+    {
+      method: 'PUT',
+      body: {status: toApiPaymentStatus(input.status)}
+    }
+  );
 
-  if (!isPaymentStatus(input.status)) {
-    throw new PaymentServiceError('INVALID_INPUT');
-  }
-
-  const existing = store.find((payment) => payment.id === input.id);
-
-  if (!existing) {
-    throw new PaymentServiceError('PAYMENT_NOT_FOUND');
-  }
-
-  const updated: Payment = {...existing, status: input.status};
-  store = store.map((payment) => (payment.id === updated.id ? updated : payment));
-
-  return updated;
+  return readPayment(data);
 }
