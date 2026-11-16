@@ -59,6 +59,7 @@ through configuration.
 | 6 | `POST` | `/api/medical-visits/{visitId}/medications` | `201 Created` | `/api/medical-visits/{visitId}` (parent visit) |
 | 7 | `PUT` | `/api/medical-visits/{visitId}/medications/{medicationId}` | `200 OK` | — |
 | 8 | `DELETE` | `/api/medical-visits/{visitId}/medications/{medicationId}` | `204 No Content` | — |
+| 9 | `DELETE` | `/api/medical-visits/{visitId}/diagnoses/{diagnosisId}` | `204 No Content` | — |
 
 Route identifiers are GUIDs (`{visitId:guid}`, `{diagnosisId:guid}`, `{medicationId:guid}`).
 
@@ -160,6 +161,15 @@ No request body. The medication must belong to the visit in the route, and that 
 to the acting doctor. The deletion is **permanent** (D-23): it is intended to correct a line that
 was entered by mistake, and it does not affect the visit or its other child records.
 
+### 3.8 Delete a diagnosis — `DELETE /api/medical-visits/{visitId}/diagnoses/{diagnosisId}`
+
+No request body. The diagnosis must belong to the visit in the route, and that visit must belong
+to the acting doctor. The deletion is **permanent** (D-23): it is intended to correct an entry
+made by mistake, and it does not affect the visit, its medications, its vital signs or the
+patient's other records. A visit, diagnosis pair that does not match, a visit of another doctor
+and an unknown diagnosis all return the same `404`, so the response does not reveal whether the
+visit exists.
+
 ## 4. Response contracts
 
 ### 4.1 Medical visit
@@ -217,7 +227,7 @@ navigation property is returned.
 |---|---|
 | `200 OK` | Successful `GET`/`PUT` |
 | `201 Created` | Successful `POST`; includes a `Location` header |
-| `204 No Content` | Successful medication `DELETE` |
+| `204 No Content` | Successful medication or diagnosis `DELETE` |
 | `400 Bad Request` | Request-shape validation failure, or an appointment that does not match the patient/doctor |
 | `401 Unauthorized` | Missing/invalid token, or a token without an identity |
 | `403 Forbidden` | Authenticated caller is not a doctor, or the patient is outside the doctor's workspace |
@@ -277,8 +287,10 @@ contains the exception details; the exception is logged on the server.
   the F4 list endpoint is not part of the current delivery scope.
 - `GET` for a single diagnosis or medication.
 - `GET …/medications` as a separate list route.
-- `DELETE` for visits or diagnoses (D-12); medication delete is in scope (D-23).
-- Restoring a deleted medication line (no soft delete).
+- `DELETE` for visits (D-12); the permanent deletes of medication lines and diagnoses are in scope
+  (D-23).
+- Restoring a deleted medication line or diagnosis (no soft delete) or `DELETE` for any other
+  child record.
 - `login`, `register`, `refresh`, password-reset and OTP routes.
 - Secretary access to medical records.
 
@@ -289,8 +301,10 @@ HTTP pipeline (`WebApplicationFactory`, `TestAuthHandler`, EF Core InMemory):
 
 - success `201`/`200` for all visit/diagnosis routes and both `Location` values;
 - success `201`/`200`/`204` for the medication routes, with the parent visit as `Location`;
+- success `204` for the diagnosis `DELETE`, with the diagnosis gone from the visit response and
+  from the patient history while the visit and its medications remain;
 - anonymous `401`, secretary `403`, foreign visit `404`, foreign patient `403`;
 - appointment mismatch `400`, duplicate appointment linkage `409`;
-- foreign or cross-visit medication `404`;
+- foreign or cross-visit medication `404`; foreign doctor or cross-visit diagnosis `404`;
 - `ProblemDetails` shape with no stack trace or exception text;
 - absent list routes (`405`).

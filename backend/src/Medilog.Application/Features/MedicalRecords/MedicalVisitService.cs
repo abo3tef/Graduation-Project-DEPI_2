@@ -189,6 +189,26 @@ public sealed class MedicalVisitService : IMedicalVisitService
         return _mapper.Map<DiagnosisResponse>(diagnosis);
     }
 
+    public async Task DeleteDiagnosisAsync(
+        Guid visitId,
+        Guid diagnosisId,
+        CancellationToken cancellationToken = default)
+    {
+        var doctorId = RequireActingDoctorId();
+
+        var diagnosis = await _dbContext.Diagnoses
+            .Include(candidate => candidate.Visit)
+            .FirstOrDefaultAsync(
+                candidate => candidate.Id == diagnosisId
+                    && candidate.VisitId == visitId
+                    && candidate.Visit.DoctorId == doctorId,
+                cancellationToken)
+            ?? throw new NotFoundException(DiagnosisNotFoundMessage);
+
+        _dbContext.Diagnoses.Remove(diagnosis);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task<MedicationResponse> AddMedicationAsync(
         Guid visitId,
         CreateMedicationRequest request,

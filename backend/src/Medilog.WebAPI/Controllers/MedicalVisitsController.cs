@@ -180,4 +180,20 @@ public sealed class MedicalVisitsController : ControllerBase
 
         return NoContent();
     }
+
+    /// <summary>Deletes a diagnosis that was entered by mistake (D-23).</summary>
+    [HttpDelete("{visitId:guid}/diagnoses/{diagnosisId:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteDiagnosisAsync(
+        Guid visitId,
+        Guid diagnosisId,
+        CancellationToken cancellationToken)
+    {
+        await _medicalVisitService.DeleteDiagnosisAsync(visitId, diagnosisId, cancellationToken);
+
+        return NoContent();
+    }
 }

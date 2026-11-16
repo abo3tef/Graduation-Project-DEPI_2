@@ -10,7 +10,7 @@ using Xunit;
 namespace Medilog.WebAPI.Tests.Api;
 
 /// <summary>
-/// End-to-end tests for the five approved medical-visit routes (decision D-19).
+/// End-to-end tests for the six approved medical-visit and diagnosis routes (decisions D-19, D-23).
 /// </summary>
 /// <remarks>
 /// The real WebAPI pipeline runs on top of <see cref="WebApiFactory"/>, so authentication,
@@ -192,6 +192,90 @@ public sealed class MedicalVisitsApiTests
         Assert.Equal(created.Id, updated!.Id);
         Assert.Equal("Tension headache", updated.DiagnosisName);
         Assert.Equal("Pressure-like pain", updated.Description);
+    }
+
+    [Fact]
+    public async Task Delete_diagnosis_returns_204_and_removes_it_from_the_visit_and_history()
+    {
+        // Arrange
+        using var factory = new WebApiFactory();
+        var doctorId = Guid.NewGuid();
+        var patientId = Guid.NewGuid();
+        await factory.SeedAsync(db =>
+        {
+            db.Add(ApiData.Doctor(doctorId));
+            db.Add(ApiData.Patient(patientId, doctorId));
+        });
+
+        using var client = factory.CreateClientFor(doctorId);
+        var createResponse = await client.PostAsJsonAsync(VisitsUrl, ApiData.CreateVisit(patientId));
+        var visit = await createResponse.Content.ReadFromJsonAsync<MedicalVisitResponse>();
+        var diagnosisResponse = await client.PostAsJsonAsync(
+            $"{VisitsUrl}/{visit!.Id}/diagnoses",
+            ApiData.CreateDiagnosis());
+        var diagnosis = await diagnosisResponse.Content.ReadFromJsonAsync<DiagnosisResponse>();
+        var medicationResponse = await client.PostAsJsonAsync(
+            $"{VisitsUrl}/{visit.Id}/medications",
+            ApiData.CreateMedication());
+        var medication = await medicationResponse.Content.ReadFromJsonAsync<MedicationResponse>();
+
+        // Act
+        var response = await client.DeleteAsync(
+            $"{VisitsUrl}/{visit.Id}/diagnoses/{diagnosis!.Id}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+
+        var visitResponse = await client.GetAsync($"{VisitsUrl}/{visit.Id}");
+        Assert.Equal(HttpStatusCode.OK, visitResponse.StatusCode);
+
+        var reloaded = await visitResponse.Content.ReadFromJsonAsync<MedicalVisitResponse>();
+        Assert.NotNull(reloaded);
+        Assert.DoesNotContain(reloaded!.Diagnoses, candidate => candidate.Id == diagnosis.Id);
+        Assert.Contains(reloaded.Medications, candidate => candidate.Id == medication!.Id);
+
+        var historyResponse = await client.GetAsync($"/api/patients/{patientId}/medical-visits");
+        Assert.Equal(HttpStatusCode.OK, historyResponse.StatusCode);
+
+        using var history = JsonDocument.Parse(await historyResponse.Content.ReadAsStringAsync());
+        var historyVisit = history.RootElement.GetProperty("items")[0];
+        Assert.Equal(visit.Id, historyVisit.GetProperty("visitId").GetGuid());
+        Assert.Equal(0, historyVisit.GetProperty("diagnoses").GetArrayLength());
+        Assert.Equal(1, historyVisit.GetProperty("medications").GetArrayLength());
+    }
+
+    [Fact]
+    public async Task Delete_diagnosis_from_another_visit_returns_404_and_keeps_it()
+    {
+        // Arrange
+        using var factory = new WebApiFactory();
+        var doctorId = Guid.NewGuid();
+        var patientId = Guid.NewGuid();
+        var firstVisitId = Guid.NewGuid();
+        var secondVisitId = Guid.NewGuid();
+        var diagnosisId = Guid.NewGuid();
+        await factory.SeedAsync(db =>
+        {
+            db.Add(ApiData.Doctor(doctorId));
+            db.Add(ApiData.Patient(patientId, doctorId));
+            db.Add(ApiData.Visit(firstVisitId, patientId, doctorId));
+            db.Add(ApiData.Visit(secondVisitId, patientId, doctorId));
+            db.Add(ApiData.Diagnosis(diagnosisId, secondVisitId, patientId));
+        });
+
+        using var client = factory.CreateClientFor(doctorId);
+
+        // Act
+        var response = await client.DeleteAsync(
+            $"{VisitsUrl}/{firstVisitId}/diagnoses/{diagnosisId}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+
+        var readBack = await client.GetAsync($"{VisitsUrl}/{secondVisitId}");
+        var visit = await readBack.Content.ReadFromJsonAsync<MedicalVisitResponse>();
+        Assert.NotNull(visit);
+        Assert.Contains(visit!.Diagnoses, candidate => candidate.Id == diagnosisId);
     }
 
     [Fact]
@@ -445,7 +529,7 @@ public sealed class MedicalVisitsApiTests
     }
 
     [Fact]
-    public async Task Diagnosis_of_another_doctor_is_not_found()
+    public async Task Diagnosis_of_another_doctor_is_not_found_on_update_or_delete()
     {
         // Arrange
         using var factory = new WebApiFactory();
@@ -466,12 +550,21 @@ public sealed class MedicalVisitsApiTests
         using var client = factory.CreateClientFor(otherDoctorId);
 
         // Act
-        var response = await client.PutAsJsonAsync(
+        var updateResponse = await client.PutAsJsonAsync(
             $"{VisitsUrl}/{visitId}/diagnoses/{diagnosisId}",
             ApiData.UpdateDiagnosis());
+        var deleteResponse = await client.DeleteAsync(
+            $"{VisitsUrl}/{visitId}/diagnoses/{diagnosisId}");
 
         // Assert
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, updateResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, deleteResponse.StatusCode);
+
+        using var ownerClient = factory.CreateClientFor(owningDoctorId);
+        var readBack = await ownerClient.GetAsync($"{VisitsUrl}/{visitId}");
+        var visit = await readBack.Content.ReadFromJsonAsync<MedicalVisitResponse>();
+        Assert.NotNull(visit);
+        Assert.Contains(visit!.Diagnoses, candidate => candidate.Id == diagnosisId);
     }
 
     [Fact]
@@ -527,6 +620,7 @@ public sealed class MedicalVisitsApiTests
             new(HttpMethod.Put, $"{VisitsUrl}/{visitId}", HasBody: true),
             new(HttpMethod.Post, $"{VisitsUrl}/{visitId}/diagnoses", HasBody: true),
             new(HttpMethod.Put, $"{VisitsUrl}/{visitId}/diagnoses/{diagnosisId}", HasBody: true),
+            new(HttpMethod.Delete, $"{VisitsUrl}/{visitId}/diagnoses/{diagnosisId}"),
         ];
     }
 
