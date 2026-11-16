@@ -30,6 +30,10 @@ principal is established:
 - An out-of-scope resource behaves like a missing one (`404`) unless the caller is not allowed to
   use the endpoint at all (`403`).
 
+Since F6-C1 the principal is a real JWT bearer token (`sub`, `role`, `doctorId`) issued by
+`/api/auth`; see [`AUTH_API.md`](AUTH_API.md). The `/api/auth/*` routes are the only anonymous ones.
+The temporary `X-User-Id` / `X-User-Role` development fallback is removed in F11-C2.
+
 ## 3. List, filtering and pagination
 
 Every list endpoint uses this shape (STATE.md Q-04):
@@ -86,6 +90,10 @@ Shared constants: `MinPageNumber = 1`, `DefaultPageNumber = 1`, `DefaultPageSize
 | `200 OK` | Successful `GET`/`PUT` |
 | `201 Created` | Successful `POST`; includes a `Location` header pointing at the new resource |
 | `204 No Content` | Successful `DELETE` with no body to return |
+
+**Documented exception:** `POST /api/auth/register` returns `201` with the account summary and **no
+`Location` header**, because the frozen authentication contract has no "read account" route
+(decision D-38, see [`AUTH_API.md`](AUTH_API.md)).
 
 ## 5. Error envelope
 
@@ -175,6 +183,14 @@ declared in `DomainErrorCodes`, application codes in `ErrorCodes`.
 | `validation.failed` | 400 | Field validation failed; see `errors`/`errorCodes` |
 | `request.invalid` | 400 | Model binding failed (malformed JSON, wrong type, missing body) |
 | `auth.unauthorized` | 401 | No authenticated principal |
+| `auth.invalid_credentials` | 401 | Unknown email or wrong password (identical answer) |
+| `auth.email_unverified` | 403 | Correct password, but the email address is not confirmed |
+| `auth.account_inactive` | 403 | Account deactivated by an administrator |
+| `auth.email_already_registered` | 409 | Registration reuses an existing account email |
+| `auth.token_invalid` | 401 | Verification/reset token unknown, used, expired or wrong purpose |
+| `auth.invalid_google_token` | 401 | Firebase ID token invalid, or no existing account for its email |
+| `auth.google_not_configured` | 503 | Google Sign-In is not configured |
+| `auth.not_configured` | 503 | JWT signing key missing, or email cannot be sent |
 | `access.forbidden` | 403 | Authenticated but not allowed |
 | `resource.not_found` | 404 | Missing or outside the caller's scope |
 | `request.method_not_allowed` | 405 | Route does not support the HTTP method |

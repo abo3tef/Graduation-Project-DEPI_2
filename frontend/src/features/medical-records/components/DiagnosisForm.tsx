@@ -9,7 +9,6 @@ import {
   useUpdateDiagnosisMutation
 } from '../hooks/use-diagnosis-mutations';
 import type {CreateDiagnosisRequest, DiagnosisResponse} from '../types';
-import {readDevToken, useDevToken} from '../use-dev-token';
 import {
   DIAGNOSIS_FIELD_IDS,
   DIAGNOSIS_FIELD_LIMITS,
@@ -53,7 +52,6 @@ export function DiagnosisForm(props: DiagnosisFormProps) {
   const validationT = useTranslations('MedicalRecords.validation');
   const commonT = useTranslations('MedicalRecords.common');
 
-  const {token, isReady} = useDevToken();
   const createMutation = useCreateDiagnosisMutation(props.visitId);
   const updateMutation = useUpdateDiagnosisMutation(props.visitId);
 
@@ -158,11 +156,6 @@ export function DiagnosisForm(props: DiagnosisFormProps) {
       return;
     }
 
-    const currentToken = readDevToken();
-
-    if (!currentToken) {
-      return;
-    }
 
     const payload: CreateDiagnosisRequest = {
       diagnosisName: values.diagnosisName.trim(),
@@ -172,7 +165,7 @@ export function DiagnosisForm(props: DiagnosisFormProps) {
 
     if (props.mode === 'edit') {
       updateMutation.mutate(
-        {diagnosisId: props.diagnosis.id, payload, token: currentToken},
+        {diagnosisId: props.diagnosis.id, payload},
         {onSuccess: props.onDone}
       );
 
@@ -180,7 +173,7 @@ export function DiagnosisForm(props: DiagnosisFormProps) {
     }
 
     createMutation.mutate(
-      {payload, token: currentToken},
+      {payload},
       {onSuccess: props.onDone}
     );
   }
@@ -268,7 +261,7 @@ export function DiagnosisForm(props: DiagnosisFormProps) {
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="submit"
-            disabled={isPending || !isReady || !token}
+            disabled={isPending}
             className={primaryButtonClassName}
           >
             <FiSave aria-hidden className="size-4" />

@@ -45,6 +45,11 @@ internal sealed class DoctorConfiguration : CreatedEntityConfiguration<Doctor>
             .HasConversion(EnumValueConverters.AccountStatusConverter)
             .IsRequired();
 
+        builder.Property(entity => entity.EmailVerifiedAtUtc)
+            .HasColumnName("email_verified_at_utc")
+            .HasColumnType("datetime(6)")
+            .HasConversion(ValueConverters.NullableUtcDateTimeOffsetConverter);
+
         builder.HasIndex(entity => entity.Email)
             .IsUnique()
             .HasDatabaseName("uq_doctors_email");

@@ -1,15 +1,12 @@
 'use client';
 
-import {useEffect, useRef} from 'react';
 import {FiArrowLeft, FiRefreshCw} from 'react-icons/fi';
 import {useTranslations} from 'next-intl';
 import {Link} from '@/i18n/navigation';
 import {toQueryFailureKind, type QueryFailureKind} from '../errors';
 import {useMedicalVisit} from '../hooks/use-medical-visit';
 import {isGuid} from '../validation';
-import {useDevToken} from '../use-dev-token';
 import {LoadingPanel, StatePanel} from './AsyncState';
-import {DevTokenPanel} from './DevTokenPanel';
 import {DiagnosisSection} from './DiagnosisSection';
 import {MedicationSection} from './MedicationSection';
 import {VisitDetails} from './VisitDetails';
@@ -19,54 +16,13 @@ type MedicalVisitScreenProps = {
 };
 
 /**
- * Visit detail screen. It owns the token gate, the malformed-id short circuit and the
- * `401/403/404/network/server` states, then hands the loaded visit to `VisitDetails`.
+ * Visit detail screen. It handles GUID validation, loading and
+ * `401/403/404/network/server` failure states, then hands the loaded visit to `VisitDetails`.
  */
 export function MedicalVisitScreen({visitId}: MedicalVisitScreenProps) {
   const t = useTranslations('MedicalRecords.states');
-  const {token, isReady} = useDevToken();
   const validId = isGuid(visitId);
-  const query = useMedicalVisit(visitId, token, isReady);
-  const {refetch} = query;
-  const previousTokenRef = useRef(token);
-
-  // A replaced token must refetch; the initial `null → token` transition is already covered by
-  // `enabled`, so only a token-to-token change triggers an extra request.
-  useEffect(() => {
-    if (!isReady) {
-      return;
-    }
-
-    const previous = previousTokenRef.current;
-
-    if (previous === token) {
-      return;
-    }
-
-    previousTokenRef.current = token;
-
-    if (previous !== null && token !== null) {
-      void refetch();
-    }
-  }, [isReady, token, refetch]);
-
-  if (!isReady) {
-    return <LoadingPanel label={t('loading')} />;
-  }
-
-  if (!token) {
-    return (
-      <div className="flex flex-col gap-4">
-        <StatePanel
-          title={t('tokenTitle')}
-          description={t('tokenDescription')}
-        >
-          <BackToWorkspaceLink />
-        </StatePanel>
-        <DevTokenPanel />
-      </div>
-    );
-  }
+  const query = useMedicalVisit(visitId);
 
   if (!validId) {
     return <QueryFailure kind="notFound" />;
@@ -181,8 +137,6 @@ function QueryFailure({kind, onRetry}: QueryFailureProps) {
           {commonT('backToWorkspace')}
         </Link>
       </StatePanel>
-
-      {kind === 'unauthorized' ? <DevTokenPanel /> : null}
     </div>
   );
 }

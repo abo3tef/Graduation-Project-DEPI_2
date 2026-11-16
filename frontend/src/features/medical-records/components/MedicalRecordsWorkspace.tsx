@@ -4,24 +4,19 @@ import {useState, type FormEvent} from 'react';
 import {FiArrowRight, FiClipboard, FiPlusCircle} from 'react-icons/fi';
 import {useTranslations} from 'next-intl';
 import {Link, useRouter} from '@/i18n/navigation';
-import {DevTokenPanel} from './DevTokenPanel';
-import {useDevToken} from '../use-dev-token';
 import {isGuid} from '../validation';
 
 /**
  * Entry point for the medical-records feature.
  *
  * Until the shared list contract (Q-04) exists there is no visit browser, so the doctor opens a
- * known visit by its identifier (D-31). The token panel is the development bridge (D-28).
+ * known visit by its identifier (D-31).
  */
 export function MedicalRecordsWorkspace() {
   const t = useTranslations('MedicalRecords.workspace');
   const router = useRouter();
-  const {token, isReady} = useDevToken();
   const [visitId, setVisitId] = useState('');
   const [error, setError] = useState<string | null>(null);
-
-  const hasToken = isReady && token !== null;
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -56,7 +51,7 @@ export function MedicalRecordsWorkspace() {
         </Link>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+      <div className="max-w-2xl">
         <section
           aria-labelledby="open-visit-title"
           className="rounded-2xl border border-border bg-surface p-5 sm:p-6"
@@ -102,13 +97,8 @@ export function MedicalRecordsWorkspace() {
               </p>
             ) : null}
 
-            {isReady && !hasToken ? (
-              <p className="text-xs text-muted">{t('tokenRequired')}</p>
-            ) : null}
-
             <button
               type="submit"
-              disabled={!hasToken}
               className="inline-flex w-fit items-center gap-2 rounded-xl bg-brand px-4 py-2 text-sm font-bold text-[#06211f] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {t('openVisit')}
@@ -116,8 +106,6 @@ export function MedicalRecordsWorkspace() {
             </button>
           </form>
         </section>
-
-        <DevTokenPanel />
       </div>
     </main>
   );

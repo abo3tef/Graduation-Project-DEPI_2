@@ -8,4 +8,6 @@ public static class Roles
     public const string Doctor = "Doctor";
 
     public const string Secretary = "Secretary";
+
+    public const string Admin = "Admin";
 }

@@ -1,7 +1,5 @@
 import {
   FiActivity,
-  FiArrowLeft,
-  FiArrowRight,
   FiMenu,
   FiX,
 } from "react-icons/fi";
@@ -10,7 +8,7 @@ import { LocaleSwitcher } from "@/components/shared/LocaleSwitcher";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { useState } from "react";
 import { Link } from "@/i18n/navigation";
-import { useActingIdentity } from "@/features/auth";
+import { SessionBadge, useActingIdentity } from "@/features/auth";
 
 export function Header() {
   const t = useTranslations("Navigation");
@@ -73,17 +71,7 @@ export function Header() {
         <div className="flex items-center gap-2">
           <ThemeToggle />
           <LocaleSwitcher />
-          <Link
-            href="/#contact"
-            className="inline-flex min-h-9 items-center justify-center gap-2 rounded-full border border-muted px-4 text-xs text-foreground transition hover:border-brand hover:text-brand max-md:hidden"
-          >
-            {t("login")}
-            <FiArrowLeft className="size-3 ltr:hidden rtl:block" aria-hidden />
-            <FiArrowRight
-              className="size-3 hidden ltr:block rtl:hidden"
-              aria-hidden
-            />
-          </Link>
+          <SessionBadge />
           <button
             type="button"
             className="grid size-9 place-items-center border-0 bg-transparent text-foreground md:hidden"

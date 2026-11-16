@@ -5,7 +5,6 @@ import {FiEdit3, FiPlus, FiTrash2} from 'react-icons/fi';
 import {useTranslations} from 'next-intl';
 import {useDeleteMedicationMutation} from '../hooks/use-medication-mutations';
 import type {MedicationResponse} from '../types';
-import {readDevToken} from '../use-dev-token';
 import {ConfirmDeleteDialog} from './ConfirmDeleteDialog';
 import {MedicationForm} from './MedicationForm';
 import {deleteActionClassName, sectionActionClassName} from './form-styles';
@@ -71,14 +70,9 @@ export function MedicationSection({visitId, medications}: MedicationSectionProps
       return;
     }
 
-    const token = readDevToken();
-
-    if (!token) {
-      return;
-    }
 
     deleteMutation.mutate(
-      {medicationId: deleteTarget.id, token},
+      {medicationId: deleteTarget.id},
       {onSuccess: () => setDeleteTarget(null)}
     );
   }

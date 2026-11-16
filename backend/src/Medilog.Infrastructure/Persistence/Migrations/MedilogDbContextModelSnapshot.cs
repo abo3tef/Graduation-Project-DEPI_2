@@ -19,6 +19,61 @@ namespace Medilog.Infrastructure.Persistence.Migrations
                 .HasAnnotation("ProductVersion", "10.0.14")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
+            modelBuilder.Entity("Medilog.Domain.Entities.Admin", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)")
+                        .HasColumnName("id");
+
+                    b.Property<string>("AccountStatus")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("account_status");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("varchar(320)")
+                        .HasColumnName("email");
+
+                    b.Property<DateTime?>("EmailVerifiedAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("email_verified_at_utc");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("full_name");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("password_hash");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique()
+                        .HasDatabaseName("uq_admins_email");
+
+                    b.ToTable("admins", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_admins_account_status", "`account_status` IN ('Active', 'Inactive')");
+                        });
+
+                    b.HasAnnotation("MySQL:Collation", "utf8mb4_0900_ai_ci");
+
+                    MySQLEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                });
+
             modelBuilder.Entity("Medilog.Domain.Entities.Allergy", b =>
                 {
                     b.Property<Guid>("Id")
@@ -139,6 +194,68 @@ namespace Medilog.Infrastructure.Persistence.Migrations
                     MySQLEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
                 });
 
+            modelBuilder.Entity("Medilog.Domain.Entities.AuthToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime?>("ConsumedAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("consumed_at_utc");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<DateTime>("ExpiresAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("expires_at_utc");
+
+                    b.Property<string>("Purpose")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("purpose");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)")
+                        .HasColumnName("token_hash");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("user_id");
+
+                    b.Property<string>("UserType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("user_type");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique()
+                        .HasDatabaseName("uq_auth_tokens_token_hash");
+
+                    b.HasIndex("UserId", "UserType", "Purpose")
+                        .HasDatabaseName("ix_auth_tokens_user_purpose");
+
+                    b.ToTable("auth_tokens", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_auth_tokens_purpose", "`purpose` IN ('EmailVerification', 'PasswordReset')");
+
+                            t.HasCheckConstraint("ck_auth_tokens_user_type", "`user_type` IN ('Doctor', 'Secretary', 'Admin')");
+                        });
+
+                    b.HasAnnotation("MySQL:Collation", "utf8mb4_0900_ai_ci");
+
+                    MySQLEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                });
+
             modelBuilder.Entity("Medilog.Domain.Entities.ChronicCondition", b =>
                 {
                     b.Property<Guid>("Id")
@@ -247,6 +364,10 @@ namespace Medilog.Infrastructure.Persistence.Migrations
                         .HasMaxLength(320)
                         .HasColumnType("varchar(320)")
                         .HasColumnName("email");
+
+                    b.Property<DateTime?>("EmailVerifiedAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("email_verified_at_utc");
 
                     b.Property<string>("FullName")
                         .IsRequired()
@@ -735,6 +856,10 @@ namespace Medilog.Infrastructure.Persistence.Migrations
                         .HasMaxLength(320)
                         .HasColumnType("varchar(320)")
                         .HasColumnName("email");
+
+                    b.Property<DateTime?>("EmailVerifiedAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("email_verified_at_utc");
 
                     b.Property<string>("FullName")
                         .IsRequired()

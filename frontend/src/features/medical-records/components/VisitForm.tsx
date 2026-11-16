@@ -9,7 +9,6 @@ import {
   useUpdateVisitMutation
 } from '../hooks/use-visit-mutations';
 import type {MedicalVisitResponse} from '../types';
-import {readDevToken, useDevToken} from '../use-dev-token';
 import {
   VISIT_FIELD_IDS,
   VISIT_FIELD_LIMITS,
@@ -57,7 +56,6 @@ export function VisitForm(props: VisitFormProps) {
   const validationT = useTranslations('MedicalRecords.validation');
   const commonT = useTranslations('MedicalRecords.common');
 
-  const {token, isReady} = useDevToken();
   const createMutation = useCreateVisitMutation();
   const updateMutation = useUpdateVisitMutation(
     isCreate ? '' : props.initialVisit.id
@@ -162,11 +160,6 @@ export function VisitForm(props: VisitFormProps) {
       return;
     }
 
-    const currentToken = readDevToken();
-
-    if (!currentToken) {
-      return;
-    }
 
     if (isCreate) {
       createMutation.mutate(
@@ -178,8 +171,7 @@ export function VisitForm(props: VisitFormProps) {
             chiefComplaint: trimToNull(values.chiefComplaint),
             symptoms: trimToNull(values.symptoms),
             clinicalNotes: trimToNull(values.clinicalNotes)
-          },
-          token: currentToken
+          }
         },
         {onSuccess}
       );
@@ -194,8 +186,7 @@ export function VisitForm(props: VisitFormProps) {
           chiefComplaint: trimToNull(values.chiefComplaint),
           symptoms: trimToNull(values.symptoms),
           clinicalNotes: trimToNull(values.clinicalNotes)
-        },
-        token: currentToken
+        }
       },
       {onSuccess}
     );
@@ -346,7 +337,7 @@ export function VisitForm(props: VisitFormProps) {
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="submit"
-            disabled={isPending || !isReady || !token}
+            disabled={isPending}
             className={primaryButtonClassName}
           >
             <FiSave aria-hidden className="size-4" />

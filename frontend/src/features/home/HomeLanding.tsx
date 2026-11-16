@@ -18,6 +18,7 @@ import {useLocale, useTranslations} from 'next-intl';
 import {Link} from '@/i18n/navigation';
 import {Footer} from '@/components/layout/Footer';
 import {Header} from '@/components/layout/Header';
+import {SignedInNotice} from '@/features/auth';
 import {fadeIn, scaleIn, slideUp, staggerContainer} from '@/lib/animations';
 
 const featureIcons = [FiClipboard, FiCalendar, FiActivity, FiUsers] as const;
@@ -58,6 +59,9 @@ export function HomeLanding() {
   return (
     <div className="min-h-screen overflow-hidden bg-background">
       <Header />
+      <div className="pt-4">
+        <SignedInNotice />
+      </div>
       <main>
         <section className="relative mx-auto grid min-h-[620px] w-[min(1180px,calc(100%-40px))] grid-cols-1 items-center gap-12 py-20 lg:grid-cols-[1fr_1fr]">
           <div className="pointer-events-none absolute -right-40 -top-32 size-[360px] rounded-full bg-[#10b7a5] opacity-20 blur-[90px]" />

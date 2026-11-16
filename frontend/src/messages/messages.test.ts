@@ -32,7 +32,7 @@ describe('translations', () => {
     expect(leafPaths(ar[namespace] as Tree).sort()).toEqual(leafPaths(en[namespace] as Tree).sort());
   });
 
-  it.each(['Appointments', 'DevIdentity'])('%s has no empty or untranslated strings', (namespace) => {
+  it.each(['Appointments', 'Auth'])('%s has no empty or untranslated strings', (namespace) => {
     for (const path of leafPaths(en[namespace] as Tree)) {
       const english = get(en[namespace] as Tree, path);
       const arabic = get(ar[namespace] as Tree, path);
@@ -47,7 +47,7 @@ describe('translations', () => {
       // Real arguments only: `{name}` or `{name, plural, …}`; not the text of a plural branch.
       [...text.matchAll(/\{(\w+)\s*[,}]/g)].map((match) => match[1]).sort();
 
-    for (const namespace of ['Appointments', 'DevIdentity']) {
+    for (const namespace of ['Appointments', 'Auth']) {
       for (const path of leafPaths(en[namespace] as Tree)) {
         const english = get(en[namespace] as Tree, path) as string;
         const arabic = get(ar[namespace] as Tree, path) as string;

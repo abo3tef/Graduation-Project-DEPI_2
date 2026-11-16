@@ -9,18 +9,15 @@ import type {CreateMedicationRequest, UpdateMedicationRequest} from '../types';
 
 type CreateVariables = {
   payload: CreateMedicationRequest;
-  token: string;
 };
 
 type UpdateVariables = {
   medicationId: string;
   payload: UpdateMedicationRequest;
-  token: string;
 };
 
 type DeleteVariables = {
   medicationId: string;
-  token: string;
 };
 
 /**
@@ -33,8 +30,7 @@ export function useCreateMedicationMutation(visitId: string) {
   const t = useTranslations('MedicalRecords.notifications');
 
   return useMutation({
-    mutationFn: ({payload, token}: CreateVariables) =>
-      createMedication(visitId, payload, token),
+    mutationFn: ({payload}: CreateVariables) => createMedication(visitId, payload),
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: medicalRecordKeys.visit(visitId)
@@ -52,8 +48,8 @@ export function useUpdateMedicationMutation(visitId: string) {
   const t = useTranslations('MedicalRecords.notifications');
 
   return useMutation({
-    mutationFn: ({medicationId, payload, token}: UpdateVariables) =>
-      updateMedication(visitId, medicationId, payload, token),
+    mutationFn: ({medicationId, payload}: UpdateVariables) =>
+      updateMedication(visitId, medicationId, payload),
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: medicalRecordKeys.visit(visitId)
@@ -71,8 +67,8 @@ export function useDeleteMedicationMutation(visitId: string) {
   const t = useTranslations('MedicalRecords.notifications');
 
   return useMutation({
-    mutationFn: ({medicationId, token}: DeleteVariables) =>
-      deleteMedication(visitId, medicationId, token),
+    mutationFn: ({medicationId}: DeleteVariables) =>
+      deleteMedication(visitId, medicationId),
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: medicalRecordKeys.visit(visitId)

@@ -350,6 +350,8 @@ public sealed class MedicalVisitServiceTests
         await Assert.ThrowsAsync<ForbiddenException>(() => fixture.Service.GetVisitAsync(visit.Id));
         await Assert.ThrowsAsync<ForbiddenException>(
             () => fixture.Service.CreateVisitAsync(createRequest));
+        await Assert.ThrowsAsync<ForbiddenException>(
+            () => fixture.Service.DeleteDiagnosisAsync(visit.Id, Guid.NewGuid()));
         Assert.Empty(fixture.DbContext.MedicalVisits);
     }
 }
