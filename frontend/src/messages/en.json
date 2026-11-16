@@ -632,6 +632,7 @@
       "unknown": "An unexpected error occurred. Try again."
     }
   },
+<<<<<<< Updated upstream
   "Auth": {
     "meta": {
       "loginTitle": "Sign in | Medilog",
@@ -722,6 +723,57 @@
       "success": "Your password was changed. Sign in with the new password.",
       "missingToken": "This reset link is incomplete. Request a new one.",
       "requestNew": "Request a new link"
+=======
+  "Dashboard": {
+    "meta": {"title": "Clinic dashboard", "description": "A demo dashboard for secretary and doctor workflows."},
+    "brand": "Medilog",
+    "demoLabel": "Presentation dashboard · demo data",
+    "eyebrow": "Clinic overview",
+    "summary": "Dashboard summary",
+    "today": "Today",
+    "currency": "EGP",
+    "notifications": "Notifications",
+    "export": "Export report",
+    "search": "Search",
+    "searchPlaceholder": "Search by patient or doctor",
+    "tableHint": "All actions here are simulated for the presentation.",
+    "noResults": "No matching records.",
+    "common": {"now": "Now", "today": "Today"},
+    "week": ["Sat", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri"],
+    "secretary": {
+      "role": "Secretary",
+      "title": "Good morning, Mona",
+      "description": "Manage bookings, patient flow, and daily payments from one clear view.",
+      "activityTitle": "Appointments this week",
+      "tableTitle": "Today’s appointments",
+      "stats": {"todayAppointments": "Today’s appointments", "waitingPatients": "Waiting patients", "totalPatients": "Total patients", "todayRevenue": "Today’s revenue"}
+    },
+    "doctor": {
+      "role": "Doctor",
+      "title": "Good morning, Dr. Ahmed",
+      "description": "Review your clinic activity, patients, and medical visits at a glance.",
+      "activityTitle": "Visits this week",
+      "tableTitle": "Today’s patient schedule",
+      "stats": {"todayVisits": "Today’s visits", "completedVisits": "Completed visits", "activePatients": "Active patients", "monthRevenue": "Monthly revenue"}
+    },
+    "quickActions": {"title": "Quick actions", "description": "Common tasks for your role", "book": "Book an appointment", "patient": "Add a patient", "payment": "Record a payment", "visit": "Record a visit", "schedule": "Open my schedule"},
+    "table": {"time": "Time", "patient": "Patient", "doctor": "Doctor", "type": "Visit type", "status": "Status", "actions": "Actions"},
+    "statuses": {"confirmed": "Confirmed", "waiting": "Waiting", "completed": "Completed", "cancelled": "Cancelled"},
+    "actions": {"confirm": "Confirm", "complete": "Complete", "cancel": "Cancel", "details": "Details", "reschedule": "Reschedule", "openMenu": "Open actions menu"},
+    "pagination": {"previous": "Previous page", "next": "Next page", "pageOf": "Page {page} of {totalPages}"},
+    "toast": {"notifications": "No new notifications.", "exported": "Demo report exported.", "booked": "Demo appointment booked.", "patientAdded": "Demo patient added.", "paymentAdded": "Demo payment recorded.", "visitStarted": "Demo visit opened.", "patientOpened": "Demo patient profile opened.", "scheduleOpened": "Demo schedule opened.", "details": "Showing demo details.", "rescheduled": "Demo appointment rescheduled.", "confirmed": "Appointment confirmed.", "completed": "Appointment completed.", "cancelled": "Appointment cancelled.", "waiting": "Appointment moved to waiting.", "patient": "Patient updated."}
+  },
+  "DevIdentity": {
+    "acting": "Acting as {role} · {id}",
+    "set": "Set user (dev)",
+    "title": "Current user (development only)",
+    "description": "Authentication is not enabled yet. Enter the user id and role to send to the API in development.",
+    "userId": "User id",
+    "role": "Role",
+    "roles": {
+      "Secretary": "Secretary",
+      "Doctor": "Doctor"
+>>>>>>> Stashed changes
     },
     "errors": {
       "invalidCredentials": "The email or password is incorrect.",

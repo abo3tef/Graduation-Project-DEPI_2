@@ -632,6 +632,7 @@
       "unknown": "حدث خطأ غير متوقع. حاول مرة أخرى."
     }
   },
+<<<<<<< Updated upstream
   "Auth": {
     "meta": {
       "loginTitle": "تسجيل الدخول | السجل الطبي",
@@ -722,6 +723,57 @@
       "success": "تم تغيير كلمة المرور. سجّل الدخول بكلمة المرور الجديدة.",
       "missingToken": "رابط إعادة التعيين غير مكتمل. اطلب رابطًا جديدًا.",
       "requestNew": "طلب رابط جديد"
+=======
+  "Dashboard": {
+    "meta": {"title": "لوحة تحكم العيادة", "description": "لوحة عرض تجريبية لسير عمل السكرتير والطبيب."},
+    "brand": "Medilog",
+    "demoLabel": "لوحة عرض · بيانات وهمية",
+    "eyebrow": "نظرة عامة على العيادة",
+    "summary": "ملخص الداشبورد",
+    "today": "اليوم",
+    "currency": "ج.م",
+    "notifications": "الإشعارات",
+    "export": "تصدير التقرير",
+    "search": "بحث",
+    "searchPlaceholder": "ابحث باسم المريض أو الطبيب",
+    "tableHint": "كل الإجراءات هنا وهمية لغرض عرض التصميم فقط.",
+    "noResults": "لا توجد نتائج مطابقة.",
+    "common": {"now": "الآن", "today": "اليوم"},
+    "week": ["السبت", "الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة"],
+    "secretary": {
+      "role": "السكرتير",
+      "title": "صباح الخير يا منى",
+      "description": "أديري الحجوزات وحركة المرضى والمدفوعات اليومية من شاشة واحدة.",
+      "activityTitle": "مواعيد هذا الأسبوع",
+      "tableTitle": "مواعيد اليوم",
+      "stats": {"todayAppointments": "مواعيد اليوم", "waitingPatients": "مرضى في الانتظار", "totalPatients": "إجمالي المرضى", "todayRevenue": "إيرادات اليوم"}
+    },
+    "doctor": {
+      "role": "الطبيب",
+      "title": "صباح الخير د. أحمد",
+      "description": "راجع نشاط عيادتك ومرضاك وزياراتك الطبية في لمحة سريعة.",
+      "activityTitle": "زيارات هذا الأسبوع",
+      "tableTitle": "جدول مرضى اليوم",
+      "stats": {"todayVisits": "زيارات اليوم", "completedVisits": "زيارات مكتملة", "activePatients": "مرضى نشطون", "monthRevenue": "إيرادات الشهر"}
+    },
+    "quickActions": {"title": "إجراءات سريعة", "description": "المهام الأكثر استخدامًا لدورك", "book": "حجز موعد", "patient": "إضافة مريض", "payment": "تسجيل دفعة", "visit": "تسجيل زيارة", "schedule": "فتح جدولي"},
+    "table": {"time": "الوقت", "patient": "المريض", "doctor": "الطبيب", "type": "نوع الزيارة", "status": "الحالة", "actions": "الإجراءات"},
+    "statuses": {"confirmed": "مؤكد", "waiting": "في الانتظار", "completed": "مكتمل", "cancelled": "ملغي"},
+    "actions": {"confirm": "تأكيد", "complete": "إتمام", "cancel": "إلغاء", "details": "التفاصيل", "reschedule": "إعادة الجدولة", "openMenu": "فتح قائمة الإجراءات"},
+    "pagination": {"previous": "الصفحة السابقة", "next": "الصفحة التالية", "pageOf": "الصفحة {page} من {totalPages}"},
+    "toast": {"notifications": "لا توجد إشعارات جديدة.", "exported": "تم تصدير تقرير تجريبي.", "booked": "تم حجز موعد تجريبي.", "patientAdded": "تمت إضافة مريض تجريبي.", "paymentAdded": "تم تسجيل دفعة تجريبية.", "visitStarted": "تم فتح زيارة تجريبية.", "patientOpened": "تم فتح ملف مريض تجريبي.", "scheduleOpened": "تم فتح جدول تجريبي.", "details": "تم عرض التفاصيل التجريبية.", "rescheduled": "تمت إعادة جدولة الموعد تجريبيًا.", "confirmed": "تم تأكيد الموعد.", "completed": "تم إتمام الموعد.", "cancelled": "تم إلغاء الموعد.", "waiting": "تم نقل الموعد إلى الانتظار.", "patient": "تم تحديث المريض."}
+  },
+  "DevIdentity": {
+    "acting": "تصرّف كـ {role} · {id}",
+    "set": "تحديد المستخدم (تطوير)",
+    "title": "المستخدم الحالي (للتطوير فقط)",
+    "description": "المصادقة غير مفعّلة بعد. أدخل معرّف المستخدم ودوره ليُرسلا إلى الخادم في بيئة التطوير.",
+    "userId": "معرّف المستخدم",
+    "role": "الدور",
+    "roles": {
+      "Secretary": "سكرتير",
+      "Doctor": "طبيب"
+>>>>>>> Stashed changes
     },
     "errors": {
       "invalidCredentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
