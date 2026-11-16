@@ -3,7 +3,7 @@
 import {useId, useState} from 'react';
 import {useFormatter, useTranslations} from 'next-intl';
 import {useVitalSigns} from '../hooks/use-vital-signs';
-import {useDevToken} from '../use-dev-token';
+import {useMedicalCredentials} from '../use-medical-credentials';
 import {VITAL_SIGNS_FIELDS} from '../vital-signs-validation';
 import {toQueryFailureKind} from '../errors';
 import {LoadingPanel, StatePanel} from './AsyncState';
@@ -11,7 +11,7 @@ import {secondaryButtonClassName} from './form-styles';
 
 /** Read-only; successful backend reads establish data access, never permission to edit. */
 export function VitalSignsSection({visitId}: {visitId: string}) {
-  const {token, isReady, credentialScope} = useDevToken();
+  const {token, isReady, credentialScope} = useMedicalCredentials();
   if (!isReady || !token?.trim()) return null;
   return <VitalSignsPage key={`${visitId}:${credentialScope}`} visitId={visitId} />;
 }

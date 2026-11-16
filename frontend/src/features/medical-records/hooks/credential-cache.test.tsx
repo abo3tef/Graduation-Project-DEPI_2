@@ -1,9 +1,10 @@
+import {setMedicalTestSession, clearMedicalTestSession} from '../test-session';
 import {act, renderHook, waitFor} from '@testing-library/react';
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
 import type {ReactNode} from 'react';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {getMedicalVisit, listVitalSigns, createMedicalVisit, updateMedicalVisit, createVitalSigns} from '../api';
-import {useDevToken} from '../use-dev-token';
+import {readMedicalToken, useMedicalCredentials} from '../use-medical-credentials';
 import {medicalRecordKeys} from '../keys';
 import {useMedicalVisit} from './use-medical-visit';
 import {useVitalSigns} from './use-vital-signs';
@@ -49,33 +50,33 @@ describe('medical credential cache isolation', () => {
   it('never renders A visit or vitals under B, on clear, or when switching back to A', async () => {
     const {client, wrapper} = setup();
     const pendingB = deferred<MedicalVisitResponse>();
-    vi.mocked(getMedicalVisit).mockImplementation((_id, token) => token === B ? pendingB.promise : Promise.resolve(visit(A)));
+    vi.mocked(getMedicalVisit).mockImplementation(() => readMedicalToken() === B ? pendingB.promise : Promise.resolve(visit(A)));
     vi.mocked(listVitalSigns).mockImplementation(async (_id, token) => ({
       items: [{id: token, ...measurement}], page: 1, pageSize: 10, totalCount: 1, totalPages: 1
     }));
     const rendered: Array<{token: string | null; owner?: string; vital?: string}> = [];
     const {result, unmount} = renderHook(() => {
-      const identity = useDevToken();
-      const detail = useMedicalVisit(visitId, identity.token, identity.isReady);
+      const identity = useMedicalCredentials();
+      const detail = useMedicalVisit(visitId);
       const vitals = useVitalSigns(visitId);
       rendered.push({token: identity.token, owner: detail.data?.doctorId, vital: vitals.data?.items[0]?.id});
       return {identity, detail, vitals};
     }, {wrapper});
-    act(() => {result.current.identity.clearToken(); result.current.identity.saveToken(A);});
+    act(() => {clearMedicalTestSession(); setMedicalTestSession(A);});
     await waitFor(() => expect(result.current.detail.data?.doctorId).toBe(A));
     await waitFor(() => expect(result.current.vitals.data?.items[0]?.id).toBe(A));
     const scopeA = result.current.identity.credentialScope;
-    act(() => {result.current.identity.saveToken(A);});
+    act(() => {setMedicalTestSession(A);});
     expect(result.current.identity.credentialScope).toBe(scopeA);
-    act(() => {result.current.identity.saveToken(B);});
+    act(() => {setMedicalTestSession(B);});
     expect(result.current.detail.data).toBeUndefined();
     await waitFor(() => expect(result.current.vitals.data?.items[0]?.id).toBe(B));
     await act(async () => {pendingB.resolve(visit(B));});
     await waitFor(() => expect(result.current.detail.data?.doctorId).toBe(B));
-    act(() => {result.current.identity.clearToken();});
+    act(() => {clearMedicalTestSession();});
     expect(result.current.detail.data).toBeUndefined();
     expect(result.current.vitals.data).toBeUndefined();
-    act(() => {result.current.identity.saveToken(A);});
+    act(() => {setMedicalTestSession(A);});
     expect(result.current.detail.data?.doctorId).not.toBe(B);
     await waitFor(() => expect(result.current.detail.data?.doctorId).toBe(A));
     expect(rendered.some(row => row.token === B && (row.owner === A || row.vital === A))).toBe(false);
@@ -92,16 +93,16 @@ describe('medical credential cache isolation', () => {
     vi.mocked(createMedicalVisit).mockReturnValue(pending.promise);
     vi.mocked(updateMedicalVisit).mockReturnValue(pending.promise);
     const {result, unmount} = renderHook(() => ({
-      identity: useDevToken(), create: useCreateVisitMutation(), update: useUpdateVisitMutation(visitId)
+      identity: useMedicalCredentials(), create: useCreateVisitMutation(), update: useUpdateVisitMutation(visitId)
     }), {wrapper});
-    act(() => {result.current.identity.saveToken(A);});
+    act(() => {setMedicalTestSession(A);});
     const payload = {visitDate: '2026-11-15T10:00:00Z', chiefComplaint: null, symptoms: null, clinicalNotes: null};
     act(() => {
-      if (mode === 'create') result.current.create.mutate({token: A, payload: {...payload, patientId: 'patient', appointmentId: null}});
-      else result.current.update.mutate({token: A, payload});
+      if (mode === 'create') result.current.create.mutate({payload: {...payload, patientId: 'patient', appointmentId: null}});
+      else result.current.update.mutate({payload});
     });
     await waitFor(() => expect(mode === 'create' ? createMedicalVisit : updateMedicalVisit).toHaveBeenCalledOnce());
-    act(() => {result.current.identity.saveToken(B);});
+    act(() => {setMedicalTestSession(B);});
     const bKey = medicalRecordKeys.visitDetail(visitId, result.current.identity.credentialScope);
     client.setQueryData(bKey, visit(B));
     await act(async () => {pending.resolve(visit(A));});
@@ -111,12 +112,32 @@ describe('medical credential cache isolation', () => {
     unmount(); client.clear();
   });
 
+  it('discards a late response across logout and restoring the same token', async () => {
+    const {client, wrapper} = setup();
+    const pending = deferred<MedicalVisitResponse>();
+    vi.mocked(updateMedicalVisit).mockReturnValue(pending.promise);
+    const {result, unmount} = renderHook(() => ({identity: useMedicalCredentials(), mutation: useUpdateVisitMutation(visitId)}), {wrapper});
+    act(() => {setMedicalTestSession(A);});
+    const oldScope = result.current.identity.credentialScope;
+    act(() => {result.current.mutation.mutate({payload: {
+      visitDate: '2026-11-15T10:00:00Z', chiefComplaint: null, symptoms: null, clinicalNotes: null
+    }});});
+    await waitFor(() => expect(updateMedicalVisit).toHaveBeenCalledOnce());
+    act(() => {clearMedicalTestSession(); setMedicalTestSession(A);});
+    expect(result.current.identity.credentialScope).not.toBe(oldScope);
+    const newKey = medicalRecordKeys.visitDetail(visitId, result.current.identity.credentialScope);
+    await act(async () => {pending.resolve(visit(A));});
+    await waitFor(() => expect(result.current.mutation.isSuccess).toBe(true));
+    expect(client.getQueryData(newKey)).toBeUndefined();
+    unmount(); client.clear();
+  });
+
   it('current visit mutations still seed their scoped detail cache', async () => {
     const {client, wrapper} = setup();
     vi.mocked(updateMedicalVisit).mockResolvedValue(visit(A));
-    const {result, unmount} = renderHook(() => ({identity: useDevToken(), mutation: useUpdateVisitMutation(visitId)}), {wrapper});
-    act(() => {result.current.identity.saveToken(A);});
-    await act(async () => {await result.current.mutation.mutateAsync({token: A, payload: {
+    const {result, unmount} = renderHook(() => ({identity: useMedicalCredentials(), mutation: useUpdateVisitMutation(visitId)}), {wrapper});
+    act(() => {setMedicalTestSession(A);});
+    await act(async () => {await result.current.mutation.mutateAsync({payload: {
       visitDate: '2026-11-15T10:00:00Z', chiefComplaint: null, symptoms: null, clinicalNotes: null
     }});});
     expect(client.getQueryData(medicalRecordKeys.visitDetail(visitId, result.current.identity.credentialScope))).toEqual(visit(A));
@@ -126,8 +147,8 @@ describe('medical credential cache isolation', () => {
   it('vitals mutations invalidate scoped detail and all paged lists using safe prefixes', async () => {
     const {client, wrapper} = setup();
     vi.mocked(createVitalSigns).mockResolvedValue({id: 'measurement', ...measurement});
-    const {result, unmount} = renderHook(() => ({identity: useDevToken(), mutation: useCreateVitalSignsMutation(visitId)}), {wrapper});
-    act(() => {result.current.identity.saveToken(A);});
+    const {result, unmount} = renderHook(() => ({identity: useMedicalCredentials(), mutation: useCreateVitalSignsMutation(visitId)}), {wrapper});
+    act(() => {setMedicalTestSession(A);});
     const scope = result.current.identity.credentialScope;
     const keys = [medicalRecordKeys.visitDetail(visitId, scope),
       medicalRecordKeys.vitalSignsPage(visitId, scope, 1, 10), medicalRecordKeys.vitalSignsPage(visitId, scope, 2, 10)];

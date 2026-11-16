@@ -26,6 +26,12 @@ public static class ErrorCodes
 
     public const string CompleteRequiresDoctor = "appointment.complete_requires_doctor";
 
+    public const string PaymentNotFound = "payment.not_found";
+
+    public const string PaymentAppointmentNotFound = "payment.appointment_not_found";
+
+    public const string PaymentAlreadyExists = "payment.already_exists";
+
     public const string TimeNotInTimeZone = "appointment.time_not_in_time_zone";
 
     public const string ValidationFailed = "validation.failed";

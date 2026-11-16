@@ -39,6 +39,9 @@ export function AppointmentsPage() {
   const page = list.data;
   const {setPageNumber} = controller;
   const pageNumber = controller.filters.pageNumber;
+  // Admins have no appointment screens until F11 (D-C2-1), so they get no row actions either.
+  const actionRole =
+    identity.role === 'Doctor' || identity.role === 'Secretary' ? identity.role : null;
 
   // After a change the current page can disappear (for example the last item moved
   // away); step back to the last page that still exists instead of showing "empty".
@@ -140,7 +143,7 @@ export function AppointmentsPage() {
                 </p>
                 <AppointmentsTable
                   items={page.items}
-                  role={identity.role}
+                  role={actionRole}
                   onAction={handleAction}
                   busy={list.isFetching}
                 />

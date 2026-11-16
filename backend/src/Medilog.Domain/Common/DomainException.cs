@@ -40,4 +40,16 @@ public static class DomainErrorCodes
     public const string UseCancelOperation = "appointment.use_cancel_operation";
 
     public const string InvalidStatusTransition = "appointment.invalid_status_transition";
+
+    public const string PaymentMissingReference = "payment.missing_reference";
+
+    public const string PaymentInvalidAmount = "payment.invalid_amount";
+
+    public const string PaymentInvalidMethod = "payment.invalid_method";
+
+    public const string PaymentNotesTooLong = "payment.notes_too_long";
+
+    public const string PaymentInvalidStatusTransition = "payment.invalid_status_transition";
+
+    public const string PaymentPaidFinal = "payment.paid_final";
 }

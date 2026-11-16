@@ -36,6 +36,11 @@ public interface IMedicalVisitService
         UpdateDiagnosisRequest request,
         CancellationToken cancellationToken = default);
 
+    Task DeleteDiagnosisAsync(
+        Guid visitId,
+        Guid diagnosisId,
+        CancellationToken cancellationToken = default);
+
     Task<MedicationResponse> AddMedicationAsync(
         Guid visitId,
         CreateMedicationRequest request,

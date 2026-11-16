@@ -5,11 +5,11 @@ import {ApiError} from '@/lib/api';
 import {DEFAULT_PAGE_SIZE} from '@/types/paging';
 import {listVitalSigns} from '../api';
 import {medicalRecordKeys} from '../keys';
-import {useDevToken} from '../use-dev-token';
+import {useMedicalCredentials} from '../use-medical-credentials';
 import {isGuid} from '../validation';
 
 export function useVitalSigns(visitId: string, pageNumber = 1, pageSize = DEFAULT_PAGE_SIZE) {
-  const {token, isReady, credentialScope} = useDevToken();
+  const {token, isReady, credentialScope} = useMedicalCredentials();
 
   return useQuery({
     queryKey: medicalRecordKeys.vitalSignsPage(visitId, credentialScope, pageNumber, pageSize),

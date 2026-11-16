@@ -46,6 +46,14 @@ internal static class EnumValueConverters
         value => AuthTokenPurposeToLabel(value),
         value => AuthTokenPurposeFromLabel(value));
 
+    public static readonly ValueConverter<PaymentMethod, string> PaymentMethodConverter = new(
+        value => PaymentMethodToLabel(value),
+        value => PaymentMethodFromLabel(value));
+
+    public static readonly ValueConverter<PaymentStatus, string> PaymentStatusConverter = new(
+        value => PaymentStatusToLabel(value),
+        value => PaymentStatusFromLabel(value));
+
     private static string AccountStatusToLabel(AccountStatus value) => value switch
     {
         AccountStatus.Active => "Active",
@@ -198,5 +206,35 @@ internal static class EnumValueConverters
         "EmailVerification" => AuthTokenPurpose.EmailVerification,
         "PasswordReset" => AuthTokenPurpose.PasswordReset,
         _ => throw new ArgumentOutOfRangeException(nameof(value), value, "Unknown auth token purpose.")
+    };
+
+    private static string PaymentMethodToLabel(PaymentMethod value) => value switch
+    {
+        PaymentMethod.Cash => "Cash",
+        PaymentMethod.Card => "Card",
+        _ => throw new ArgumentOutOfRangeException(nameof(value), value, "Unknown payment method.")
+    };
+
+    private static PaymentMethod PaymentMethodFromLabel(string value) => value switch
+    {
+        "Cash" => PaymentMethod.Cash,
+        "Card" => PaymentMethod.Card,
+        _ => throw new ArgumentOutOfRangeException(nameof(value), value, "Unknown payment method.")
+    };
+
+    private static string PaymentStatusToLabel(PaymentStatus value) => value switch
+    {
+        PaymentStatus.Pending => "Pending",
+        PaymentStatus.Partial => "Partial",
+        PaymentStatus.Paid => "Paid",
+        _ => throw new ArgumentOutOfRangeException(nameof(value), value, "Unknown payment status.")
+    };
+
+    private static PaymentStatus PaymentStatusFromLabel(string value) => value switch
+    {
+        "Pending" => PaymentStatus.Pending,
+        "Partial" => PaymentStatus.Partial,
+        "Paid" => PaymentStatus.Paid,
+        _ => throw new ArgumentOutOfRangeException(nameof(value), value, "Unknown payment status.")
     };
 }

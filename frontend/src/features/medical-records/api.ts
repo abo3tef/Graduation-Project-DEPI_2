@@ -15,10 +15,12 @@ import type {
   VitalSignsResponse
 } from './types';
 
+import {readMedicalToken} from './use-medical-credentials';
+
 const BASE_PATH = '/api/medical-visits';
 
 function requireVitalSignsToken(token: string): void {
-  if (!token.trim()) {
+  if (!token.trim() || token !== readMedicalToken()) {
     throw new ApiError({kind: 'unauthorized', status: 401});
   }
 }
@@ -35,7 +37,7 @@ export async function listVitalSigns(
 ): Promise<PagedResult<VitalSignsResponse>> {
   requireVitalSignsToken(token);
   const data = await request<unknown>(`${BASE_PATH}/${encodeURIComponent(visitId)}/vital-signs`, {
-    token, signal, query: {pageNumber, pageSize}
+    signal, query: {pageNumber, pageSize}
   });
   return readPagedResult(data, expectVitalSigns);
 }
@@ -45,7 +47,7 @@ export async function createVitalSigns(
 ): Promise<VitalSignsResponse> {
   requireVitalSignsToken(token);
   const data = await request<unknown>(`${BASE_PATH}/${encodeURIComponent(visitId)}/vital-signs`, {
-    method: 'POST', body: vitalSignsBody(payload), token
+    method: 'POST', body: vitalSignsBody(payload)
   });
   return expectVitalSigns(data);
 }
@@ -56,32 +58,29 @@ export async function updateVitalSigns(
   requireVitalSignsToken(token);
   const data = await request<unknown>(
     `${BASE_PATH}/${encodeURIComponent(visitId)}/vital-signs/${encodeURIComponent(vitalSignsId)}`,
-    {method: 'PUT', body: vitalSignsBody(payload), token}
+    {method: 'PUT', body: vitalSignsBody(payload)}
   );
   return expectVitalSigns(data);
 }
 
 export async function getMedicalVisit(
   visitId: string,
-  token: string,
   signal?: AbortSignal
 ): Promise<MedicalVisitResponse> {
   const data = await request<unknown>(
     `${BASE_PATH}/${encodeURIComponent(visitId)}`,
-    {token, signal}
+    {signal}
   );
 
   return expectMedicalVisit(data);
 }
 
 export async function createMedicalVisit(
-  payload: CreateMedicalVisitRequest,
-  token: string
+  payload: CreateMedicalVisitRequest
 ): Promise<MedicalVisitResponse> {
   const data = await request<unknown>(BASE_PATH, {
     method: 'POST',
-    body: payload,
-    token
+    body: payload
   });
 
   return expectMedicalVisit(data);
@@ -89,12 +88,11 @@ export async function createMedicalVisit(
 
 export async function updateMedicalVisit(
   visitId: string,
-  payload: UpdateMedicalVisitRequest,
-  token: string
+  payload: UpdateMedicalVisitRequest
 ): Promise<MedicalVisitResponse> {
   const data = await request<unknown>(
     `${BASE_PATH}/${encodeURIComponent(visitId)}`,
-    {method: 'PUT', body: payload, token}
+    {method: 'PUT', body: payload}
   );
 
   return expectMedicalVisit(data);
@@ -102,12 +100,11 @@ export async function updateMedicalVisit(
 
 export async function createDiagnosis(
   visitId: string,
-  payload: CreateDiagnosisRequest,
-  token: string
+  payload: CreateDiagnosisRequest
 ): Promise<DiagnosisResponse> {
   const data = await request<unknown>(
     `${BASE_PATH}/${encodeURIComponent(visitId)}/diagnoses`,
-    {method: 'POST', body: payload, token}
+    {method: 'POST', body: payload}
   );
 
   return expectDiagnosis(data);
@@ -116,25 +113,33 @@ export async function createDiagnosis(
 export async function updateDiagnosis(
   visitId: string,
   diagnosisId: string,
-  payload: UpdateDiagnosisRequest,
-  token: string
+  payload: UpdateDiagnosisRequest
 ): Promise<DiagnosisResponse> {
   const data = await request<unknown>(
     `${BASE_PATH}/${encodeURIComponent(visitId)}/diagnoses/${encodeURIComponent(diagnosisId)}`,
-    {method: 'PUT', body: payload, token}
+    {method: 'PUT', body: payload}
   );
 
   return expectDiagnosis(data);
 }
 
+export async function deleteDiagnosis(
+  visitId: string,
+  diagnosisId: string
+): Promise<void> {
+  await requestVoid(
+    `${BASE_PATH}/${encodeURIComponent(visitId)}/diagnoses/${encodeURIComponent(diagnosisId)}`,
+    {method: 'DELETE'}
+  );
+}
+
 export async function createMedication(
   visitId: string,
-  payload: CreateMedicationRequest,
-  token: string
+  payload: CreateMedicationRequest
 ): Promise<MedicationResponse> {
   const data = await request<unknown>(
     `${BASE_PATH}/${encodeURIComponent(visitId)}/medications`,
-    {method: 'POST', body: payload, token}
+    {method: 'POST', body: payload}
   );
 
   return expectMedication(data);
@@ -143,12 +148,11 @@ export async function createMedication(
 export async function updateMedication(
   visitId: string,
   medicationId: string,
-  payload: UpdateMedicationRequest,
-  token: string
+  payload: UpdateMedicationRequest
 ): Promise<MedicationResponse> {
   const data = await request<unknown>(
     `${BASE_PATH}/${encodeURIComponent(visitId)}/medications/${encodeURIComponent(medicationId)}`,
-    {method: 'PUT', body: payload, token}
+    {method: 'PUT', body: payload}
   );
 
   return expectMedication(data);
@@ -156,11 +160,10 @@ export async function updateMedication(
 
 export async function deleteMedication(
   visitId: string,
-  medicationId: string,
-  token: string
+  medicationId: string
 ): Promise<void> {
   await requestVoid(
     `${BASE_PATH}/${encodeURIComponent(visitId)}/medications/${encodeURIComponent(medicationId)}`,
-    {method: 'DELETE', token}
+    {method: 'DELETE'}
   );
 }

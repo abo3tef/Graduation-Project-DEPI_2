@@ -1,3 +1,4 @@
+import {setMedicalTestSession, clearMedicalTestSession} from '../test-session';
 import {act, render, renderHook, screen, waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
@@ -8,7 +9,7 @@ import en from '@/messages/en.json';
 import ar from '@/messages/ar.json';
 import {ApiError} from '@/lib/api';
 import {getMedicalVisit, listVitalSigns} from '../api';
-import {useDevToken} from '../use-dev-token';
+import {useMedicalCredentials} from '../use-medical-credentials';
 import type {VitalSignsResponse} from '../types';
 import type {PagedResult} from '@/types/paging';
 import {VitalSignsSection} from './VitalSignsSection';
@@ -18,7 +19,6 @@ vi.mock('../api', () => ({getMedicalVisit: vi.fn(), listVitalSigns: vi.fn()}));
 vi.mock('./VisitDetails', () => ({VisitDetails: () => <p>Test visit details</p>}));
 vi.mock('./DiagnosisSection', () => ({DiagnosisSection: () => null}));
 vi.mock('./MedicationSection', () => ({MedicationSection: () => null}));
-vi.mock('./DevTokenPanel', () => ({DevTokenPanel: () => null}));
 vi.mock('@/i18n/navigation', () => ({Link: ({children}: {children: ReactNode}) => <span>{children}</span>}));
 
 const visitId = '11111111-1111-4111-8111-111111111111';
@@ -33,8 +33,8 @@ function setup(locale: 'en' | 'ar' = 'en') {
     return <QueryClientProvider client={client}><NextIntlClientProvider locale={locale}
       messages={locale === 'ar' ? ar : en} onError={error => {throw error;}}>{children}</NextIntlClientProvider></QueryClientProvider>;
   }
-  const identity = renderHook(() => useDevToken());
-  act(() => {identity.result.current.clearToken(); identity.result.current.saveToken('section-test-token');});
+  const identity = renderHook(() => useMedicalCredentials());
+  act(() => {clearMedicalTestSession(); setMedicalTestSession('section-test-token');});
   return {wrapper, identity};
 }
 beforeEach(() => {vi.resetAllMocks();});
@@ -129,17 +129,17 @@ describe('read-only VitalSignsSection', () => {
   });
 
   it('renders Arabic labels and removes sensitive section data when token is cleared', async () => {
-    const {wrapper, identity} = setup('ar');
+    const {wrapper} = setup('ar');
     vi.mocked(listVitalSigns).mockResolvedValue(page([record]));
     const {container} = render(<VitalSignsSection visitId={visitId} />, {wrapper});
     await screen.findByText('ضغط الدم');
     expect(container.textContent).toContain('ملم زئبق');
-    act(() => {identity.result.current.clearToken();});
+    act(() => {clearMedicalTestSession();});
     expect(container).toBeEmptyDOMElement();
   });
 
   it('mounts only after visit access succeeds and hides visit plus vitals on token removal', async () => {
-    const {wrapper, identity} = setup();
+    const {wrapper} = setup();
     vi.mocked(getMedicalVisit).mockResolvedValue({id: visitId, patientId: 'patient', doctorId: 'doctor',
       appointmentId: null, visitDate: '2026-11-15T10:00:00Z', chiefComplaint: null, symptoms: null,
       clinicalNotes: null, diagnoses: [], medications: [], vitalSigns: []});
@@ -147,7 +147,7 @@ describe('read-only VitalSignsSection', () => {
     render(<MedicalVisitScreen visitId={visitId} />, {wrapper});
     await screen.findByText('Test visit details');
     await screen.findByText('Measurement record 1');
-    act(() => {identity.result.current.clearToken();});
+    act(() => {clearMedicalTestSession();});
     expect(screen.queryByText('Test visit details')).not.toBeInTheDocument();
     expect(screen.queryByText('120/80')).not.toBeInTheDocument();
   });

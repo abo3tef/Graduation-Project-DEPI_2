@@ -1,11 +1,17 @@
-// Opaque, tab-local cache generation. Advanced by credential events, never by React rendering.
-// No token, token fragment, or token-derived representation is exposed in query keys.
+import {getSessionState, subscribeSession} from '@/features/auth/session';
+
+// Opaque tab-local generations. No token or token-derived query keys.
 let scope = 0;
+let previousSession = getSessionState().session;
 
 export function readCredentialScope(): number {
+  const session = getSessionState().session;
+  if (session !== previousSession) {
+    previousSession = session;
+    scope += 1;
+  }
   return scope;
 }
 
-export function advanceCredentialScope(): void {
-  scope += 1;
-}
+// Observe logout/account changes even while medical screens are unmounted.
+subscribeSession(() => {readCredentialScope();});

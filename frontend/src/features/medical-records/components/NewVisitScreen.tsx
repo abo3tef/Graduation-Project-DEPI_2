@@ -4,8 +4,6 @@ import {FiArrowLeft} from 'react-icons/fi';
 import {useSearchParams} from 'next/navigation';
 import {useTranslations} from 'next-intl';
 import {Link, useRouter} from '@/i18n/navigation';
-import {useDevToken} from '../use-dev-token';
-import {DevTokenPanel} from './DevTokenPanel';
 import {VisitForm} from './VisitForm';
 
 /**
@@ -15,10 +13,8 @@ import {VisitForm} from './VisitForm';
 export function NewVisitScreen() {
   const t = useTranslations('MedicalRecords.visitForm');
   const commonT = useTranslations('MedicalRecords.common');
-  const statesT = useTranslations('MedicalRecords.states');
   const router = useRouter();
   const searchParams = useSearchParams();
-  const {token, isReady} = useDevToken();
 
   const initialPatientId = searchParams.get('patientId') ?? '';
 
@@ -42,7 +38,7 @@ export function NewVisitScreen() {
         </p>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+      <div className="max-w-3xl">
         <section
           aria-labelledby="new-visit-title"
           className="rounded-2xl border border-border bg-surface p-5 sm:p-6"
@@ -58,15 +54,6 @@ export function NewVisitScreen() {
             }
           />
         </section>
-
-        <aside className="flex flex-col gap-4">
-          {isReady && !token ? (
-            <p className="rounded-xl border border-border bg-surface-2 px-4 py-3 text-sm text-muted">
-              {statesT('tokenRequiredNotice')}
-            </p>
-          ) : null}
-          <DevTokenPanel />
-        </aside>
       </div>
     </main>
   );

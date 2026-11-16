@@ -7,28 +7,36 @@ import {createMedicalVisit, updateMedicalVisit} from '../api';
 import {medicalRecordKeys} from '../keys';
 import type {CreateMedicalVisitRequest, UpdateMedicalVisitRequest} from '../types';
 import {ApiError} from '@/lib/api';
-import {readDevToken} from '../use-dev-token';
+import {readMedicalToken} from '../use-medical-credentials';
 import {readCredentialScope} from '../credential-scope';
 
-function captureScope({token}: {token: string}): number {
-  if (!token.trim() || token !== readDevToken()) {
+const pendingScopes = new WeakMap<object, number>();
+
+function captureScope(variables: object): number {
+  if (!readMedicalToken()) {
     throw new ApiError({kind: 'unauthorized', status: 401});
   }
-  return readCredentialScope();
+  const scope = readCredentialScope();
+  pendingScopes.set(variables, scope);
+  return scope;
 }
 
-function isCurrentScope(token: string, scope: number | undefined): boolean {
-  return token === readDevToken() && scope === readCredentialScope();
+function isCurrentScope(scope: number | undefined): boolean {
+  return Boolean(readMedicalToken()) && scope !== undefined && scope === readCredentialScope();
+}
+
+function requireCapturedScope(variables: object): void {
+  if (!isCurrentScope(pendingScopes.get(variables))) {
+    throw new ApiError({kind: 'unauthorized', status: 401});
+  }
 }
 
 type CreateVariables = {
   payload: CreateMedicalVisitRequest;
-  token: string;
 };
 
 type UpdateVariables = {
   payload: UpdateMedicalVisitRequest;
-  token: string;
 };
 
 /**
@@ -41,14 +49,18 @@ export function useCreateVisitMutation() {
 
   return useMutation({
     onMutate: captureScope,
-    mutationFn: ({payload, token}: CreateVariables) => createMedicalVisit(payload, token),
-    onSuccess: (visit, variables, scope) => {
-      if (scope === undefined || !isCurrentScope(variables.token, scope)) return;
+    mutationFn: (variables: CreateVariables) => {
+      requireCapturedScope(variables);
+      return createMedicalVisit(variables.payload);
+    },
+    onSuccess: (visit, _variables, scope) => {
+      if (scope === undefined || !isCurrentScope(scope)) return;
       queryClient.setQueryData(medicalRecordKeys.visitDetail(visit.id, scope), visit);
+
       notify.success(t('created'));
     },
-    onError: (_error, variables, scope) => {
-      if (scope === undefined || !isCurrentScope(variables.token, scope)) return;
+    onError: (_error, _variables, scope) => {
+      if (scope === undefined || !isCurrentScope(scope)) return;
       notify.error(t('saveFailed'));
     }
   });
@@ -60,15 +72,18 @@ export function useUpdateVisitMutation(visitId: string) {
 
   return useMutation({
     onMutate: captureScope,
-    mutationFn: ({payload, token}: UpdateVariables) =>
-      updateMedicalVisit(visitId, payload, token),
-    onSuccess: (visit, variables, scope) => {
-      if (scope === undefined || !isCurrentScope(variables.token, scope)) return;
+    mutationFn: (variables: UpdateVariables) => {
+      requireCapturedScope(variables);
+      return updateMedicalVisit(visitId, variables.payload);
+    },
+    onSuccess: (visit, _variables, scope) => {
+      if (scope === undefined || !isCurrentScope(scope)) return;
       queryClient.setQueryData(medicalRecordKeys.visitDetail(visit.id, scope), visit);
+
       notify.success(t('updated'));
     },
-    onError: (_error, variables, scope) => {
-      if (!isCurrentScope(variables.token, scope)) return;
+    onError: (_error, _variables, scope) => {
+      if (!isCurrentScope(scope)) return;
       notify.error(t('saveFailed'));
     }
   });

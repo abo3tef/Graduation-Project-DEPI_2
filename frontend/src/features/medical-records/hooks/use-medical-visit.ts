@@ -5,7 +5,8 @@ import {ApiError} from '@/lib/api';
 import {getMedicalVisit} from '../api';
 import {medicalRecordKeys} from '../keys';
 import {isGuid} from '../validation';
-import {useDevToken} from '../use-dev-token';
+import {useMedicalCredentials} from '../use-medical-credentials';
+import {readCredentialScope} from '../credential-scope';
 
 const NON_RETRYABLE_KINDS: readonly string[] = [
   'unauthorized',
@@ -16,23 +17,20 @@ const NON_RETRYABLE_KINDS: readonly string[] = [
 ];
 
 /**
- * Visit detail query. It stays disabled until the client knows the token (D-28) and the
- * route id is a GUID, so a malformed URL never reaches the API.
+ * Visit detail query. It stays disabled until the route id is a valid GUID,
+ * so a malformed URL never reaches the API.
  */
-export function useMedicalVisit(visitId: string, token: string | null, ready: boolean) {
-  const identity = useDevToken();
-  const credentialMatches = ready && identity.isReady && token === identity.token;
+export function useMedicalVisit(visitId: string) {
+  const identity = useMedicalCredentials();
   return useQuery({
     queryKey: medicalRecordKeys.visitDetail(visitId, identity.credentialScope),
     queryFn: ({signal}) => {
-      if (!credentialMatches || !token?.trim()) {
-        // Defensive: `enabled` already guards this, but keeps the function total.
+      if (!identity.isReady || !identity.token || identity.credentialScope !== readCredentialScope()) {
         throw new ApiError({kind: 'unauthorized', status: 401});
       }
-
-      return getMedicalVisit(visitId, token, signal);
+      return getMedicalVisit(visitId, signal);
     },
-    enabled: credentialMatches && Boolean(token?.trim()) && isGuid(visitId),
+    enabled: identity.isReady && Boolean(identity.token) && isGuid(visitId),
     placeholderData: undefined,
     gcTime: 0,
     retry: (failureCount, error) => {

@@ -52,7 +52,8 @@ export function useActor() {
   return {
     identity,
     actor: identity.userId ?? 'anonymous',
-    ready: identity.status === 'ready'
+    // Admins have no appointment screens until F11 (D-C2-1), so they never call these endpoints.
+    ready: identity.status === 'ready' && identity.role !== 'Admin'
   };
 }
 

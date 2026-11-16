@@ -1,3 +1,4 @@
+import {setMedicalTestSession, clearMedicalTestSession} from '../test-session';
 import {act, fireEvent, render, renderHook, screen, waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
@@ -8,7 +9,7 @@ import en from '@/messages/en.json';
 import ar from '@/messages/ar.json';
 import {ApiError} from '@/lib/api';
 import {createVitalSigns, updateVitalSigns} from '../api';
-import {useDevToken} from '../use-dev-token';
+import {useMedicalCredentials} from '../use-medical-credentials';
 import {VitalSignsForm} from './VitalSignsForm';
 import type {VitalSignsResponse} from '../types';
 
@@ -24,8 +25,8 @@ function setup(locale: 'en' | 'ar' = 'en') {
     return <QueryClientProvider client={client}><NextIntlClientProvider locale={locale}
       messages={locale === 'ar' ? ar : en} onError={error => {throw error;}}>{children}</NextIntlClientProvider></QueryClientProvider>;
   }
-  const identity = renderHook(() => useDevToken());
-  act(() => {identity.result.current.clearToken(); identity.result.current.saveToken('test-form-token');});
+  const identity = renderHook(() => useMedicalCredentials());
+  act(() => {clearMedicalTestSession(); setMedicalTestSession('test-form-token');});
   return {wrapper, identity, client};
 }
 beforeEach(() => {vi.clearAllMocks();});
@@ -132,7 +133,7 @@ describe('VitalSignsForm', () => {
   });
 
   it('hides an open form after credential change and does not call onDone for the old request', async () => {
-    const {wrapper, identity} = setup();
+    const {wrapper} = setup();
     let finish!: (value: VitalSignsResponse) => void;
     vi.mocked(createVitalSigns).mockReturnValue(new Promise(resolve => {finish = resolve;}));
     const done = vi.fn();
@@ -140,7 +141,7 @@ describe('VitalSignsForm', () => {
     fireEvent.change(screen.getByLabelText('Heart rate'), {target: {value: '80'}});
     fireEvent.submit(container.querySelector('form')!);
     await waitFor(() => expect(createVitalSigns).toHaveBeenCalledOnce());
-    act(() => {identity.result.current.saveToken('different-test-token');});
+    act(() => {setMedicalTestSession('different-test-token');});
     expect(container).toBeEmptyDOMElement();
     await act(async () => {finish(existing);});
     expect(done).not.toHaveBeenCalled();

@@ -4,7 +4,7 @@
 > Records *status, decisions, blockers, next steps*. It does **not** define rules (`AGENTS.md` does) and must **not** change approved scope, ownership, or acceptance criteria.
 > **Updated by:** the contributor at the end of each Cycle, through a PR reviewed by the Tech Lead. The AI only proposes the update (`ElwakeelBuild` → `done`).
 
-- **Last updated:** 2026-11-14
+- **Last updated:** 2026-11-15
 - **Final delivery:** 2026-11-15 (night)
 - **Tech Lead:** Abdullah
 - **Integration branch:** `main`
@@ -63,10 +63,10 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 | Cycle | Owner | Depends on | Status | Blocking open items |
 |-------|-------|-----------|--------|---------------------|
 | F6-C1 Auth backend | Shalaby | — | In review | Q-11, Q-12, Q-13, Q-14, Q-15 — answered (D-32…D-43); started 2026-11-14 (⚠ oversized, see §7) |
-| F6-C2 Auth frontend | Shalaby | F6-C1 | Approved | Q-13 |
-| F4v2-C1 Diagnosis delete backend | Shalaby | Phase 1 | Approved | — |
-| F4v2-C2 Diagnosis delete frontend | Shalaby | F4v2-C1 | Approved | — |
-| F7-C1 Payments backend | Habiba | F6-C1 (A) | Approved | Q-21 |
+| F6-C2 Auth frontend | Shalaby | F6-C1 | In review | Q-13 |
+| F4v2-C1 Diagnosis delete backend | Shalaby | Phase 1 | In review | — |
+| F4v2-C2 Diagnosis delete frontend | Shalaby | F4v2-C1 | In review | — |
+| F7-C1 Payments backend | Habiba | F6-C1 (A) | In review | — |
 | F7-C2 Payments frontend + dashboard | Habiba | F7-C1 | Approved | Q-21 |
 | F8-C1 Patients backend | Menna | F6-C1 (A) | Approved | Q-17, Q-18 |
 | F8-C2 Patients frontend + picker | Menna | F8-C1 | Approved | — |
@@ -81,8 +81,8 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 
 | Member | Active Cycle | Branch | Status | Last update |
 |--------|--------------|--------|--------|-------------|
-| Shalaby | F6-C1 (Auth backend) | `feature/shalaby-auth` | In review | 2026-11-15 |
-| Habiba | — | `feature/habiba-payments` | — | — |
+| Shalaby | F4v2-C2 (Diagnosis delete frontend) | `feature/shalaby-auth` | In review | 2026-11-16 |
+| Habiba | F7-C1 | `feature/habiba-payments` | In review | 2026-11-15 |
 | Menna | — | `feature/menna-patients` | — | — |
 | Anton | — | `feature/anton-vitals` | — | — |
 | Merihan | — | `feature/merihan-medical-profile` | — | — |
@@ -115,6 +115,7 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 | 2026-11-14 | **Q-13:** access token only, **no refresh token**; 24 h demo lifetime from configuration (`Jwt:AccessTokenMinutes`, default `1440`); frontend token storage is decided in F6-C2 | F6-C1 plan — Tech Lead confirms at PR |
 | 2026-11-14 | **Q-14:** **no ASP.NET Core Identity** — custom credentials already exist on `doctors`/`secretaries` (`PasswordHash`, `AccountStatus`, unique email); an `admins` table is added; claims are `sub` = user id, `role` = `Doctor`/`Secretary`/`Admin`, `doctorId` for doctors (equal to `sub`), HS256 | F6-C1 T1 inspection — Tech Lead confirms at PR |
 | 2026-11-14 | **Q-15:** BCL `System.Net.Mail` SMTP behind `IEmailService` (secrets in user-secrets/env, dev file sink when unconfigured); verification/reset tokens are 32-byte CSPRNG values stored as SHA-256 hashes, single-use, previous invalidated; verification 24 h, reset 60 min; link style | F6-C1 plan — Tech Lead confirms at PR |
+| 2026-11-15 | **Q-01 / Q-21:** one Payment per Appointment (unique `appointment_id`); fields `patient_id`, `doctor_id`, `amount decimal(18,2)` (0 < amount <= 1,000,000), `method` (`Cash`\|`Card`), `status` (`Pending`\|`Partial`\|`Paid`), `paid_at_utc`, `notes` <= 500, `created_by` (no FK), `created_at_utc`. Transitions `Pending->Partial`, `Pending->Paid`, `Partial->Paid`; `Paid` is final; `POST` always creates `Pending`; `Paid` is immutable (`409 payment.paid_final`). Revenue = `SUM(amount) WHERE status = 'Paid' AND doctor_id = @doctorId`. Payable picker excludes `Cancelled`/`No-Show` and already-billed appointments. Doctor: own payments; secretary: assigned doctors; out-of-scope -> 404. | Habiba (F7-C1), confirmed by Tech Lead 2026-11-15 |
 
 ### F6-C1 plan decisions (2026-11-14, recorded before `build`)
 | ID | Decision | Approved value |
@@ -135,7 +136,6 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 ### Phase 1 decisions implemented in code but not written down (Tech Lead must record the actual rule — agents must not guess)
 | ID | Topic | Record by |
 |----|-------|-----------|
-| Q-01 / Q-21 | Payment model (what a payment attaches to, partial payments, methods, statuses, allowed status changes, revenue attribution) | F7-C1-T1, confirmed by Tech Lead |
 | Q-02 | Doctor–patient access relationship | Tech Lead |
 | Q-03 | Meaning of "patient status" (F3) and "patients' statuses today" (F5) | Tech Lead |
 | Q-08 | Medical entities in scope for F3/F4 | Tech Lead |
@@ -157,7 +157,7 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 |------|---------|----------|-------|
 | 2026-11-14 | Firebase project + SMTP account/secrets not confirmed | F6 live demo only (no longer F6-C1: the automated checks use a fake Firebase validator and the `.eml` sink) | Shalaby / Tech Lead |
 | 2026-11-14 | `docs/PROJECT_OVERVIEW.md` missing | Session Start Kit | Tech Lead |
-| 2026-11-14 | Phase 1 decisions not written down (§8) | F7, F10, F11 | Tech Lead |
+| 2026-11-14 | Phase 1 decisions not written down (§8) | F10, F11 | Tech Lead |
 | 2026-11-15 | No reachable MySQL instance while building F6-C1 | Applies/verifies the auth migration against a real database | Shalaby / Tech Lead |
 
 ## 10. Execution Reports
@@ -165,12 +165,16 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 | Cycle | Contributor | Date | Result | Report |
 |-------|-------------|------|--------|--------|
 | F6-C1 — Auth backend | Shalaby | 2026-11-15 | In review | `docs/reports/F6-C1.md` |
+| F6-C2 — Auth frontend | Shalaby | 2026-11-15 | In review | `docs/reports/F6-C2.md` |
+| F4v2-C1 — Diagnosis delete backend | Shalaby | 2026-11-16 | In review | `docs/reports/F4v2-C1.md` |
+| F4v2-C2 — Diagnosis delete frontend | Shalaby | 2026-11-16 | In review | `docs/reports/F4v2-C2.md` |
+| F7-C1 | Habiba | 2026-11-15 | Done for approved scope (AC-4 dashboard deferred); build clean; 421/421 tests | `docs/reports/F7-C1.md` |
 
 ## 11. Next Steps
 
 1. All 14 Phase 2 Cycle files are `Approved` (2026-11-14) here and in each file. The Tech Lead still records answers/defaults for Q-16 … Q-22 in §8 as each Cycle's `plan` starts; a blocking question without an answer or explicit default stops that Cycle before `build`. Q-11 … Q-15 are answered in §8.
-2. **Tech Lead review + merge of `feature/shalaby-auth`**, checkpoint A (`b3e4bd3`, `a941ba1`) first so the other features can test real roles; the rest of F6-C1 follows in the same PR. Auth contract for F6-C2: `backend/docs/api/AUTH_API.md`.
-3. Shalaby then starts **F6-C2** (frontend screens, central token handling, `DevTokenPanel` removal). Everyone else continues C1 `plan` in parallel.
+2. **Tech Lead review + merge of `feature/shalaby-auth`** (F6-C1, F6-C2, F4v2-C1, F4v2-C2). Auth contract: `backend/docs/api/AUTH_API.md`; diagnosis contract: `backend/docs/api/MEDICAL_RECORDS_API.md`; frontend execution reports: `docs/reports/F6-C2.md`, `docs/reports/F4v2-C2.md`.
+3. Everyone else continues C1/C2 `plan` in parallel. F6-C1, F6-C2, F4v2-C1 and F4v2-C2 are `In review`; no further Shalaby Cycle is planned until the Tech Lead reviews the branch.
 4. Follow §4 milestones; update §5 and §6 after each `done`.
 5. Final week-end task list (F11-C2): full build/test, E2E role matrix, seed data, demo script.
 
@@ -183,3 +187,7 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 | 2026-11-14 | Basic data filled (Tech Lead: Abdullah, integration branch: `main`, DB: MySQL); all 14 Phase 2 Cycles set to `Approved` here and in their Cycle files; the "Draft cycles" blocker closed | Tech Lead |
 | 2026-11-14 | Q-11 … Q-15 recorded as approved F6 defaults; F6-C1 plan decisions D-32 … D-43 added to §8 (identity storage, auth-token table, PBKDF2, claims, lifetimes, error codes, seed, packages) | Shalaby (F6 owner) — Tech Lead confirms at PR |
 | 2026-11-15 | F6-C1 implemented on `feature/shalaby-auth` (checkpoint A → slice E) and moved to `In review`; execution report `docs/reports/F6-C1.md` added; Firebase/SMTP blocker narrowed to the live demo; MySQL blocker added | Shalaby (F6 owner) — Tech Lead review pending |
+| 2026-11-15 | F6-C2 implemented on `feature/shalaby-auth` (E1–E6 complete, all 4 quality gates green): session store + token handling, auth data layer + tests, 5 auth screens + route guards, Google Sign-In (Firebase JS SDK), DevTokenPanel removal; F6-C2 moved to `In review`; execution report `docs/reports/F6-C2.md` added | Shalaby (F6 owner) — Tech Lead review pending |
+| 2026-11-16 | F4v2-C1 implemented on `feature/shalaby-auth`: diagnosis `DELETE` (owner-scoped, route-consistent, hard delete per D-23), route added to the authorization matrix, 490 backend tests green, no model change; moved to `In review`; execution report `docs/reports/F4v2-C1.md` added | Shalaby (F4v2 owner) — Tech Lead review pending |
+| 2026-11-16 | F4v2-C2 implemented on `feature/shalaby-auth`: delete action + accessible confirm dialog on each diagnosis, visit-query invalidation, ar/en messages, first `features/medical-records/api.test.ts` (2 cases); all 4 frontend gates green (431 tests); moved to `In review`; execution report `docs/reports/F4v2-C2.md` added | Shalaby (F4v2 owner) — Tech Lead review pending |
+| 2026-11-15 | F7-C1 payments backend implemented and in review; Q-01/Q-21 payment model recorded; payable picker excludes Cancelled/No-Show | Habiba |

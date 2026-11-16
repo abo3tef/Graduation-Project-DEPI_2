@@ -9,7 +9,6 @@ import {
   useUpdateMedicationMutation
 } from '../hooks/use-medication-mutations';
 import type {CreateMedicationRequest, MedicationResponse} from '../types';
-import {readDevToken, useDevToken} from '../use-dev-token';
 import {
   MEDICATION_FIELD_IDS,
   MEDICATION_FIELD_LIMITS,
@@ -46,7 +45,6 @@ export function MedicationForm(props: MedicationFormProps) {
   const validationT = useTranslations('MedicalRecords.validation');
   const commonT = useTranslations('MedicalRecords.common');
 
-  const {token, isReady} = useDevToken();
   const createMutation = useCreateMedicationMutation(props.visitId);
   const updateMutation = useUpdateMedicationMutation(props.visitId);
 
@@ -151,11 +149,6 @@ export function MedicationForm(props: MedicationFormProps) {
       return;
     }
 
-    const currentToken = readDevToken();
-
-    if (!currentToken) {
-      return;
-    }
 
     const payload: CreateMedicationRequest = {
       medicationName: values.medicationName.trim(),
@@ -167,7 +160,7 @@ export function MedicationForm(props: MedicationFormProps) {
 
     if (props.mode === 'edit') {
       updateMutation.mutate(
-        {medicationId: props.medication.id, payload, token: currentToken},
+        {medicationId: props.medication.id, payload},
         {onSuccess: props.onDone}
       );
 
@@ -175,7 +168,7 @@ export function MedicationForm(props: MedicationFormProps) {
     }
 
     createMutation.mutate(
-      {payload, token: currentToken},
+      {payload},
       {onSuccess: props.onDone}
     );
   }
@@ -301,7 +294,7 @@ export function MedicationForm(props: MedicationFormProps) {
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="submit"
-            disabled={isPending || !isReady || !token}
+            disabled={isPending}
             className={primaryButtonClassName}
           >
             <FiSave aria-hidden className="size-4" />

@@ -4,7 +4,7 @@ import type {ComponentProps} from 'react';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import {resetAuthHeadersProviders} from '@/lib/api';
 import {getClinicNow} from '../utils/date-time';
-import {setDevIdentityForTests} from '../test/dev-identity-helper';
+import {signInForTests} from '../test/session-helper';
 import {
   actAs,
   DOCTOR_ID,
@@ -13,8 +13,7 @@ import {
   makeAppointment,
   page,
   problem,
-  renderWithProviders,
-  SECRETARY_ID
+  renderWithProviders
 } from '../test/test-utils';
 import {AppointmentsPage} from './AppointmentsPage';
 
@@ -82,8 +81,7 @@ describe('AppointmentsPage', () => {
     expect(call?.query.get('pageSize')).toBe('10');
     expect(call?.query.has('doctorId')).toBe(false);
     expect(call?.query.has('status')).toBe(false);
-    expect(call?.headers['X-User-Id']).toBe(SECRETARY_ID);
-    expect(call?.headers['X-User-Role']).toBe('Secretary');
+    expect(call?.headers.Authorization).toBe('Bearer token-Secretary');
     expect(screen.getByRole('link', {name: /New appointment/})).toHaveAttribute('href', '/appointments/new');
   });
 
@@ -246,7 +244,7 @@ describe('AppointmentsPage', () => {
   it('switches identity live: refetches as the new user and never shows the previous user\'s cached rows', async () => {
     actAs('Secretary');
     api.on('GET', LIST, (call) =>
-      call.headers['X-User-Role'] === 'Doctor'
+      call.headers.Authorization === 'Bearer token-Doctor'
         ? {body: page([makeAppointment({patientName: 'Doctor Only Patient'})])}
         : {body: page([makeAppointment({patientName: 'Secretary Only Patient'})])}
     );
@@ -254,13 +252,12 @@ describe('AppointmentsPage', () => {
     await waitForRow('Secretary Only Patient');
     expect(screen.queryByRole('button', {name: /^Complete/})).not.toBeInTheDocument();
 
-    act(() => setDevIdentityForTests({userId: DOCTOR_ID, role: 'Doctor'}));
+    act(() => signInForTests('Doctor', DOCTOR_ID));
 
     await waitForRow('Doctor Only Patient');
     expect(screen.queryByText('Secretary Only Patient')).not.toBeInTheDocument();
     const last = api.callsTo('GET', LIST).at(-1);
-    expect(last?.headers['X-User-Id']).toBe(DOCTOR_ID);
-    expect(last?.headers['X-User-Role']).toBe('Doctor');
+    expect(last?.headers.Authorization).toBe('Bearer token-Doctor');
     // The new role gets the doctor-only action; the secretary never had it.
     expect(screen.getAllByRole('button', {name: 'Complete — Doctor Only Patient'}).length).toBeGreaterThan(0);
   });
@@ -276,6 +273,9 @@ describe('AppointmentsPage', () => {
     renderWithProviders(<AppointmentsPage />);
     await waitFor(() => expect(api.callsTo('GET', LIST).length).toBe(2));
 
-    expect(api.callsTo('GET', LIST).map((call) => call.headers['X-User-Role'])).toEqual(['Secretary', 'Doctor']);
+    expect(api.callsTo('GET', LIST).map((call) => call.headers.Authorization)).toEqual([
+      'Bearer token-Secretary',
+      'Bearer token-Doctor'
+    ]);
   });
 });

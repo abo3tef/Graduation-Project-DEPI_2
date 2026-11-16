@@ -3,7 +3,8 @@
 import {useMutation, useQueryClient} from '@tanstack/react-query';
 import {createVitalSigns, updateVitalSigns} from '../api';
 import {medicalRecordKeys} from '../keys';
-import {readDevToken} from '../use-dev-token';
+import {readCredentialScope} from '../credential-scope';
+import {readMedicalToken} from '../use-medical-credentials';
 import {ApiError} from '@/lib/api';
 import {notify} from '@/lib/utils/toast';
 import type {SaveVitalSignsRequest} from '../types';
@@ -14,7 +15,7 @@ type UpdateVariables = SaveVariables & {vitalSignsId: string};
 type Messages = {success: string; error: string};
 
 function requireCurrentToken(token: string): void {
-  if (!token.trim() || token !== readDevToken()) {
+  if (!token.trim() || token !== readMedicalToken()) {
     throw new ApiError({kind: 'unauthorized', status: 401});
   }
 }
@@ -22,18 +23,19 @@ function requireCurrentToken(token: string): void {
 function useSaveCallbacks(visitId: string, messages?: Messages) {
   const queryClient = useQueryClient();
   return {
-    onSuccess: async (_data: unknown, variables: SaveVariables) => {
+    onMutate: () => readCredentialScope(),
+    onSuccess: async (_data: unknown, variables: SaveVariables, scope: number | undefined) => {
       // Invalidate without seeding data from a request completed after an account change.
       await Promise.all([
         queryClient.invalidateQueries({queryKey: medicalRecordKeys.visit(visitId)}),
         queryClient.invalidateQueries({queryKey: medicalRecordKeys.vitalSigns(visitId)})
       ]);
-      if (messages && variables.token === readDevToken()) {
+      if (messages && scope === readCredentialScope() && variables.token === readMedicalToken()) {
         notify.success(messages.success);
       }
     },
-    onError: (_error: unknown, variables: SaveVariables) => {
-      if (messages && variables.token === readDevToken()) {
+    onError: (_error: unknown, variables: SaveVariables, scope: number | undefined) => {
+      if (messages && scope === readCredentialScope() && variables.token === readMedicalToken()) {
         notify.error(messages.error);
       }
     }

@@ -5,7 +5,7 @@ import {useTranslations} from 'next-intl';
 import {fieldErrorsOf} from '../errors';
 import {readCredentialScope} from '../credential-scope';
 import {useCreateVitalSignsMutation, useUpdateVitalSignsMutation} from '../hooks/use-vital-signs-mutations';
-import {readDevToken, useDevToken} from '../use-dev-token';
+import {readMedicalToken, useMedicalCredentials} from '../use-medical-credentials';
 import type {VitalSignsResponse} from '../types';
 import {
   VITAL_SIGNS_FIELDS, VITAL_SIGNS_LIMITS, initialVitalSignsValues, toVitalSignsRequest,
@@ -24,7 +24,7 @@ type VitalSignsFormProps = BaseProps & (
 export function VitalSignsForm(props: VitalSignsFormProps) {
   const t = useTranslations('MedicalRecords.vitalSigns');
   const commonT = useTranslations('MedicalRecords.common');
-  const identity = useDevToken();
+  const identity = useMedicalCredentials();
   const [openingScope] = useState(identity.credentialScope);
   const [values, setValues] = useState(() => initialVitalSignsValues(props.mode === 'edit' ? props.vitalSigns : undefined));
   const [errors, setErrors] = useState<VitalSignsFormErrors>({});
@@ -63,7 +63,7 @@ export function VitalSignsForm(props: VitalSignsFormProps) {
       document.getElementById(fieldId(first ?? VITAL_SIGNS_FIELDS[0]))?.focus();
       return;
     }
-    const token = readDevToken();
+    const token = readMedicalToken();
     if (!token || token !== identity.token) return;
     lock.current = true;
     setSaved(false);

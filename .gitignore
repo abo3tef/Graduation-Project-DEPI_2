@@ -33,3 +33,5 @@ Thumbs.db
 *.log
 npm-debug.log*
 backend/logs/
+# Development mail sink: written relative to the WebAPI content root (D-39).
+backend/src/Medilog.WebAPI/logs/
