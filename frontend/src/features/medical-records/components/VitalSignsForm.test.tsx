@@ -17,6 +17,7 @@ vi.mock('../api', () => ({createVitalSigns: vi.fn(), updateVitalSigns: vi.fn()})
 vi.mock('@/lib/utils/toast', () => ({notify: {success: vi.fn(), error: vi.fn()}}));
 const existing: VitalSignsResponse = {id: 'measurement', bloodPressure: '120/80', heartRate: 72,
   temperature: 37, respiratoryRate: 16, spO2: 98, weight: 70, height: 175};
+const doctorId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const visitId = '11111111-1111-4111-8111-111111111111';
 
 function setup(locale: 'en' | 'ar' = 'en') {
@@ -26,7 +27,7 @@ function setup(locale: 'en' | 'ar' = 'en') {
       messages={locale === 'ar' ? ar : en} onError={error => {throw error;}}>{children}</NextIntlClientProvider></QueryClientProvider>;
   }
   const identity = renderHook(() => useMedicalCredentials());
-  act(() => {clearMedicalTestSession(); setMedicalTestSession('test-form-token');});
+  act(() => {clearMedicalTestSession(); setMedicalTestSession('test-form-token', {id: doctorId, doctorId});});
   return {wrapper, identity, client};
 }
 beforeEach(() => {vi.clearAllMocks();});
@@ -36,7 +37,7 @@ describe('VitalSignsForm', () => {
     const {wrapper} = setup();
     const done = vi.fn();
     vi.mocked(createVitalSigns).mockResolvedValue({...existing, heartRate: 80});
-    render(<VitalSignsForm mode="create" visitId={visitId} onDone={done} onCancel={vi.fn()} />, {wrapper});
+    render(<VitalSignsForm visitDoctorId={doctorId} mode="create" visitId={visitId} onDone={done} onCancel={vi.fn()} />, {wrapper});
     const user = userEvent.setup();
     await user.click(screen.getByRole('button', {name: 'Save vital signs'}));
     expect(screen.getByRole('alert')).toHaveTextContent('Enter at least one measurement.');
@@ -53,7 +54,7 @@ describe('VitalSignsForm', () => {
   it('edit sends a full replacement including null-cleared values', async () => {
     const {wrapper} = setup();
     vi.mocked(updateVitalSigns).mockResolvedValue(existing);
-    render(<VitalSignsForm mode="edit" vitalSigns={existing} visitId={visitId} onDone={vi.fn()} onCancel={vi.fn()} />, {wrapper});
+    render(<VitalSignsForm visitDoctorId={doctorId} mode="edit" vitalSigns={existing} visitId={visitId} onDone={vi.fn()} onCancel={vi.fn()} />, {wrapper});
     const user = userEvent.setup();
     for (const label of ['Blood pressure', 'Temperature', 'Respiratory rate', 'Oxygen saturation', 'Weight', 'Height']) {
       await user.clear(screen.getByLabelText(label));
@@ -69,7 +70,7 @@ describe('VitalSignsForm', () => {
     let finish!: (value: VitalSignsResponse) => void;
     vi.mocked(createVitalSigns).mockReturnValue(new Promise(resolve => {finish = resolve;}));
     const done = vi.fn();
-    const {container} = render(<VitalSignsForm mode="create" visitId={visitId} onDone={done} onCancel={vi.fn()} />, {wrapper});
+    const {container} = render(<VitalSignsForm visitDoctorId={doctorId} mode="create" visitId={visitId} onDone={done} onCancel={vi.fn()} />, {wrapper});
     fireEvent.change(screen.getByLabelText('Heart rate'), {target: {value: '80'}});
     fireEvent.submit(container.querySelector('form')!);
     fireEvent.submit(container.querySelector('form')!);
@@ -84,7 +85,7 @@ describe('VitalSignsForm', () => {
     const {wrapper} = setup();
     vi.mocked(createVitalSigns).mockRejectedValue(new ApiError({kind: 'validation', status: 400,
       fieldErrors: {heartRate: ['Server rejected this measurement.']}}));
-    render(<VitalSignsForm mode="create" visitId={visitId} onDone={vi.fn()} onCancel={vi.fn()} />, {wrapper});
+    render(<VitalSignsForm visitDoctorId={doctorId} mode="create" visitId={visitId} onDone={vi.fn()} onCancel={vi.fn()} />, {wrapper});
     const user = userEvent.setup();
     await user.type(screen.getByLabelText('Heart rate'), '80');
     await user.click(screen.getByRole('button', {name: 'Save vital signs'}));
@@ -99,7 +100,7 @@ describe('VitalSignsForm', () => {
   it.each(['en', 'ar'] as const)('supports keyboard order, localized client errors and accessible descriptions in %s', async locale => {
     const {wrapper} = setup(locale);
     const messages = (locale === 'ar' ? ar : en).MedicalRecords.vitalSigns;
-    const {container} = render(<VitalSignsForm mode="create" visitId={visitId} onDone={vi.fn()} onCancel={vi.fn()} />, {wrapper});
+    const {container} = render(<VitalSignsForm visitDoctorId={doctorId} mode="create" visitId={visitId} onDone={vi.fn()} onCancel={vi.fn()} />, {wrapper});
     const user = userEvent.setup();
     for (const field of ['bloodPressure', 'heartRate', 'temperature', 'respiratoryRate', 'spO2', 'weight', 'height'] as const) {
       await user.tab();
@@ -125,7 +126,7 @@ describe('VitalSignsForm', () => {
   it('uses matching Arabic messages and cancels without saving', async () => {
     const {wrapper} = setup('ar');
     const cancel = vi.fn();
-    render(<VitalSignsForm mode="create" visitId={visitId} onDone={vi.fn()} onCancel={cancel} />, {wrapper});
+    render(<VitalSignsForm visitDoctorId={doctorId} mode="create" visitId={visitId} onDone={vi.fn()} onCancel={cancel} />, {wrapper});
     expect(screen.getByLabelText('ضغط الدم')).toHaveAttribute('dir', 'ltr');
     await userEvent.click(screen.getByRole('button', {name: ar.MedicalRecords.common.cancel}));
     expect(cancel).toHaveBeenCalledOnce();
@@ -137,11 +138,41 @@ describe('VitalSignsForm', () => {
     let finish!: (value: VitalSignsResponse) => void;
     vi.mocked(createVitalSigns).mockReturnValue(new Promise(resolve => {finish = resolve;}));
     const done = vi.fn();
-    const {container} = render(<VitalSignsForm mode="create" visitId={visitId} onDone={done} onCancel={vi.fn()} />, {wrapper});
+    const {container} = render(<VitalSignsForm visitDoctorId={doctorId} mode="create" visitId={visitId} onDone={done} onCancel={vi.fn()} />, {wrapper});
     fireEvent.change(screen.getByLabelText('Heart rate'), {target: {value: '80'}});
     fireEvent.submit(container.querySelector('form')!);
     await waitFor(() => expect(createVitalSigns).toHaveBeenCalledOnce());
     act(() => {setMedicalTestSession('different-test-token');});
+    expect(container).toBeEmptyDOMElement();
+    await act(async () => {finish(existing);});
+    expect(done).not.toHaveBeenCalled();
+  });
+});
+
+describe('VitalSignsForm submission context', () => {
+  it('rechecks ownership in the submission handler before React removes the stale form', () => {
+    const {wrapper} = setup();
+    const {container} = render(<VitalSignsForm mode="create" visitId={visitId} visitDoctorId={doctorId} onDone={vi.fn()} onCancel={vi.fn()} />, {wrapper});
+    fireEvent.change(screen.getByLabelText('Heart rate'), {target: {value: '80'}});
+    const form = container.querySelector('form')!;
+    act(() => {
+      setMedicalTestSession('test-form-token', {id: doctorId, doctorId, role: 'Secretary'});
+      fireEvent.submit(form);
+    });
+    expect(createVitalSigns).not.toHaveBeenCalled();
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it('ignores a pending completion when the visit changes without a remount', async () => {
+    const {wrapper} = setup();
+    let finish!: (value: VitalSignsResponse) => void;
+    vi.mocked(createVitalSigns).mockReturnValue(new Promise(resolve => {finish = resolve;}));
+    const done = vi.fn();
+    const {container, rerender} = render(<VitalSignsForm mode="create" visitId={visitId} visitDoctorId={doctorId} onDone={done} onCancel={vi.fn()} />, {wrapper});
+    fireEvent.change(screen.getByLabelText('Heart rate'), {target: {value: '80'}});
+    fireEvent.submit(container.querySelector('form')!);
+    await waitFor(() => expect(createVitalSigns).toHaveBeenCalledOnce());
+    rerender(<VitalSignsForm mode="create" visitId={doctorId} visitDoctorId={doctorId} onDone={done} onCancel={vi.fn()} />);
     expect(container).toBeEmptyDOMElement();
     await act(async () => {finish(existing);});
     expect(done).not.toHaveBeenCalled();

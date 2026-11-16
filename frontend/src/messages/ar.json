@@ -164,6 +164,11 @@
   },
   "MedicalRecords": {
     "vitalSigns": {
+      "addAction": "إضافة العلامات الحيوية",
+      "editAction": "تعديل العلامات الحيوية",
+      "editLabel": "تعديل سجل القياسات {number}",
+      "savedPreviewTitle": "سجل القياسات المحفوظ",
+      "savedPreviewDescription": "هذا السجل المحفوظ غير موجود في الصفحة الحالية.",
       "title": "العلامات الحيوية",
       "bloodPressureUnit": "ملم زئبق",
       "orderingNote": "القياسات المسجّلة لهذه الزيارة.",

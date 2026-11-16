@@ -12,7 +12,7 @@ import type {SaveVitalSignsRequest} from '../types';
 type SaveVariables = {payload: SaveVitalSignsRequest; token: string};
 type UpdateVariables = SaveVariables & {vitalSignsId: string};
 // The UI supplies translated notification text when T3/T5 are implemented.
-type Messages = {success: string; error: string};
+type Messages = {success: string; error: string; isCurrent?: () => boolean};
 
 function requireCurrentToken(token: string): void {
   if (!token.trim() || token !== readMedicalToken()) {
@@ -30,12 +30,12 @@ function useSaveCallbacks(visitId: string, messages?: Messages) {
         queryClient.invalidateQueries({queryKey: medicalRecordKeys.visit(visitId)}),
         queryClient.invalidateQueries({queryKey: medicalRecordKeys.vitalSigns(visitId)})
       ]);
-      if (messages && scope === readCredentialScope() && variables.token === readMedicalToken()) {
+      if (messages && messages.isCurrent?.() !== false && scope === readCredentialScope() && variables.token === readMedicalToken()) {
         notify.success(messages.success);
       }
     },
     onError: (_error: unknown, variables: SaveVariables, scope: number | undefined) => {
-      if (messages && scope === readCredentialScope() && variables.token === readMedicalToken()) {
+      if (messages && messages.isCurrent?.() !== false && scope === readCredentialScope() && variables.token === readMedicalToken()) {
         notify.error(messages.error);
       }
     }

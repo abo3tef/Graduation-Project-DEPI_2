@@ -1,9 +1,9 @@
-import {clearSession, getSessionState, setSession} from '../auth/session/session-store';
+import {clearSession, getSessionState, setSession, type SessionUser} from '../auth/session/session-store';
 
 /** Synthetic sessions for the F9 integration tests only. */
-export function setMedicalTestSession(token: string): void {
-  if (getSessionState().session?.accessToken === token) return;
+export function setMedicalTestSession(token: string, user?: Partial<SessionUser>): void {
+  if (!user && getSessionState().session?.accessToken === token) return;
   setSession({accessToken: token, expiresAtUtc: new Date(Date.now() + 3600000).toISOString(),
-    user: {id: token, fullName: 'Test Doctor', email: 'doctor@example.test', role: 'Doctor', doctorId: token}});
+    user: {id: token, fullName: 'Test Doctor', email: 'doctor@example.test', role: 'Doctor', doctorId: token, ...user}});
 }
 export {clearSession as clearMedicalTestSession};

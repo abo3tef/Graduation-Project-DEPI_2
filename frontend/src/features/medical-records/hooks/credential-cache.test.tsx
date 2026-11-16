@@ -5,6 +5,7 @@ import type {ReactNode} from 'react';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {getMedicalVisit, listVitalSigns, createMedicalVisit, updateMedicalVisit, createVitalSigns} from '../api';
 import {readMedicalToken, useMedicalCredentials} from '../use-medical-credentials';
+import {notify} from '@/lib/utils/toast';
 import {medicalRecordKeys} from '../keys';
 import {useMedicalVisit} from './use-medical-visit';
 import {useVitalSigns} from './use-vital-signs';
@@ -157,4 +158,29 @@ describe('medical credential cache isolation', () => {
     keys.forEach(key => expect(client.getQueryState(key)?.isInvalidated).toBe(true));
     unmount(); client.clear();
   });
+});
+
+it.each(['success', 'error'] as const)('isolates a late vitals %s after logout and restoring the same token', async outcome => {
+  const {client, wrapper} = setup();
+  let resolve!: (value: {id: string} & SaveVitalSignsRequest) => void;
+  let reject!: (error: Error) => void;
+  vi.mocked(createVitalSigns).mockReturnValue(new Promise((done, fail) => {resolve = done; reject = fail;}));
+  const {result, unmount} = renderHook(() => ({identity: useMedicalCredentials(),
+    mutation: useCreateVitalSignsMutation(visitId, {success: 'saved', error: 'failed'})}), {wrapper});
+  act(() => {clearMedicalTestSession(); setMedicalTestSession(A);});
+  act(() => {result.current.mutation.mutate({token: A, payload: measurement});});
+  await waitFor(() => expect(createVitalSigns).toHaveBeenCalledOnce());
+  act(() => {clearMedicalTestSession(); setMedicalTestSession(A);});
+  const key = medicalRecordKeys.vitalSignsPage(visitId, result.current.identity.credentialScope, 1, 10);
+  const cached = {items: [{id: 'current-session', ...measurement}]};
+  client.setQueryData(key, cached);
+  await act(async () => {
+    if (outcome === 'success') resolve({id: 'old-session', ...measurement});
+    else reject(new Error('Synthetic failure'));
+  });
+  await waitFor(() => expect(result.current.mutation.isPending).toBe(false));
+  expect(client.getQueryData(key)).toEqual(cached);
+  expect(notify.success).not.toHaveBeenCalled();
+  expect(notify.error).not.toHaveBeenCalled();
+  unmount(); client.clear();
 });

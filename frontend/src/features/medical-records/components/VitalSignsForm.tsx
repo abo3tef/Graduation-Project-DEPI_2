@@ -2,6 +2,8 @@
 
 import {useEffect, useId, useRef, useState, type FormEvent} from 'react';
 import {useTranslations} from 'next-intl';
+import {getSessionState} from '@/features/auth/session';
+import {canWriteVitalSigns} from '../vital-signs-access';
 import {fieldErrorsOf} from '../errors';
 import {readCredentialScope} from '../credential-scope';
 import {useCreateVitalSignsMutation, useUpdateVitalSignsMutation} from '../hooks/use-vital-signs-mutations';
@@ -15,7 +17,7 @@ import {FormField} from './FormField';
 import {MutationAlert} from './MutationAlert';
 import {controlClassName, primaryButtonClassName, secondaryButtonClassName} from './form-styles';
 
-type BaseProps = {visitId: string; onDone: () => void; onCancel: () => void};
+type BaseProps = {visitId: string; visitDoctorId: string; onDone: (record: VitalSignsResponse) => void; onCancel: () => void};
 type VitalSignsFormProps = BaseProps & (
   {mode: 'create'} | {mode: 'edit'; vitalSigns: VitalSignsResponse}
 );
@@ -26,12 +28,21 @@ export function VitalSignsForm(props: VitalSignsFormProps) {
   const commonT = useTranslations('MedicalRecords.common');
   const identity = useMedicalCredentials();
   const [openingScope] = useState(identity.credentialScope);
+  const context = [props.visitId, props.visitDoctorId, props.mode,
+    props.mode === 'edit' ? props.vitalSigns.id : 'new'].join(':');
+  const [openingContext] = useState(context);
+  const lifecycle = useRef<{context: string} | null>(null);
+  useEffect(() => {
+    lifecycle.current = {context};
+    return () => {lifecycle.current = null;};
+  }, [context]);
   const [values, setValues] = useState(() => initialVitalSignsValues(props.mode === 'edit' ? props.vitalSigns : undefined));
   const [errors, setErrors] = useState<VitalSignsFormErrors>({});
   const [saved, setSaved] = useState(false);
   const lock = useRef(false);
   const prefix = useId();
-  const messages = {success: t('saved'), error: t('saveFailed')};
+  const messages = {success: t('saved'), error: t('saveFailed'),
+    isCurrent: () => lifecycle.current?.context === context && openingScope === readCredentialScope()};
   const create = useCreateVitalSignsMutation(props.visitId, messages);
   const update = useUpdateVitalSignsMutation(props.visitId, messages);
   const active = props.mode === 'create' ? create : update;
@@ -44,7 +55,8 @@ export function VitalSignsForm(props: VitalSignsFormProps) {
     if (first) document.getElementById(`${prefix}-${first}`)?.focus();
   }, [active.error, prefix]);
 
-  if (!identity.isReady || !identity.token || openingScope !== identity.credentialScope) return null;
+  if (!identity.isReady || !identity.token || openingScope !== identity.credentialScope ||
+      openingContext !== context || !canWriteVitalSigns(getSessionState(), props.visitDoctorId)) return null;
 
   function setField(field: VitalSignsField, value: string) {
     setValues(previous => ({...previous, [field]: value}));
@@ -55,7 +67,8 @@ export function VitalSignsForm(props: VitalSignsFormProps) {
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (lock.current || active.isPending || openingScope !== readCredentialScope()) return;
+    if (lock.current || active.isPending || openingScope !== readCredentialScope() ||
+        openingContext !== context || !canWriteVitalSigns(getSessionState(), props.visitDoctorId)) return;
     const nextErrors = validateVitalSignsForm(values);
     setErrors(nextErrors);
     const first = VITAL_SIGNS_FIELDS.find(field => nextErrors[field]);
@@ -67,11 +80,13 @@ export function VitalSignsForm(props: VitalSignsFormProps) {
     if (!token || token !== identity.token) return;
     lock.current = true;
     setSaved(false);
+    const submittedLifecycle = lifecycle.current;
     const options = {
-      onSuccess: () => {
-        if (openingScope !== readCredentialScope()) return;
+      onSuccess: (record: VitalSignsResponse) => {
+        if (submittedLifecycle !== lifecycle.current || openingScope !== readCredentialScope() ||
+            !canWriteVitalSigns(getSessionState(), props.visitDoctorId)) return;
         setSaved(true);
-        props.onDone();
+        props.onDone(record);
       },
       onSettled: () => {lock.current = false;}
     };

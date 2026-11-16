@@ -164,6 +164,11 @@
   },
   "MedicalRecords": {
     "vitalSigns": {
+      "addAction": "Add vital signs",
+      "editAction": "Edit",
+      "editLabel": "Edit measurement record {number}",
+      "savedPreviewTitle": "Saved measurement",
+      "savedPreviewDescription": "This saved record is not on the current page.",
       "title": "Vital signs",
       "bloodPressureUnit": "mmHg",
       "orderingNote": "Measurements recorded for this visit.",
