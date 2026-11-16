@@ -1,12 +1,14 @@
 'use client';
 
-import {useState} from 'react';
-import {FiEdit3, FiPlus} from 'react-icons/fi';
+import {useEffect, useState} from 'react';
+import {FiEdit3, FiPlus, FiTrash2} from 'react-icons/fi';
 import {useFormatter, useTranslations} from 'next-intl';
+import {useDeleteDiagnosisMutation} from '../hooks/use-diagnosis-mutations';
 import type {DiagnosisResponse} from '../types';
 import {parseDateOnlyUtc} from '../validation';
+import {ConfirmDeleteDialog} from './ConfirmDeleteDialog';
 import {DiagnosisForm} from './DiagnosisForm';
-import {sectionActionClassName} from './form-styles';
+import {deleteActionClassName, sectionActionClassName} from './form-styles';
 
 type DiagnosisSectionProps = {
   visitId: string;
@@ -16,13 +18,31 @@ type DiagnosisSectionProps = {
 /**
  * Diagnosis list for a visit. It renders the server's order as-is (diagnosisDate, then id) and
  * only ever holds local "which item is being edited" state; the list itself comes back from the
- * invalidated visit query after each mutation.
+ * invalidated visit query after each mutation. Delete is a permanent `DELETE` (D-23), so it always
+ * goes through `ConfirmDeleteDialog` and never shows an optimistic state.
  */
 export function DiagnosisSection({visitId, diagnoses}: DiagnosisSectionProps) {
   const t = useTranslations('MedicalRecords.diagnosis');
+  const commonT = useTranslations('MedicalRecords.common');
   const formatter = useFormatter();
+  const deleteMutation = useDeleteDiagnosisMutation(visitId);
   const [isCreating, setIsCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<DiagnosisResponse | null>(
+    null
+  );
+
+  /**
+   * A successful delete unmounts the row the dialog was opened from, so the dialog's own focus
+   * restore has nothing left to focus. Land on the section's add button instead of `<body>`.
+   */
+  useEffect(() => {
+    if (!deleteMutation.isSuccess) {
+      return;
+    }
+
+    document.getElementById('diagnoses-add')?.focus();
+  }, [deleteMutation.isSuccess]);
 
   function closeForms() {
     setIsCreating(false);
@@ -37,6 +57,26 @@ export function DiagnosisSection({visitId, diagnoses}: DiagnosisSectionProps) {
   function startEdit(diagnosisId: string) {
     setIsCreating(false);
     setEditingId(diagnosisId);
+  }
+
+  function cancelDelete() {
+    if (deleteMutation.isPending) {
+      return;
+    }
+
+    deleteMutation.reset();
+    setDeleteTarget(null);
+  }
+
+  function confirmDelete() {
+    if (!deleteTarget) {
+      return;
+    }
+
+    deleteMutation.mutate(
+      {diagnosisId: deleteTarget.id},
+      {onSuccess: () => setDeleteTarget(null)}
+    );
   }
 
   function formatDate(value: string): string {
@@ -65,6 +105,7 @@ export function DiagnosisSection({visitId, diagnoses}: DiagnosisSectionProps) {
 
         {!isCreating ? (
           <button
+            id="diagnoses-add"
             type="button"
             onClick={startCreate}
             className={sectionActionClassName}
@@ -123,15 +164,27 @@ export function DiagnosisSection({visitId, diagnoses}: DiagnosisSectionProps) {
                       ) : null}
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => startEdit(diagnosis.id)}
-                      aria-label={`${t('editAction')}: ${diagnosis.diagnosisName}`}
-                      className={sectionActionClassName}
-                    >
-                      <FiEdit3 aria-hidden className="size-4" />
-                      {t('editAction')}
-                    </button>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => startEdit(diagnosis.id)}
+                        aria-label={`${t('editAction')}: ${diagnosis.diagnosisName}`}
+                        className={sectionActionClassName}
+                      >
+                        <FiEdit3 aria-hidden className="size-4" />
+                        {t('editAction')}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setDeleteTarget(diagnosis)}
+                        aria-label={`${t('deleteAction')}: ${diagnosis.diagnosisName}`}
+                        className={deleteActionClassName}
+                      >
+                        <FiTrash2 aria-hidden className="size-4" />
+                        {t('deleteAction')}
+                      </button>
+                    </div>
                   </div>
                 )}
               </li>
@@ -139,6 +192,20 @@ export function DiagnosisSection({visitId, diagnoses}: DiagnosisSectionProps) {
           </ul>
         ) : null}
       </div>
+
+      <ConfirmDeleteDialog
+        open={deleteTarget !== null}
+        title={t('deleteTitle')}
+        description={t('deleteDescription')}
+        confirmLabel={t('deleteConfirm')}
+        pendingLabel={t('deleting')}
+        cancelLabel={commonT('cancel')}
+        isPending={deleteMutation.isPending}
+        error={deleteMutation.error}
+        fallbackFocusId="diagnoses-add"
+        onConfirm={confirmDelete}
+        onCancel={cancelDelete}
+      />
     </section>
   );
 }

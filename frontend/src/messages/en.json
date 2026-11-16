@@ -223,6 +223,7 @@
       "description": "The conditions recorded during this visit.",
       "addAction": "Add diagnosis",
       "editAction": "Edit",
+      "deleteAction": "Delete",
       "emptyTitle": "No diagnosis recorded yet",
       "emptyDescription": "Add the first diagnosis for this visit.",
       "nameLabel": "Diagnosis",
@@ -233,7 +234,11 @@
       "editTitle": "Edit diagnosis",
       "createSubmit": "Add diagnosis",
       "editSubmit": "Save changes",
-      "saving": "Saving…"
+      "saving": "Saving…",
+      "deleteTitle": "Delete this diagnosis?",
+      "deleteDescription": "This permanently removes the diagnosis from the visit. It cannot be undone.",
+      "deleteConfirm": "Delete permanently",
+      "deleting": "Deleting…"
     },
     "medication": {
       "title": "Medications",
@@ -306,6 +311,8 @@
       "diagnosisCreated": "The diagnosis was added.",
       "diagnosisUpdated": "The diagnosis was updated.",
       "diagnosisSaveFailed": "The diagnosis could not be saved.",
+      "diagnosisDeleted": "The diagnosis was deleted.",
+      "diagnosisDeleteFailed": "The diagnosis could not be deleted.",
       "medicationCreated": "The medication was added.",
       "medicationUpdated": "The medication was updated.",
       "medicationDeleted": "The medication was deleted.",

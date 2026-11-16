@@ -223,6 +223,7 @@
       "description": "الحالات المرضية المسجلة في هذه الزيارة.",
       "addAction": "إضافة تشخيص",
       "editAction": "تعديل",
+      "deleteAction": "حذف",
       "emptyTitle": "لا يوجد تشخيص مسجّل بعد",
       "emptyDescription": "أضف أول تشخيص لهذه الزيارة.",
       "nameLabel": "التشخيص",
@@ -233,7 +234,11 @@
       "editTitle": "تعديل التشخيص",
       "createSubmit": "إضافة التشخيص",
       "editSubmit": "حفظ التعديلات",
-      "saving": "جارٍ الحفظ…"
+      "saving": "جارٍ الحفظ…",
+      "deleteTitle": "حذف هذا التشخيص؟",
+      "deleteDescription": "سيُحذف التشخيص نهائيًا من هذه الزيارة ولا يمكن التراجع عن الحذف.",
+      "deleteConfirm": "حذف نهائي",
+      "deleting": "جارٍ الحذف…"
     },
     "medication": {
       "title": "الأدوية",
@@ -306,6 +311,8 @@
       "diagnosisCreated": "تمت إضافة التشخيص.",
       "diagnosisUpdated": "تم تحديث التشخيص.",
       "diagnosisSaveFailed": "تعذر حفظ التشخيص.",
+      "diagnosisDeleted": "تم حذف التشخيص.",
+      "diagnosisDeleteFailed": "تعذّر حذف التشخيص.",
       "medicationCreated": "تمت إضافة الدواء.",
       "medicationUpdated": "تم تحديث الدواء.",
       "medicationDeleted": "تم حذف الدواء.",

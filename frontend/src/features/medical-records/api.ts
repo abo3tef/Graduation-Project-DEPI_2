@@ -74,6 +74,16 @@ export async function updateDiagnosis(
   return expectDiagnosis(data);
 }
 
+export async function deleteDiagnosis(
+  visitId: string,
+  diagnosisId: string
+): Promise<void> {
+  await requestVoid(
+    `${BASE_PATH}/${encodeURIComponent(visitId)}/diagnoses/${encodeURIComponent(diagnosisId)}`,
+    {method: 'DELETE'}
+  );
+}
+
 export async function createMedication(
   visitId: string,
   payload: CreateMedicationRequest
