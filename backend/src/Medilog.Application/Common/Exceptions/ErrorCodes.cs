@@ -14,6 +14,12 @@ public static class ErrorCodes
 
     public const string PatientNotFound = "patient.not_found";
 
+    /// <summary>The patient has appointments, visits, payments or other records and cannot be deleted (409, Q-17).</summary>
+    public const string PatientHasRelatedRecords = "patient.has_related_records";
+
+    /// <summary>A secretary tried to set a medical field such as blood type (403, Q-18).</summary>
+    public const string PatientMedicalFieldForbidden = "patient.medical_field_forbidden";
+
     public const string AppointmentNotFound = "appointment.not_found";
 
     public const string MedicalRecordAccessDenied = "medical.access_denied";

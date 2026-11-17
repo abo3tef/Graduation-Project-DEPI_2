@@ -437,7 +437,10 @@ public class AppointmentsEndpointTests
         var s = api.Scenario;
         var caller = api.SecretaryCaller();
 
-        foreach (var route in new[] { "/api/patients", "/api/visits", "/api/diagnoses", "/api/prescriptions", "/api/medical-records", $"/api/patients/{s.PatientA.Id}" })
+        // /api/patients and /api/patients/{id} are no longer in this list: F8 adds them as administrative
+        // patient routes. Their secretary restrictions (no blood type, assigned doctors only) are
+        // asserted in PatientsApiTests; the medical sub-routes stay doctor-only (MedicalRecordsApiTests).
+        foreach (var route in new[] { "/api/visits", "/api/diagnoses", "/api/prescriptions", "/api/medical-records" })
         {
             var response = await client.CallAsync(HttpMethod.Get, route, caller);
             Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);

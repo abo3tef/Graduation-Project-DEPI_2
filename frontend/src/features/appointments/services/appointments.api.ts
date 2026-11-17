@@ -1,21 +1,18 @@
 import {apiRequest} from '@/lib/api';
 import type {PagedResult} from '@/types/paging';
 import {
-  PATIENT_SEARCH_LIMIT,
   type Appointment,
   type AppointmentFilters,
   type AppointmentStatus,
   type BookAppointmentInput,
   type DoctorLookup,
-  type PatientLookup,
   type RescheduleAppointmentInput
 } from '../types/appointment.types';
 import {normalizeTime} from '../utils/date-time';
 import {
   readAppointment,
   readAppointmentPage,
-  readDoctorLookups,
-  readPatientLookups
+  readDoctorLookups
 } from './appointment-readers';
 
 const BASE_PATH = '/api/appointments';
@@ -100,17 +97,4 @@ export async function listDoctorLookups(signal?: AbortSignal): Promise<readonly 
   const data = await apiRequest<unknown>(`${BASE_PATH}/lookups/doctors`, {signal});
 
   return readDoctorLookups(data);
-}
-
-export async function searchPatientLookups(
-  doctorId: string,
-  search: string,
-  signal?: AbortSignal
-): Promise<readonly PatientLookup[]> {
-  const data = await apiRequest<unknown>(`${BASE_PATH}/lookups/patients`, {
-    query: {doctorId, search: search.trim(), limit: PATIENT_SEARCH_LIMIT},
-    signal
-  });
-
-  return readPatientLookups(data);
 }

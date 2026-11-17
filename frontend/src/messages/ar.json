@@ -214,6 +214,7 @@
     },
     "common": {
       "backHome": "العودة إلى الرئيسية",
+      "patients": "المرضى",
       "backToWorkspace": "العودة إلى السجلات الطبية",
       "retry": "إعادة المحاولة",
       "cancel": "إلغاء",
@@ -230,11 +231,8 @@
       "invalidVisitId": "أدخل معرّف زيارة صحيحًا.",
       "openVisit": "فتح الزيارة",
       "openPatientTitle": "فتح الملف الطبي لمريض",
-      "openPatientHint": "الصق معرّف المريض لمراجعة ملفه الطبي وجدوله الزمني.",
-      "patientIdLabel": "معرّف المريض",
-      "patientIdPlaceholder": "00000000-0000-0000-0000-000000000000",
-      "invalidPatientId": "أدخل معرّف مريض صحيحًا.",
-      "openPatient": "فتح ملف المريض",
+      "openPatientHint": "ابحث عن مريض بالاسم أو الهاتف لمراجعة ملفه الطبي وجدوله الزمني.",
+      "patientIdLabel": "المريض",
       "createVisit": "تسجيل زيارة جديدة"
     },
     "visit": {
@@ -254,8 +252,8 @@
     "visitForm": {
       "eyebrow": "زيارة طبية",
       "createTitle": "تسجيل زيارة جديدة",
-      "createDescription": "سجّل تفاصيل الاستشارة لمريض في مساحة عملك. معرّف المريض مطلوب.",
-      "patientId": "معرّف المريض",
+      "createDescription": "سجّل تفاصيل الاستشارة لمريض في مساحة عملك. اختر المريض أولًا.",
+      "patientId": "المريض",
       "patientIdHint": "يجب أن يكون المريض ضمن مساحة عملك.",
       "appointmentId": "معرّف الموعد (اختياري)",
       "appointmentIdHint": "اتركه فارغًا إذا لم تكن الزيارة مرتبطة بموعد.",
@@ -339,8 +337,8 @@
       "server": "حدث خطأ غير متوقع. أعد المحاولة."
     },
     "validation": {
-      "patientIdRequired": "أدخل معرّف المريض.",
-      "patientIdInvalid": "أدخل معرّف مريض صحيحًا.",
+      "patientIdRequired": "اختر مريضًا.",
+      "patientIdInvalid": "اختر مريضًا صحيحًا.",
       "appointmentIdInvalid": "أدخل معرّف موعد صحيحًا.",
       "visitDateRequired": "أدخل تاريخ ووقت الزيارة.",
       "visitDateInvalid": "أدخل تاريخ ووقت زيارة صحيحين.",
@@ -595,7 +593,8 @@
     "nav": {
       "label": "التنقل في المواعيد",
       "list": "المواعيد",
-      "new": "حجز جديد"
+      "new": "حجز جديد",
+      "patients": "المرضى"
     },
     "title": "المواعيد",
     "subtitle": "إدارة حجوزات الأطباء المسؤول عنهم.",
@@ -676,15 +675,6 @@
       "minutes": "{minutes} دقيقة",
       "reasonCounter": "{count}/{max}",
       "submit": "حجز الموعد"
-    },
-    "patientSearch": {
-      "placeholder": "ابحث بالاسم أو رقم الهاتف",
-      "needsDoctor": "اختر الطبيب أولًا.",
-      "minChars": "{count, plural, one {اكتب حرفًا واحدًا على الأقل للبحث.} two {اكتب حرفين على الأقل للبحث.} few {اكتب # أحرف على الأقل للبحث.} other {اكتب # حرفًا على الأقل للبحث.}}",
-      "searching": "جارٍ البحث…",
-      "none": "لا يوجد مرضى مطابقون لدى هذا الطبيب.",
-      "change": "تغيير",
-      "results": "المرضى المطابقون"
     },
     "daySchedule": {
       "title": "جدول الطبيب في هذا اليوم",
@@ -975,6 +965,137 @@
       "doctorOnly": "هذه اللوحة مخصصة للأطباء فقط. يرجى التبديل إلى حساب طبيب للعرض.",
       "error": "تعذر تحميل بيانات لوحة التحكم.",
       "retry": "إعادة المحاولة"
+    }
+  },
+  "Patients": {
+    "meta": {
+      "listTitle": "المرضى",
+      "newTitle": "مريض جديد",
+      "editTitle": "تعديل بيانات المريض"
+    },
+    "list": {
+      "title": "المرضى",
+      "description": "ابحث عن مرضى العيادة وأضفهم وحدّث بياناتهم.",
+      "new": "مريض جديد",
+      "searchLabel": "البحث عن المرضى",
+      "searchPlaceholder": "الاسم أو الهاتف أو معرّف المريض",
+      "genderLabel": "النوع",
+      "genderAll": "الكل",
+      "loading": "جارٍ تحميل المرضى…",
+      "retry": "إعادة المحاولة",
+      "empty": "لا يوجد مرضى بعد. أضف أول مريض.",
+      "emptySearch": "لا يوجد مرضى مطابقون لبحثك.",
+      "summary": "{count, plural, one {مريض واحد} two {مريضان} few {# مرضى} other {# مريضًا}}",
+      "columns": {
+        "name": "الاسم",
+        "dateOfBirth": "تاريخ الميلاد",
+        "gender": "النوع",
+        "phone": "الهاتف",
+        "actions": "الإجراءات"
+      },
+      "edit": "تعديل",
+      "delete": "حذف",
+      "editNamed": "تعديل {name}",
+      "deleteNamed": "حذف {name}",
+      "pagination": {
+        "label": "التنقل بين صفحات المرضى",
+        "position": "الصفحة {page} من {total}",
+        "previous": "السابق",
+        "next": "التالي"
+      }
+    },
+    "gender": {
+      "Male": "ذكر",
+      "Female": "أنثى"
+    },
+    "bloodType": {
+      "APositive": "A+",
+      "ANegative": "A-",
+      "BPositive": "B+",
+      "BNegative": "B-",
+      "ABPositive": "AB+",
+      "ABNegative": "AB-",
+      "OPositive": "O+",
+      "ONegative": "O-"
+    },
+    "form": {
+      "createTitle": "مريض جديد",
+      "createDescription": "أدخل البيانات الإدارية للمريض.",
+      "editTitle": "تعديل بيانات المريض",
+      "editDescription": "حدّث بيانات المريض.",
+      "fields": {
+        "doctor": "الطبيب",
+        "fullName": "الاسم الكامل",
+        "dateOfBirth": "تاريخ الميلاد",
+        "gender": "النوع",
+        "phone": "الهاتف",
+        "address": "العنوان",
+        "emergencyContact": "جهة الاتصال للطوارئ",
+        "bloodType": "فصيلة الدم"
+      },
+      "doctorPlaceholder": "اختر الطبيب",
+      "loadingDoctors": "جارٍ تحميل الأطباء…",
+      "genderPlaceholder": "اختر النوع",
+      "bloodTypeNone": "غير مسجّلة",
+      "bloodTypeHint": "معلومة طبية، تظهر للأطباء فقط.",
+      "administrativeOnly": "يمكنك إدارة البيانات الإدارية فقط. المعلومات الطبية يتولاها الطبيب.",
+      "validationSummary": "راجع الحقول المميّزة بالأخطاء.",
+      "save": "حفظ المريض",
+      "saving": "جارٍ الحفظ…",
+      "cancel": "إلغاء"
+    },
+    "validation": {
+      "required": "هذا الحقل مطلوب.",
+      "fullNameTooLong": "الاسم طويل جدًا (200 حرف كحد أقصى).",
+      "dateOfBirthInvalid": "أدخل تاريخًا صحيحًا.",
+      "dateOfBirthFuture": "لا يمكن أن يكون تاريخ الميلاد في المستقبل.",
+      "dateOfBirthTooOld": "لا يمكن أن يكون تاريخ الميلاد قبل عام 1900.",
+      "phoneInvalid": "أدخل رقم هاتف صحيحًا (7 أرقام على الأقل).",
+      "phoneTooLong": "رقم الهاتف طويل جدًا (30 حرفًا كحد أقصى).",
+      "addressTooLong": "العنوان طويل جدًا (500 حرف كحد أقصى).",
+      "emergencyContactTooLong": "جهة الاتصال للطوارئ طويلة جدًا (100 حرف كحد أقصى).",
+      "invalid": "هذه القيمة غير صحيحة."
+    },
+    "delete": {
+      "title": "حذف هذا المريض؟",
+      "description": "سيتم حذف {name} نهائيًا ولا يمكن التراجع عن ذلك.",
+      "cancel": "إلغاء",
+      "confirm": "حذف المريض"
+    },
+    "errors": {
+      "network": "تعذّر الوصول إلى الخادم. تحقق من اتصالك وحاول مرة أخرى.",
+      "invalidResponse": "أرسل الخادم ردًا غير متوقع.",
+      "identity": "حسابك لا يستطيع إدارة المرضى. سجّل الدخول مرة أخرى.",
+      "hasRelatedRecords": "لدى هذا المريض مواعيد أو زيارات أو مدفوعات أو سجلات أخرى، ولا يمكن حذفه.",
+      "patientNotFound": "لم يُعثر على هذا المريض.",
+      "doctorNotFound": "لم يُعثر على الطبيب المحدد.",
+      "medicalForbidden": "لا يمكن تغيير المعلومات الطبية إلا بواسطة الطبيب.",
+      "validation": "بعض القيم غير صحيحة. راجع النموذج.",
+      "forbidden": "غير مسموح لك بتنفيذ هذا الإجراء.",
+      "notFound": "لم يُعثر على العنصر المطلوب.",
+      "conflict": "الطلب يتعارض مع البيانات الحالية.",
+      "badRequest": "تعذّرت معالجة الطلب. راجع القيم المدخلة.",
+      "server": "حدث خطأ في الخادم. حاول لاحقًا.",
+      "unknown": "حدث خطأ ما. حاول مرة أخرى."
+    },
+    "toasts": {
+      "created": "تمت إضافة المريض.",
+      "updated": "تم تحديث بيانات المريض.",
+      "deleted": "تم حذف المريض."
+    },
+    "select": {
+      "placeholder": "ابحث بالاسم أو رقم الهاتف",
+      "needsDoctor": "اختر الطبيب أولًا.",
+      "minChars": "{count, plural, one {اكتب حرفًا واحدًا على الأقل للبحث.} two {اكتب حرفين على الأقل للبحث.} few {اكتب # أحرف على الأقل للبحث.} other {اكتب # حرفًا على الأقل للبحث.}}",
+      "searching": "جارٍ البحث…",
+      "none": "لا يوجد مرضى مطابقون.",
+      "change": "تغيير",
+      "results": "المرضى المطابقون"
+    },
+    "states": {
+      "identityTitle": "تسجيل الدخول مطلوب",
+      "signInHint": "سجّل الدخول بحساب طبيب أو سكرتير لإدارة المرضى.",
+      "loading": "جارٍ التحميل…"
     }
   }
 }

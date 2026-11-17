@@ -23,8 +23,6 @@ export function holdsSlot(status: AppointmentStatus): boolean {
 
 export const REASON_MAX_LENGTH = 1000;
 export const CANCELLATION_REASON_MAX_LENGTH = 500;
-export const PATIENT_SEARCH_MIN_LENGTH = 2;
-export const PATIENT_SEARCH_LIMIT = 10;
 
 export type Appointment = {
   readonly id: string;
@@ -51,12 +49,6 @@ export type DoctorLookup = {
   readonly id: string;
   readonly fullName: string;
   readonly specialization: string | null;
-};
-
-export type PatientLookup = {
-  readonly id: string;
-  readonly fullName: string;
-  readonly phone: string | null;
 };
 
 export type AppointmentFilters = {

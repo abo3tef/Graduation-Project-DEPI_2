@@ -31,7 +31,8 @@ vi.mock('@/lib/utils/toast', () => ({notify}));
 
 const LIST = '/api/appointments';
 const DOCTOR_LOOKUP = '/api/appointments/lookups/doctors';
-const PATIENT_LOOKUP = '/api/appointments/lookups/patients';
+// F8: the booking form uses the shared patient picker, which reads GET /api/patients/lookup.
+const PATIENT_LOOKUP = '/api/patients/lookup';
 const DAY = '2099-01-02';
 
 let api: FakeApi;
@@ -138,7 +139,7 @@ describe('BookingForm', () => {
     await chooseDoctor(user, 0);
 
     await user.type(patientInput(), 'zzz');
-    expect(await screen.findByText('No matching patients for this doctor.')).toBeInTheDocument();
+    expect(await screen.findByText('No matching patients.')).toBeInTheDocument();
 
     await user.clear(patientInput());
     await choosePatient(user);

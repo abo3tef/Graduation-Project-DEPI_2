@@ -68,7 +68,7 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 | F4v2-C2 Diagnosis delete frontend | Shalaby | F4v2-C1 | In review | — |
 | F7-C1 Payments backend | Habiba | F6-C1 (A) | In review | — |
 | F7-C2 Payments frontend + dashboard | Habiba | F7-C1 | Approved | Q-21 |
-| F8-C1 Patients backend | Menna | F6-C1 (A) | Approved | Q-17, Q-18 |
+| F8-C1 Patients backend | Menna | F6-C1 (A) | In progress | — (Q-17, Q-18 answered 2026-11-17) |
 | F8-C2 Patients frontend + picker | Menna | F8-C1 | Approved | — |
 | F9-C1 Vital signs backend | Anton | F6-C1 (A) | Approved | Q-19 |
 | F9-C2 Vital signs frontend | Anton | F9-C1 | Approved | — |
@@ -83,7 +83,7 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 |--------|--------------|--------|--------|-------------|
 | Shalaby | F4v2-C2 (Diagnosis delete frontend) | `feature/shalaby-auth` | In review | 2026-11-16 |
 | Habiba | F7-C1 | `feature/habiba-payments` | In review | 2026-11-15 |
-| Menna | — | `feature/menna-patients` | — | — |
+| Menna | F8-C1 (Patients backend) | `feature/menna-patients` | In progress | 2026-11-17 |
 | Anton | — | `feature/anton-vitals` | — | — |
 | Merihan | F10-C2 | `feature/mrehan-medical-profile` | In review | 2026-11-15 |
 | Abdullah | — | `feature/abdullah-admin-integration` | — | — |
@@ -116,6 +116,7 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 | 2026-11-14 | **Q-14:** **no ASP.NET Core Identity** — custom credentials already exist on `doctors`/`secretaries` (`PasswordHash`, `AccountStatus`, unique email); an `admins` table is added; claims are `sub` = user id, `role` = `Doctor`/`Secretary`/`Admin`, `doctorId` for doctors (equal to `sub`), HS256 | F6-C1 T1 inspection — Tech Lead confirms at PR |
 | 2026-11-14 | **Q-15:** BCL `System.Net.Mail` SMTP behind `IEmailService` (secrets in user-secrets/env, dev file sink when unconfigured); verification/reset tokens are 32-byte CSPRNG values stored as SHA-256 hashes, single-use, previous invalidated; verification 24 h, reset 60 min; link style | F6-C1 plan — Tech Lead confirms at PR |
 | 2026-11-15 | **Q-01 / Q-21:** one Payment per Appointment (unique `appointment_id`); fields `patient_id`, `doctor_id`, `amount decimal(18,2)` (0 < amount <= 1,000,000), `method` (`Cash`\|`Card`), `status` (`Pending`\|`Partial`\|`Paid`), `paid_at_utc`, `notes` <= 500, `created_by` (no FK), `created_at_utc`. Transitions `Pending->Partial`, `Pending->Paid`, `Partial->Paid`; `Paid` is final; `POST` always creates `Pending`; `Paid` is immutable (`409 payment.paid_final`). Revenue = `SUM(amount) WHERE status = 'Paid' AND doctor_id = @doctorId`. Payable picker excludes `Cancelled`/`No-Show` and already-billed appointments. Doctor: own payments; secretary: assigned doctors; out-of-scope -> 404. | Habiba (F7-C1), confirmed by Tech Lead 2026-11-15 |
+| 2026-11-17 | **Q-17:** `DELETE /api/patients/{id}` is a hard delete allowed only for a patient with **no related records**; if the patient has any appointment, medical visit, payment (or any other clinical record) the request is rejected with `409 Conflict` (`patient.has_related_records`); nothing is cascaded. **Q-18:** a secretary views and edits administrative fields only (`fullName`, `dateOfBirth`, `gender`, `phone`, `address`, `emergencyContact`) for patients of assigned doctors (`doctor_secretaries`); `bloodType` and any medical data are never returned to nor accepted from a secretary | Tech Lead, confirmed to Menna for F8-C1 |
 
 ### F6-C1 plan decisions (2026-11-14, recorded before `build`)
 | ID | Decision | Approved value |
@@ -145,8 +146,8 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 | ID | Question | Proposed default (needs approval) | Blocks |
 |----|----------|-----------------------------------|--------|
 | Q-16 | How are secretaries assigned to doctors after self-registration (FR-42)? Not listed in F11 | Admin assigns in F11 (`SecretaryDoctor`) | F11, secretary scope |
-| Q-17 | Patient `DELETE` rule: D-23 only covers correcting entries | Reject with 409 when the patient has appointments, visits, or payments; only empty patients can be hard-deleted | F8 |
-| Q-18 | Fields a secretary may see/edit on a patient (FR-49: name, DOB, gender, phone, address, emergency contact) | Blood type and any medical field excluded for secretary | F8 |
+| Q-17 | ~~Patient `DELETE` rule~~ — **Approved 2026-11-17** (see Approved table) | — | — |
+| Q-18 | ~~Fields a secretary may see/edit on a patient~~ — **Approved 2026-11-17** (see Approved table) | — | — |
 | Q-19 | Vital-sign fields and valid ranges (Class Spec: BP, HR, temperature, respiratory rate, weight, height, SpO2) | All Class Spec fields, optional, plausible-range validation approved by the team; edit by owning doctor only; no delete | F9 |
 | Q-20 | Timeline event types and order (SRS lists visits, diagnoses, medications, labs, documents, notes; request mentions visits, medications, vitals) | Visit, Diagnosis, Medication, VitalSigns, MedicalNote; newest first with stable tie-breaker; labs/documents excluded | F10 |
 | Q-22 | Admin role editing: allowed transitions, protection for self/last Admin, effect on existing data | Admin cannot change own role or deactivate self; last active Admin protected; role change limited to Doctor↔Secretary only if no conflicting data | F11 |
@@ -196,3 +197,4 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 | 2026-11-15 | F10-C1 timeline backend implemented (Visit/Diagnosis/Medication/MedicalNote per Q-20; type + instant-window filters, deterministic ordering, data-source pagination; API + 27 tests; contract doc §3.3) — `In review`, uncommitted, VitalSigns events deferred to F10-C1-T4 until F9-C1 merges | AI draft — pending Merihan/Tech Lead review |
 | 2026-11-15 | F10-C1 review fixes applied (uncommitted): pagination-overflow guard (`long` skip, two-pass count→bounded fetch, clamped window; `pageNumber=int.MaxValue` → 200/empty/metadata), ordering contract corrected to the true ordinal type order (`Diagnosis` < `MedicalNote` < `Medication` < `Visit`) in the API doc/report/service remarks, GUID tie-break aligned to canonical string order (`Id.ToString()`, matching the SQL `char(36)` column) — 4 regression tests added | AI draft — pending Merihan/Tech Lead review |
 | 2026-11-15 | F10-C2 frontend implementation pushed as `a2e60e7`; documentation/report added with typecheck, lint, production build and 316/316 tests recorded as passed; manual Doctor/Secretary/cross-doctor, live-data, and visual RTL acceptance checks remain pending | Contributor report — pending review |
+| 2026-11-17 | Q-17 and Q-18 recorded as approved (hard delete only without related records, otherwise 409; secretary sees/edits administrative fields only, never `bloodType`); F8-C1 moved to `In progress` on `feature/menna-patients` | Menna (F8 owner) — Tech Lead decision |

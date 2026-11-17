@@ -35,6 +35,16 @@ public interface IApplicationDbContext
 
     DbSet<MedicalNote> MedicalNotes { get; }
 
+    DbSet<Payment> Payments { get; }
+
+    DbSet<Allergy> Allergies { get; }
+
+    DbSet<ChronicCondition> ChronicConditions { get; }
+
+    DbSet<LaboratoryResult> LaboratoryResults { get; }
+
+    DbSet<MedicalDocument> MedicalDocuments { get; }
+
     Task<int> SaveChangesAsync(
         CancellationToken cancellationToken = default);
 }
