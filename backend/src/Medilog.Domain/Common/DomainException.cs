@@ -52,4 +52,20 @@ public static class DomainErrorCodes
     public const string PaymentInvalidStatusTransition = "payment.invalid_status_transition";
 
     public const string PaymentPaidFinal = "payment.paid_final";
+
+    public const string PatientOwnerRequired = "patient.owner_required";
+
+    public const string PatientInvalidName = "patient.invalid_name";
+
+    public const string PatientInvalidDateOfBirth = "patient.invalid_date_of_birth";
+
+    public const string PatientInvalidGender = "patient.invalid_gender";
+
+    public const string PatientInvalidPhone = "patient.invalid_phone";
+
+    public const string PatientInvalidAddress = "patient.invalid_address";
+
+    public const string PatientInvalidEmergencyContact = "patient.invalid_emergency_contact";
+
+    public const string PatientInvalidBloodType = "patient.invalid_blood_type";
 }
