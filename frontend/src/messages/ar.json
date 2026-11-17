@@ -185,6 +185,12 @@
       "visitIdPlaceholder": "00000000-0000-0000-0000-000000000000",
       "invalidVisitId": "أدخل معرّف زيارة صحيحًا.",
       "openVisit": "فتح الزيارة",
+      "openPatientTitle": "فتح الملف الطبي لمريض",
+      "openPatientHint": "الصق معرّف المريض لمراجعة ملفه الطبي وجدوله الزمني.",
+      "patientIdLabel": "معرّف المريض",
+      "patientIdPlaceholder": "00000000-0000-0000-0000-000000000000",
+      "invalidPatientId": "أدخل معرّف مريض صحيحًا.",
+      "openPatient": "فتح ملف المريض",
       "createVisit": "تسجيل زيارة جديدة"
     },
     "visit": {
@@ -318,6 +324,96 @@
       "medicationDeleted": "تم حذف الدواء.",
       "medicationSaveFailed": "تعذر حفظ الدواء.",
       "medicationDeleteFailed": "تعذر حذف الدواء."
+    }
+  },
+  "MedicalTimeline": {
+    "title": "الجدول الزمني الطبي للمريض",
+    "profile": {
+      "eyebrow": "التاريخ الطبي للمريض",
+      "pageTitle": "الملف الطبي للمريض",
+      "pageDescription": "راجع ملف المريض والحساسية والحالات المزمنة والجدول الزمني الطبي.",
+      "title": "الملف الطبي",
+      "loading": "جارٍ تحميل الملف الطبي للمريض…",
+      "refreshing": "جارٍ تحديث ملف المريض…",
+      "notProvided": "غير مسجل",
+      "demographics": "البيانات الشخصية",
+      "contact": "معلومات التواصل",
+      "dateOfBirth": "تاريخ الميلاد",
+      "age": "العمر",
+      "gender": "النوع",
+      "bloodType": "فصيلة الدم",
+      "phone": "الهاتف",
+      "address": "العنوان",
+      "emergencyContact": "جهة اتصال الطوارئ",
+      "allergies": "الحساسية",
+      "emptyAllergies": "لا توجد حساسيات مسجلة.",
+      "chronicConditions": "الأمراض المزمنة",
+      "emptyChronicConditions": "لا توجد أمراض مزمنة مسجلة.",
+      "name": "الاسم",
+      "severity": "الحدة",
+      "description": "الوصف",
+      "notes": "ملاحظات",
+      "diagnosisDate": "تاريخ التشخيص",
+      "status": "الحالة"
+    },
+    "event": {
+      "notProvided": "غير مسجل",
+      "typeLabel": "نوع الحدث",
+      "titleLabel": "العنوان",
+      "occurredAtLabel": "وقت الحدث",
+      "summaryLabel": "الملخص",
+      "relatedVisitLabel": "الزيارة المرتبطة",
+      "relatedVisitIdLabel": "معرّف الزيارة المرتبطة",
+      "openRelatedVisit": "فتح الزيارة المرتبطة",
+      "detailsButton": "تفاصيل {title}",
+      "types": {
+        "visit": "زيارة",
+        "diagnosis": "تشخيص",
+        "medication": "دواء",
+        "medicalNote": "ملاحظة سريرية"
+      }
+    },
+    "filters": {
+      "title": "التصفية",
+      "type": "نوع الحدث",
+      "typeOptions": {
+        "all": "كل الأنواع",
+        "visit": "الزيارات",
+        "diagnosis": "التشخيصات",
+        "medication": "الأدوية",
+        "medicalNote": "الملاحظات السريرية"
+      },
+      "from": "من",
+      "to": "إلى",
+      "invalidRange": "يجب أن يكون وقت \"من\" قبل وقت \"إلى\".",
+      "reset": "إعادة ضبط التصفية"
+    },
+    "pagination": {
+      "label": "صفحات الجدول الزمني",
+      "previous": "السابق",
+      "next": "التالي",
+      "position": "صفحة {page} من {total}"
+    },
+    "list": {
+      "emptyTitle": "لا توجد أحداث بعد",
+      "emptyDescription": "تظهر الزيارات والتشخيصات والأدوية والملاحظات السريرية هنا فور تسجيلها.",
+      "emptyFilteredTitle": "لا توجد أحداث مطابقة لهذه التصفية",
+      "emptyFilteredDescription": "جرّب توسيع نطاق التاريخ أو إلغاء تصفية نوع الحدث."
+    },
+    "states": {
+      "loading": "جارٍ تحميل الجدول الزمني الطبي…",
+      "refreshing": "جارٍ التحديث…",
+      "retry": "حاول مرة أخرى",
+      "unauthorizedTitle": "جلستك غير صالحة",
+      "unauthorizedDescription": "الرمز مفقود أو منتهي. أضف رمز تطوير صالحًا وحاول مرة أخرى.",
+      "forbiddenTitle": "الوصول مرفوض",
+      "forbiddenDescription": "الطبيب المعالج فقط يمكنه فتح الجدول الزمني الطبي لهذا المريض.",
+      "notFoundTitle": "المريض غير موجود",
+      "notFoundDescription": "هذا المريض غير موجود أو خارج مساحة عملك.",
+      "networkTitle": "لا يمكن الوصول إلى الخادم",
+      "networkDescription": "تحقق من عنوان الواجهة البرمجية واتصالك ثم حاول مرة أخرى.",
+      "serverTitle": "حدث خطأ ما",
+      "serverDescription": "تعذر على الخادم إكمال الطلب. حاول مرة أخرى."
     }
   },
   "NotFound": {

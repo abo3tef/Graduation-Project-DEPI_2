@@ -9,7 +9,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace Medilog.WebAPI.Controllers;
 
 /// <summary>
-/// HTTP surface for reading a patient's medical profile and paged medical history (F3-C2).
+/// HTTP surface for reading a patient's medical profile, paged medical history
+/// (F3-C2) and the patient medical timeline (F10-C1).
 /// </summary>
 /// <remarks>
 /// Every action is a thin adapter over <see cref="IMedicalRecordService"/>: no validation, query
@@ -73,6 +74,43 @@ public sealed class MedicalRecordsController : ControllerBase
     {
         var response = await _medicalRecords.GetMedicalHistoryAsync(
             new GetMedicalHistoryRequest(patientId, pageNumber, pageSize),
+            cancellationToken);
+
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Returns one page of the patient's medical timeline (F10-C1): visits,
+    /// diagnoses, medications and clinical notes in one chronological feed,
+    /// newest first. Optional filters: <c>eventType</c> (one of Visit,
+    /// Diagnosis, Medication, MedicalNote — case-insensitive) and the
+    /// <c>from</c>/<c>to</c> instant window. Paging follows the shared Q-04
+    /// contract: <c>pageNumber</c> (default 1) and <c>pageSize</c> (default 10,
+    /// maximum 50), validated by the service.
+    /// </summary>
+    /// <remarks>
+    /// The scalar-binding convention from <c>medical-visits</c> applies: the
+    /// patient id arrives in the route, so every filter binds as a scalar from
+    /// the query string. The diagnosis source has no time-of-day, so the
+    /// <c>from</c>/<c>to</c> window applies to it in UTC calendar days.
+    /// </remarks>
+    [HttpGet("timeline")]
+    [ProducesResponseType(typeof(PagedResult<PatientTimelineEventResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<PagedResult<PatientTimelineEventResponse>>> GetPatientTimelineAsync(
+        Guid patientId,
+        [FromQuery(Name = "eventType")] string? eventType = null,
+        [FromQuery(Name = "from")] DateTimeOffset? from = null,
+        [FromQuery(Name = "to")] DateTimeOffset? to = null,
+        [FromQuery(Name = "pageNumber")] int pageNumber = PagingDefaults.DefaultPageNumber,
+        [FromQuery(Name = "pageSize")] int pageSize = PagingDefaults.DefaultPageSize,
+        CancellationToken cancellationToken = default)
+    {
+        var response = await _medicalRecords.GetPatientTimelineAsync(
+            new GetPatientTimelineRequest(patientId, eventType, from, to, pageNumber, pageSize),
             cancellationToken);
 
         return Ok(response);

@@ -16,3 +16,11 @@ public sealed record GetMedicalHistoryRequest(
     Guid PatientId,
     int PageNumber = PagingDefaults.DefaultPageNumber,
     int PageSize = PagingDefaults.DefaultPageSize) : IPagedQuery;
+
+public sealed record GetPatientTimelineRequest(
+    Guid PatientId,
+    string? EventType = null,
+    DateTimeOffset? From = null,
+    DateTimeOffset? To = null,
+    int PageNumber = PagingDefaults.DefaultPageNumber,
+    int PageSize = PagingDefaults.DefaultPageSize) : IPagedQuery;

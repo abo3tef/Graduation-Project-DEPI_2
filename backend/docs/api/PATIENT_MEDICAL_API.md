@@ -26,6 +26,7 @@ by the F3-C1 unit tests.
 |---|--------|-------|---------|
 | 1 | `GET` | `/api/patients/{patientId}/medical-profile` | `200 OK` |
 | 2 | `GET` | `/api/patients/{patientId}/medical-visits` | `200 OK` |
+| 3 | `GET` | `/api/patients/{patientId}/timeline` | `200 OK` (F10-C1) |
 
 ## 3.1 Medical profile — `GET /api/patients/{patientId}/medical-profile`
 
@@ -93,6 +94,97 @@ an empty `items` array with correct metadata):
 }
 ```
 
+## 3.3 Patient timeline — `GET /api/patients/{patientId}/timeline` (F10-C1)
+
+One page of the patient's medical timeline (decision Q-20): visits, diagnoses, medications and
+clinical notes merged into a single chronological feed, newest first, each event carrying only
+the fields needed for display. Vital-sign events join this contract once F9-C1 merges
+(F10-C1-T4); laboratory results and documents are excluded by Q-20.
+
+**Query parameters:**
+
+| Parameter | In | Rules |
+|---|---|---|
+| `eventType` | query | Optional; one of `Visit`, `Diagnosis`, `Medication`, `MedicalNote` — case-insensitive; anything else is `400` |
+| `from`, `to` | query | Optional ISO-8601 instants; `from <= to` is enforced (`400` otherwise). The window applies to visits, medications and notes as instants. **Diagnoses have no time-of-day**, so the window applies to them in UTC calendar days: a diagnosis on day D belongs to the window when `date(from) <= D <= date(to)` |
+| `pageNumber` | query | `>= 1`; default `1` |
+| `pageSize` | query | `1..50`; default `10` |
+
+**Ordering contract:** `occurredAt` descending, then event `type` ascending in true ordinal
+order (`Diagnosis` < `MedicalNote` < `Medication` < `Visit`), then event `id` ascending in
+canonical GUID string order (the same order the `char(36)` id columns give the SQL sources) as
+the stable tie-breaker.
+
+**`occurredAt` conventions per source:**
+
+| Event type | `occurredAt` |
+|---|---|
+| `Visit` | `VisitDate` (normalized UTC instant) |
+| `Diagnosis` | midnight UTC of `DiagnosisDate` (the column is a calendar date without a time) |
+| `Medication` | the `VisitDate` of the visit that produced the prescription item (a medication has no date of its own) |
+| `MedicalNote` | `createdAtUtc` (audit-stamped creation instant) |
+
+Paging follows the shared Q-04 envelope; each source is counted and truncated at the data
+source (SQL), never the whole timeline in memory. A `pageNumber` beyond the last page returns
+an empty `items` array with correct metadata.
+
+**Response `200`:**
+
+```json
+{
+  "items": [
+    {
+      "id": "…",
+      "type": "MedicalNote",
+      "occurredAt": "2026-11-15T09:30:00+00:00",
+      "title": "Clinical Note",
+      "summary": "Follow up in one week.",
+      "relatedVisitId": null
+    },
+    {
+      "id": "…",
+      "type": "Medication",
+      "occurredAt": "2026-11-14T10:00:00+00:00",
+      "title": "Amoxicillin",
+      "summary": "500 mg · Every 8 hours",
+      "relatedVisitId": "…"
+    },
+    {
+      "id": "…",
+      "type": "Visit",
+      "occurredAt": "2026-11-14T10:00:00+00:00",
+      "title": "Medical Visit",
+      "summary": "Persistent headache",
+      "relatedVisitId": "…"
+    },
+    {
+      "id": "…",
+      "type": "Diagnosis",
+      "occurredAt": "2026-11-14T00:00:00+00:00",
+      "title": "Tension headache",
+      "summary": "Pressure-like pain",
+      "relatedVisitId": "…"
+    }
+  ],
+  "page": 1,
+  "pageSize": 10,
+  "totalCount": 4,
+  "totalPages": 1
+}
+```
+
+**Display projection:**
+
+| Event type | `title` | `summary` |
+|---|---|---|
+| `Visit` | fixed `"Medical Visit"` | `chiefComplaint` |
+| `Diagnosis` | `diagnosisName` | `description` |
+| `Medication` | `medicationName` | `"dosage · frequency"` (empty parts skipped; `null` when both are empty) |
+| `MedicalNote` | fixed `"Clinical Note"` | `noteContent` |
+
+`relatedVisitId` points at the visit that produced the event (the visit itself, the parent
+visit for diagnoses/medications, or the optional note link; `null` for an unlinked note).
+
 ## 4. Errors
 
 | Status | When | `code` |
@@ -102,13 +194,16 @@ an empty `items` array with correct metadata):
 | `403` | Authenticated doctor with an unusable identity (missing/inactive doctor) | `identity.invalid` |
 | `404` | Unknown patient, patient with no owning doctor, or another doctor's patient | `patient.not_found` (identical for all three) |
 | `400` | `pageNumber < 1` or `pageSize` outside `1..50` | `validation.failed` with camelCase `errors`/`errorCodes` per field |
+| `400` | Timeline: unknown `eventType`, or `from > to` | `validation.failed` on `eventType` / `from` |
 
 ## 5. Explicitly out of scope
 
 - Any write operation on medical data (F4, `MEDICAL_RECORDS_API.md`; the acting doctor resolves
   from the same `ICurrentUser`, but routes and use cases are separate).
-- The patient timeline, medical documents (view/download) and patient-level (unlinked) notes and
-  laboratory results — deferred by the approved F3-C1 scope decision (task file D-11); they
-  return via a later approved cycle, not via these endpoints.
+- Medical documents (view/download) and patient-level (unlinked) laboratory results — deferred
+  by the approved F3-C1 scope decision (task file D-11); they return via a later approved cycle,
+  not via these endpoints. (Patient-level notes and the patient timeline are delivered by
+  F10-C1 above.)
+- Timeline vital-sign events — deferred to F10-C1-T4 until F9-C1 merges (Q-20).
 - Any "patient status" view — blocked on the open question Q-03; no `PatientStatus` field exists
   in the domain model.

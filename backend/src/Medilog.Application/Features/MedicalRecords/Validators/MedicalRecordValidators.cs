@@ -23,3 +23,34 @@ public sealed class GetMedicalHistoryRequestValidator : PagedQueryValidator<GetM
         RuleFor(request => request.PatientId).NotEmpty();
     }
 }
+
+public sealed class GetPatientTimelineRequestValidator
+    : PagedQueryValidator<GetPatientTimelineRequest>
+{
+    private static readonly string[] AllowedEventTypes =
+    [
+        PatientTimelineEventTypes.Visit,
+        PatientTimelineEventTypes.Diagnosis,
+        PatientTimelineEventTypes.Medication,
+        PatientTimelineEventTypes.MedicalNote
+    ];
+
+    public GetPatientTimelineRequestValidator()
+    {
+        RuleFor(request => request.PatientId)
+            .NotEmpty();
+
+        RuleFor(request => request.EventType)
+            .Must(type => type is null ||
+                AllowedEventTypes.Contains(
+                    type,
+                    StringComparer.OrdinalIgnoreCase))
+            .WithMessage("Invalid timeline event type.");
+
+        RuleFor(request => request.From)
+            .LessThanOrEqualTo(request => request.To)
+            .When(request => request.From.HasValue &&
+                             request.To.HasValue)
+            .WithMessage("From must be before or equal to To.");
+    }
+}

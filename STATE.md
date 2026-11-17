@@ -42,7 +42,7 @@ Commands: `plan → build → review → done`. A Cycle can be built only when i
 | F7 | Payments Backend & Integration | Habiba | `feature/habiba-payments` | F7-C1, F7-C2 |
 | F8 | Patient Management & Search | Menna | `feature/menna-patients` | F8-C1, F8-C2 |
 | F9 | Vital Signs & Visit Enhancements | Anton | `feature/anton-vitals` | F9-C1, F9-C2 |
-| F10 | Patient Medical Profile & Timeline Integration | Merihan | `feature/merihan-medical-profile` | F10-C1, F10-C2 |
+| F10 | Patient Medical Profile & Timeline Integration | Merihan | `feature/mrehan-medical-profile` | F10-C1, F10-C2 |
 | F11 | Admin Dashboard & Full E2E Integration | Abdullah | `feature/abdullah-admin-integration` | F11-C1, F11-C2 |
 
 Cycle files: `docs/tasks/<Feature>/<CycleId>.md`. Rule: **C1 = Backend + DB + tests; C2 = Frontend + integration.**
@@ -72,8 +72,8 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 | F8-C2 Patients frontend + picker | Menna | F8-C1 | Approved | — |
 | F9-C1 Vital signs backend | Anton | F6-C1 (A) | Approved | Q-19 |
 | F9-C2 Vital signs frontend | Anton | F9-C1 | Approved | — |
-| F10-C1 Timeline backend | Merihan | F6-C1 (A), F9-C1 (vitals events) | Approved | Q-20 |
-| F10-C2 Timeline frontend | Merihan | F10-C1 | Approved | — |
+| F10-C1 Timeline backend | Merihan | F6-C1 (A), F9-C1 (vitals events) | In review | Q-20 (proposed default in §8; VitalSigns events deferred to F10-C1-T4) |
+| F10-C2 Timeline frontend | Merihan | F10-C1 | In review | Manual Doctor/Secretary/cross-doctor verification; live-data and visual RTL checks |
 | F11-C1 Admin backend | Abdullah | F6-C1 | Approved | Q-16, Q-22 |
 | F11-C2 Admin frontend + E2E integration | Abdullah | F11-C1, all C2 | Approved | — |
 
@@ -85,7 +85,7 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 | Habiba | F7-C1 | `feature/habiba-payments` | In review | 2026-11-15 |
 | Menna | — | `feature/menna-patients` | — | — |
 | Anton | — | `feature/anton-vitals` | — | — |
-| Merihan | — | `feature/merihan-medical-profile` | — | — |
+| Merihan | F10-C2 | `feature/mrehan-medical-profile` | In review | 2026-11-15 |
 | Abdullah | — | `feature/abdullah-admin-integration` | — | — |
 
 ## 7. Risks
@@ -169,6 +169,8 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 | F4v2-C1 — Diagnosis delete backend | Shalaby | 2026-11-16 | In review | `docs/reports/F4v2-C1.md` |
 | F4v2-C2 — Diagnosis delete frontend | Shalaby | 2026-11-16 | In review | `docs/reports/F4v2-C2.md` |
 | F7-C1 | Habiba | 2026-11-15 | Done for approved scope (AC-4 dashboard deferred); build clean; 421/421 tests | `docs/reports/F7-C1.md` |
+| F10-C1 | Merihan | 2026-11-15 | Build 0/0; Application 243/243, WebAPI 118/118; no model changes; MySQL not verified | `docs/reports/F10-C1.md` |
+| F10-C2 | Merihan | 2026-11-15 | Frontend implementation pushed in `a2e60e7`; typecheck/lint/build passed; 316 tests across 20 files; manual role, live-data, and visual RTL verification pending | `docs/reports/F10-C2.md` |
 
 ## 11. Next Steps
 
@@ -191,3 +193,6 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 | 2026-11-16 | F4v2-C1 implemented on `feature/shalaby-auth`: diagnosis `DELETE` (owner-scoped, route-consistent, hard delete per D-23), route added to the authorization matrix, 490 backend tests green, no model change; moved to `In review`; execution report `docs/reports/F4v2-C1.md` added | Shalaby (F4v2 owner) — Tech Lead review pending |
 | 2026-11-16 | F4v2-C2 implemented on `feature/shalaby-auth`: delete action + accessible confirm dialog on each diagnosis, visit-query invalidation, ar/en messages, first `features/medical-records/api.test.ts` (2 cases); all 4 frontend gates green (431 tests); moved to `In review`; execution report `docs/reports/F4v2-C2.md` added | Shalaby (F4v2 owner) — Tech Lead review pending |
 | 2026-11-15 | F7-C1 payments backend implemented and in review; Q-01/Q-21 payment model recorded; payable picker excludes Cancelled/No-Show | Habiba |
+| 2026-11-15 | F10-C1 timeline backend implemented (Visit/Diagnosis/Medication/MedicalNote per Q-20; type + instant-window filters, deterministic ordering, data-source pagination; API + 27 tests; contract doc §3.3) — `In review`, uncommitted, VitalSigns events deferred to F10-C1-T4 until F9-C1 merges | AI draft — pending Merihan/Tech Lead review |
+| 2026-11-15 | F10-C1 review fixes applied (uncommitted): pagination-overflow guard (`long` skip, two-pass count→bounded fetch, clamped window; `pageNumber=int.MaxValue` → 200/empty/metadata), ordering contract corrected to the true ordinal type order (`Diagnosis` < `MedicalNote` < `Medication` < `Visit`) in the API doc/report/service remarks, GUID tie-break aligned to canonical string order (`Id.ToString()`, matching the SQL `char(36)` column) — 4 regression tests added | AI draft — pending Merihan/Tech Lead review |
+| 2026-11-15 | F10-C2 frontend implementation pushed as `a2e60e7`; documentation/report added with typecheck, lint, production build and 316/316 tests recorded as passed; manual Doctor/Secretary/cross-doctor, live-data, and visual RTL acceptance checks remain pending | Contributor report — pending review |
