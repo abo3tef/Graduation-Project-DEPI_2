@@ -1,23 +1,31 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { FiMoon, FiSun } from "react-icons/fi";
 import { useTranslations } from "next-intl";
 
 type Theme = "dark" | "light";
 
+function getStoredTheme(): Theme {
+  const storedTheme = window.localStorage.getItem("medilog-theme");
+  return storedTheme === "light" || storedTheme === "dark"
+    ? storedTheme
+    : "dark";
+}
+
+function subscribeToTheme() {
+  return () => {};
+}
+
 export function ThemeToggle() {
   const t = useTranslations("Navigation");
-  const [theme, setTheme] = useState<Theme>(() => {
-    if (typeof window === "undefined") {
-      return "dark";
-    }
-
-    const storedTheme = window.localStorage.getItem("medilog-theme");
-    return storedTheme === "light" || storedTheme === "dark"
-      ? storedTheme
-      : "dark";
-  });
+  const storedTheme = useSyncExternalStore(
+    subscribeToTheme,
+    getStoredTheme,
+    () => "dark"
+  );
+  const [selectedTheme, setSelectedTheme] = useState<Theme | null>(null);
+  const theme = selectedTheme ?? storedTheme;
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -25,7 +33,7 @@ export function ThemeToggle() {
 
   function toggleTheme() {
     const nextTheme: Theme = theme === "dark" ? "light" : "dark";
-    setTheme(nextTheme);
+    setSelectedTheme(nextTheme);
     document.documentElement.dataset.theme = nextTheme;
     window.localStorage.setItem("medilog-theme", nextTheme);
   }
