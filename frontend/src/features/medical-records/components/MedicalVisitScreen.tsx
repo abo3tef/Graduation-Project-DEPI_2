@@ -3,6 +3,7 @@
 import {FiArrowLeft, FiRefreshCw} from 'react-icons/fi';
 import {useTranslations} from 'next-intl';
 import {Link} from '@/i18n/navigation';
+import {ApiError} from '@/lib/api';
 import {toQueryFailureKind, type QueryFailureKind} from '../errors';
 import {useMedicalVisit} from '../hooks/use-medical-visit';
 import {isGuid} from '../validation';
@@ -10,6 +11,7 @@ import {LoadingPanel, StatePanel} from './AsyncState';
 import {DiagnosisSection} from './DiagnosisSection';
 import {MedicationSection} from './MedicationSection';
 import {VisitDetails} from './VisitDetails';
+import {VitalSignsSection} from './VitalSignsSection';
 
 type MedicalVisitScreenProps = {
   visitId: string;
@@ -32,7 +34,13 @@ export function MedicalVisitScreen({visitId}: MedicalVisitScreenProps) {
     return <LoadingPanel label={t('loading')} />;
   }
 
-  if (query.isError) {
+  const failureKind = query.isError ? toQueryFailureKind(query.error) : null;
+  // Retain only this credential's loaded visit for transient background failures.
+  // Authorization, not-found and initial-load failures still replace the protected screen.
+  const keepLoadedVisit = Boolean(query.data) && query.error instanceof ApiError &&
+    (query.error.kind === 'network' || (query.error.status >= 500 && query.error.status <= 599));
+
+  if (query.isError && !keepLoadedVisit) {
     return (
       <QueryFailure
         kind={toQueryFailureKind(query.error)}
@@ -57,7 +65,11 @@ export function MedicalVisitScreen({visitId}: MedicalVisitScreenProps) {
           </span>
         ) : null}
       </div>
+      {query.isError && keepLoadedVisit && failureKind ? (
+        <QueryFailure kind={failureKind} showBackLink={false} onRetry={() => {void query.refetch();}} />
+      ) : null}
       <VisitDetails visit={query.data} />
+      <VitalSignsSection visitId={query.data.id} visitDoctorId={query.data.doctorId} />
       <DiagnosisSection visitId={query.data.id} diagnoses={query.data.diagnoses} />
       <MedicationSection
         visitId={query.data.id}
@@ -84,9 +96,10 @@ function BackToWorkspaceLink() {
 type QueryFailureProps = {
   kind: QueryFailureKind;
   onRetry?: () => void;
+  showBackLink?: boolean;
 };
 
-function QueryFailure({kind, onRetry}: QueryFailureProps) {
+function QueryFailure({kind, onRetry, showBackLink = true}: QueryFailureProps) {
   const t = useTranslations('MedicalRecords.states');
   const commonT = useTranslations('MedicalRecords.common');
 
@@ -129,13 +142,13 @@ function QueryFailure({kind, onRetry}: QueryFailureProps) {
             {t('retry')}
           </button>
         ) : null}
-        <Link
+        {showBackLink ? <Link
           href="/medical-records"
           className="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:border-brand hover:text-brand"
         >
           <FiArrowLeft aria-hidden className="size-4 rtl:rotate-180" />
           {commonT('backToWorkspace')}
-        </Link>
+        </Link> : null}
       </StatePanel>
     </div>
   );

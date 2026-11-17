@@ -1,4 +1,6 @@
 using Medilog.Application.Common.Security;
+using Medilog.Application.Common.Paging;
+using VisitVitalSignsResponse = Medilog.Application.Features.MedicalRecords.Responses.VisitVitalSignsResponse;
 using Medilog.Application.Features.MedicalRecords;
 using Medilog.Application.Features.MedicalRecords.Contracts;
 using Microsoft.AspNetCore.Authorization;
@@ -28,10 +30,53 @@ public sealed class MedicalVisitsController : ControllerBase
     private const string GetVisitRouteName = "MedicalVisits.GetVisit";
 
     private readonly IMedicalVisitService _medicalVisitService;
+    private readonly IVitalSignsService _vitalSignsService;
 
-    public MedicalVisitsController(IMedicalVisitService medicalVisitService)
+    public MedicalVisitsController(IMedicalVisitService medicalVisitService, IVitalSignsService vitalSignsService)
     {
         _medicalVisitService = medicalVisitService;
+        _vitalSignsService = vitalSignsService;
+    }
+
+    /// <summary>Records measurements for a visit owned by the acting doctor.</summary>
+    [HttpPost("{visitId:guid}/vital-signs")]
+    [ProducesResponseType(typeof(VisitVitalSignsResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<VisitVitalSignsResponse>> CreateVitalSignsAsync(
+        Guid visitId, [FromBody] SaveVitalSignsRequest request, CancellationToken cancellationToken)
+    {
+        var response = await _vitalSignsService.CreateAsync(visitId, request, cancellationToken);
+        return CreatedAtRoute("MedicalVisits.ListVitalSigns", new { visitId }, response);
+    }
+
+    /// <summary>Lists a visit's measurements in stable identifier order.</summary>
+    [HttpGet("{visitId:guid}/vital-signs", Name = "MedicalVisits.ListVitalSigns")]
+    [ProducesResponseType(typeof(PagedResult<VisitVitalSignsResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<PagedResult<VisitVitalSignsResponse>>> ListVitalSignsAsync(
+        Guid visitId, [FromQuery] ListVitalSignsQuery query, CancellationToken cancellationToken)
+    {
+        return Ok(await _vitalSignsService.ListAsync(visitId, query, cancellationToken));
+    }
+
+    /// <summary>Replaces all seven measurements; null clears the previous value.</summary>
+    [HttpPut("{visitId:guid}/vital-signs/{vitalSignsId:guid}")]
+    [ProducesResponseType(typeof(VisitVitalSignsResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<VisitVitalSignsResponse>> UpdateVitalSignsAsync(
+        Guid visitId, Guid vitalSignsId, [FromBody] SaveVitalSignsRequest request,
+        CancellationToken cancellationToken)
+    {
+        return Ok(await _vitalSignsService.UpdateAsync(visitId, vitalSignsId, request, cancellationToken));
     }
 
     /// <summary>Records a new medical visit for a patient in the doctor's workspace.</summary>

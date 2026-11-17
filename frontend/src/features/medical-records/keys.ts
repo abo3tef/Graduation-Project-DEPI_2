@@ -6,5 +6,10 @@ const medicalRecordsRoot = ['medical-records'] as const;
  */
 export const medicalRecordKeys = {
   all: medicalRecordsRoot,
-  visit: (visitId: string) => [...medicalRecordsRoot, 'visit', visitId] as const
+  visit: (visitId: string) => [...medicalRecordsRoot, 'visit', visitId] as const,
+  visitDetail: (visitId: string, scope: number) =>
+    [...medicalRecordsRoot, 'visit', visitId, scope] as const,
+  vitalSigns: (visitId: string) => [...medicalRecordsRoot, 'vital-signs', visitId] as const,
+  vitalSignsPage: (visitId: string, scope: number, page: number, pageSize: number) =>
+    [...medicalRecordsRoot, 'vital-signs', visitId, scope, page, pageSize] as const
 };

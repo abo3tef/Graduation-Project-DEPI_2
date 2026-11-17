@@ -69,6 +69,13 @@ public sealed class MedicalRecordsMappingProfile : Profile
                 options => options.MapFrom(source => MedicalRecordText.Normalize(source.ClinicalNotes)));
 
         CreateMap<MedicalVisit, MedicalVisitResponse>()
+            .ForMember(
+                destination => destination.VitalSigns,
+                options => options.MapFrom(source => source.VitalSigns
+                    .OrderBy(value => value.Id)
+                    .Select(value => new Responses.VisitVitalSignsResponse(
+                        value.Id, value.BloodPressure, value.HeartRate, value.Temperature,
+                        value.RespiratoryRate, value.Weight, value.Height, value.SpO2))))
             .ForCtorParam(
                 nameof(MedicalVisitResponse.Diagnoses),
                 options => options.MapFrom(

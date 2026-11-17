@@ -2,7 +2,8 @@ import {ApiError, createInvalidResponseError} from '@/lib/api';
 import type {
   DiagnosisResponse,
   MedicalVisitResponse,
-  MedicationResponse
+  MedicationResponse,
+  VitalSignsResponse
 } from './types';
 
 type JsonObject = Record<string, unknown>;
@@ -21,6 +22,29 @@ function isNullableString(value: unknown): value is string | null {
 
 function invalidResponse(): ApiError {
   return createInvalidResponseError(0);
+}
+
+function isNullableNumber(value: unknown): value is number | null {
+  return value === null || (typeof value === 'number' && Number.isFinite(value));
+}
+
+function isNullableInteger(value: unknown): value is number | null {
+  return value === null || (typeof value === 'number' && Number.isInteger(value));
+}
+
+export function expectVitalSigns(value: unknown): VitalSignsResponse {
+  if (!isObject(value)) {
+    throw invalidResponse();
+  }
+
+  const {id, bloodPressure, heartRate, temperature, respiratoryRate, weight, height, spO2} = value;
+  if (!isString(id) || !isNullableString(bloodPressure) || !isNullableInteger(heartRate) ||
+      !isNullableNumber(temperature) || !isNullableInteger(respiratoryRate) ||
+      !isNullableNumber(weight) || !isNullableNumber(height) || !isNullableInteger(spO2)) {
+    throw invalidResponse();
+  }
+
+  return {id, bloodPressure, heartRate, temperature, respiratoryRate, weight, height, spO2};
 }
 
 /**
@@ -104,7 +128,8 @@ export function expectMedicalVisit(value: unknown): MedicalVisitResponse {
     symptoms,
     clinicalNotes,
     diagnoses,
-    medications
+    medications,
+    vitalSigns
   } = value;
 
   if (
@@ -117,7 +142,8 @@ export function expectMedicalVisit(value: unknown): MedicalVisitResponse {
     !isNullableString(symptoms) ||
     !isNullableString(clinicalNotes) ||
     !Array.isArray(diagnoses) ||
-    !Array.isArray(medications)
+    !Array.isArray(medications) ||
+    !Array.isArray(vitalSigns)
   ) {
     throw invalidResponse();
   }
@@ -132,6 +158,7 @@ export function expectMedicalVisit(value: unknown): MedicalVisitResponse {
     symptoms,
     clinicalNotes,
     diagnoses: diagnoses.map(expectDiagnosis),
-    medications: medications.map(expectMedication)
+    medications: medications.map(expectMedication),
+    vitalSigns: vitalSigns.map(expectVitalSigns)
   };
 }
