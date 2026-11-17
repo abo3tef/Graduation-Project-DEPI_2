@@ -728,7 +728,6 @@
       "unknown": "An unexpected error occurred. Try again."
     }
   },
-<<<<<<< Updated upstream
   "Auth": {
     "meta": {
       "loginTitle": "Sign in | Medilog",
@@ -819,7 +818,37 @@
       "success": "Your password was changed. Sign in with the new password.",
       "missingToken": "This reset link is incomplete. Request a new one.",
       "requestNew": "Request a new link"
-=======
+    },
+    "errors": {
+      "invalidCredentials": "The email or password is incorrect.",
+      "emailUnverified": "Confirm your email address before signing in.",
+      "accountInactive": "This account is deactivated. Contact an administrator.",
+      "emailAlreadyRegistered": "An account already exists for this email.",
+      "tokenInvalid": "This link is invalid or has expired.",
+      "invalidGoogleToken": "Google sign-in is not available for this account.",
+      "googleNotConfigured": "Google sign-in is not configured.",
+      "notConfigured": "The server is not configured for sign-in yet.",
+      "validation": "Check the highlighted fields.",
+      "forbidden": "Your account cannot open this page.",
+      "network": "The server could not be reached.",
+      "server": "A server error occurred. Try again later.",
+      "unknown": "Something went wrong. Try again."
+    },
+    "guard": {
+      "loading": "Checking your session…",
+      "signedOutTitle": "Sign in required",
+      "signedOut": "Sign in to continue.",
+      "forbiddenTitle": "Not available for your account",
+      "forbidden": "This page belongs to another role.",
+      "goHome": "Go to your home page"
+    },
+    "home": {
+      "signedIn": "Signed in as {name}.",
+      "openWorkspace": "Open my workspace",
+      "backHome": "Back to the home page",
+      "adminNotice": "Administration screens are scheduled for the next release. You can sign out from the account menu at the top."
+    }
+  },
   "Dashboard": {
     "meta": {"title": "Clinic dashboard", "description": "A demo dashboard for secretary and doctor workflows."},
     "brand": "Medilog",
@@ -858,48 +887,6 @@
     "actions": {"confirm": "Confirm", "complete": "Complete", "cancel": "Cancel", "details": "Details", "reschedule": "Reschedule", "openMenu": "Open actions menu"},
     "pagination": {"previous": "Previous page", "next": "Next page", "pageOf": "Page {page} of {totalPages}"},
     "toast": {"notifications": "No new notifications.", "exported": "Demo report exported.", "booked": "Demo appointment booked.", "patientAdded": "Demo patient added.", "paymentAdded": "Demo payment recorded.", "visitStarted": "Demo visit opened.", "patientOpened": "Demo patient profile opened.", "scheduleOpened": "Demo schedule opened.", "details": "Showing demo details.", "rescheduled": "Demo appointment rescheduled.", "confirmed": "Appointment confirmed.", "completed": "Appointment completed.", "cancelled": "Appointment cancelled.", "waiting": "Appointment moved to waiting.", "patient": "Patient updated."}
-  },
-  "DevIdentity": {
-    "acting": "Acting as {role} · {id}",
-    "set": "Set user (dev)",
-    "title": "Current user (development only)",
-    "description": "Authentication is not enabled yet. Enter the user id and role to send to the API in development.",
-    "userId": "User id",
-    "role": "Role",
-    "roles": {
-      "Secretary": "Secretary",
-      "Doctor": "Doctor"
->>>>>>> Stashed changes
-    },
-    "errors": {
-      "invalidCredentials": "The email or password is incorrect.",
-      "emailUnverified": "Confirm your email address before signing in.",
-      "accountInactive": "This account is deactivated. Contact an administrator.",
-      "emailAlreadyRegistered": "An account already exists for this email.",
-      "tokenInvalid": "This link is invalid or has expired.",
-      "invalidGoogleToken": "Google sign-in is not available for this account.",
-      "googleNotConfigured": "Google sign-in is not configured.",
-      "notConfigured": "The server is not configured for sign-in yet.",
-      "validation": "Check the highlighted fields.",
-      "forbidden": "Your account cannot open this page.",
-      "network": "The server could not be reached.",
-      "server": "A server error occurred. Try again later.",
-      "unknown": "Something went wrong. Try again."
-    },
-    "guard": {
-      "loading": "Checking your session…",
-      "signedOutTitle": "Sign in required",
-      "signedOut": "Sign in to continue.",
-      "forbiddenTitle": "Not available for your account",
-      "forbidden": "This page belongs to another role.",
-      "goHome": "Go to your home page"
-    },
-    "home": {
-      "signedIn": "Signed in as {name}.",
-      "openWorkspace": "Open my workspace",
-      "backHome": "Back to the home page",
-      "adminNotice": "Administration screens are scheduled for the next release. You can sign out from the account menu at the top."
-    }
   },
   "dashboard": {
     "meta": {
