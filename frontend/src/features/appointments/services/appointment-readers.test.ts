@@ -3,8 +3,7 @@ import {isApiError} from '@/lib/api';
 import {
   readAppointment,
   readAppointmentPage,
-  readDoctorLookups,
-  readPatientLookups
+  readDoctorLookups
 } from './appointment-readers';
 
 const APPOINTMENT = {
@@ -87,18 +86,13 @@ describe('readAppointmentPage', () => {
 });
 
 describe('lookup readers', () => {
-  it('reads doctor and patient lookups with only the minimal fields', () => {
+  it('reads doctor lookups with only the minimal fields', () => {
     expect(readDoctorLookups([{id: 'd1', fullName: 'Dr. One', specialization: null, extra: 'ignored'}])).toEqual([
       {id: 'd1', fullName: 'Dr. One', specialization: null}
-    ]);
-    expect(readPatientLookups([{id: 'p1', fullName: 'Mona', phone: '0101', address: 'secret'}])).toEqual([
-      {id: 'p1', fullName: 'Mona', phone: '0101'}
     ]);
   });
 
   it('rejects non-arrays and malformed items', () => {
     invalid(() => readDoctorLookups({}));
-    invalid(() => readPatientLookups([{id: 'p1'}]));
-    invalid(() => readPatientLookups(null));
   });
 });

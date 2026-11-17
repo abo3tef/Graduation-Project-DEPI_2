@@ -3,8 +3,7 @@ import type {PagedResult} from '@/types/paging';
 import {
   isAppointmentStatus,
   type Appointment,
-  type DoctorLookup,
-  type PatientLookup
+  type DoctorLookup
 } from '../types/appointment.types';
 
 /**
@@ -69,22 +68,6 @@ export function readDoctorLookups(value: unknown): readonly DoctorLookup[] {
       id: text(source.id),
       fullName: text(source.fullName),
       specialization: nullableText(source.specialization)
-    };
-  });
-}
-
-export function readPatientLookups(value: unknown): readonly PatientLookup[] {
-  if (!Array.isArray(value)) {
-    fail();
-  }
-
-  return (value as unknown[]).map((item) => {
-    const source = record(item);
-
-    return {
-      id: text(source.id),
-      fullName: text(source.fullName),
-      phone: nullableText(source.phone)
     };
   });
 }

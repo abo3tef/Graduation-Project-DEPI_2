@@ -27,9 +27,17 @@ export default async function MedicalRecordsLayout({
             <FiArrowLeft aria-hidden className="size-4 rtl:rotate-180" />
             {t('common.backHome')}
           </Link>
-          <span className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">
-            {t('meta.shortLabel')}
-          </span>
+          <div className="flex flex-wrap items-center gap-4">
+            <Link
+              href="/patients"
+              className="text-sm font-semibold text-muted transition-colors hover:text-foreground"
+            >
+              {t('common.patients')}
+            </Link>
+            <span className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">
+              {t('meta.shortLabel')}
+            </span>
+          </div>
         </nav>
         {/* Medical records are the doctor's area (D-C2-4); the secretariat can never read them. */}
         <RequireRole roles={['Doctor']}>{children}</RequireRole>

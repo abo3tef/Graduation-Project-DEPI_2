@@ -2,43 +2,57 @@
 
 import {useId, useRef, useState, type KeyboardEvent} from 'react';
 import {useTranslations} from 'next-intl';
-import {usePatientSearch} from '../hooks/useLookups';
-import {PATIENT_SEARCH_MIN_LENGTH, type PatientLookup} from '../types/appointment.types';
-import {useErrorMessage} from '../hooks/useAppointmentMessages';
-import {Button} from './primitives/Button';
-import {controlClass, fieldAria} from './primitives/Field';
+import {usePatientLookup} from '../hooks/usePatients';
+import {getPatientErrorKey} from '../services/patient-errors';
+import {PATIENT_SEARCH_MIN_LENGTH, type PatientOption} from '../types/patient.types';
+import {Button, controlClass, fieldAria} from './ui';
 
-type PatientComboboxProps = {
-  /** Id of the text input; the surrounding `Field` label points at it. */
+export type PatientSelectProps = {
+  /** Id of the text input; the surrounding label points at it. */
   id: string;
-  doctorId: string;
-  value: PatientLookup | null;
-  onChange: (patient: PatientLookup | null) => void;
+  value: PatientOption | null;
+  onChange: (patient: PatientOption | null) => void;
+  /**
+   * Narrows the search to one doctor's patients (the appointment form). Leave undefined when the
+   * caller's own scope is wanted (a doctor's visit form).
+   */
+  doctorId?: string;
+  /** True when a doctor must be chosen before searching (the appointment form). */
+  requireDoctor?: boolean;
   error?: string | null;
   disabled?: boolean;
 };
 
 /**
- * Searchable patient picker following the ARIA combobox/listbox pattern
- * (arrow keys, Enter to choose, Escape to close). It only searches the chosen
- * doctor's patients and shows id-free, minimal data (name and phone).
+ * Reusable searchable patient picker (F8) following the ARIA combobox/listbox pattern: arrow keys
+ * move, Enter chooses, Escape closes. It shows only id-free, minimal data (name and phone) and
+ * never exposes medical fields. Used by the appointment (F1) and visit (F4) screens instead of
+ * typing a patient identifier.
  */
-export function PatientCombobox({id, doctorId, value, onChange, error, disabled = false}: PatientComboboxProps) {
-  const t = useTranslations('Appointments.patientSearch');
-  const errorMessage = useErrorMessage();
+export function PatientSelect({
+  id,
+  value,
+  onChange,
+  doctorId = '',
+  requireDoctor = false,
+  error,
+  disabled = false
+}: PatientSelectProps) {
+  const t = useTranslations('Patients.select');
+  const errorsT = useTranslations('Patients.errors');
   const listId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const [text, setText] = useState('');
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
-  const search = usePatientSearch(doctorId, text);
+  const blocked = requireDoctor && doctorId === '';
+  const search = usePatientLookup(text, doctorId);
 
-  const results = search.data ?? [];
-  const hasDoctor = doctorId !== '';
-  const showList = open && !value && hasDoctor && search.typedEnough && results.length > 0;
+  const results = blocked ? [] : (search.data ?? []);
+  const showList = open && !value && !blocked && search.typedEnough && results.length > 0;
   const optionId = (index: number) => `${listId}-option-${index}`;
 
-  function choose(patient: PatientLookup) {
+  function choose(patient: PatientOption) {
     onChange(patient);
     setText('');
     setOpen(false);
@@ -71,7 +85,7 @@ export function PatientCombobox({id, doctorId, value, onChange, error, disabled 
         const active = results[activeIndex];
 
         if (showList && active) {
-          event.preventDefault(); // choosing an option must not submit the form
+          event.preventDefault(); // choosing an option must not submit the surrounding form
           choose(active);
         }
         break;
@@ -90,12 +104,12 @@ export function PatientCombobox({id, doctorId, value, onChange, error, disabled 
   let status: string | null = null;
 
   if (!value) {
-    if (!hasDoctor) {
+    if (blocked) {
       status = t('needsDoctor');
     } else if (!search.typedEnough) {
       status = t('minChars', {count: PATIENT_SEARCH_MIN_LENGTH});
     } else if (search.isError) {
-      status = errorMessage(search.error);
+      status = errorsT(getPatientErrorKey(search.error));
     } else if (search.isWaiting || search.isFetching) {
       status = t('searching');
     } else if (results.length === 0) {
@@ -115,7 +129,7 @@ export function PatientCombobox({id, doctorId, value, onChange, error, disabled 
           aria-autocomplete="list"
           aria-activedescendant={showList && activeIndex >= 0 ? optionId(activeIndex) : undefined}
           autoComplete="off"
-          disabled={disabled || !hasDoctor}
+          disabled={disabled || blocked}
           readOnly={value !== null}
           value={value ? value.fullName : text}
           placeholder={t('placeholder')}

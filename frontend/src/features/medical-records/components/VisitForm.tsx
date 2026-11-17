@@ -3,6 +3,7 @@
 import {useEffect, useRef, useState, type FormEvent} from 'react';
 import {FiSave, FiX} from 'react-icons/fi';
 import {useTranslations} from 'next-intl';
+import {PatientSelect, usePatient, type PatientOption} from '@/features/patients';
 import {fieldErrorsOf} from '../errors';
 import {
   useCreateVisitMutation,
@@ -10,6 +11,7 @@ import {
 } from '../hooks/use-visit-mutations';
 import type {MedicalVisitResponse} from '../types';
 import {
+  isGuid,
   VISIT_FIELD_IDS,
   VISIT_FIELD_LIMITS,
   VISIT_FIELD_ORDER,
@@ -62,6 +64,13 @@ export function VisitForm(props: VisitFormProps) {
   );
 
   const [values, setValues] = useState<VisitFormValues>(() => initialValues(props));
+  const [patient, setPatient] = useState<PatientOption | null>(null);
+  const prefilledRef = useRef(false);
+
+  // A `?patientId=` link pre-selects that patient once its name is known (best effort: an
+  // unknown id simply leaves the picker empty and the required-patient rule applies).
+  const initialPatientId = isCreate ? (props.initialPatientId?.trim() ?? '') : '';
+  const preselected = usePatient(isGuid(initialPatientId) ? initialPatientId : null);
   const [errors, setErrors] = useState<VisitFormErrors>({});
   const submittedRef = useRef(false);
   const focusTargetRef = useRef<string | null>(null);
@@ -69,6 +78,16 @@ export function VisitForm(props: VisitFormProps) {
   const activeError = isCreate ? createMutation.error : updateMutation.error;
   const isPending = isCreate ? createMutation.isPending : updateMutation.isPending;
   const serverFieldErrors = fieldErrorsOf(activeError);
+
+  useEffect(() => {
+    const found = preselected.data;
+
+    if (found && !prefilledRef.current) {
+      prefilledRef.current = true;
+      setPatient({id: found.id, fullName: found.fullName, phone: found.phone});
+      setValues((current) => ({...current, patientId: found.id}));
+    }
+  }, [preselected.data]);
 
   // Move focus to the first invalid control after a client-side submit.
   useEffect(() => {
@@ -227,15 +246,15 @@ export function VisitForm(props: VisitFormProps) {
               required
             >
               {(control) => (
-                <input
-                  {...control}
-                  type="text"
-                  dir="ltr"
-                  autoComplete="off"
-                  spellCheck={false}
-                  value={values.patientId}
-                  onChange={(event) => setField('patientId', event.target.value)}
-                  className={`${controlClassName} font-mono`}
+                <PatientSelect
+                  id={control.id}
+                  value={patient}
+                  disabled={isPending}
+                  error={errorFor('patientId')}
+                  onChange={(next) => {
+                    setPatient(next);
+                    setField('patientId', next?.id ?? '');
+                  }}
                 />
               )}
             </FormField>
@@ -380,7 +399,8 @@ function initialValues(props: VisitFormProps): VisitFormValues {
   }
 
   return {
-    patientId: props.initialPatientId?.trim() ?? '',
+    // The picker fills this in (pre-selected from `?patientId=` or chosen by the user).
+    patientId: '',
     appointmentId: '',
     visitDate: toDateTimeLocalValue(new Date().toISOString()),
     chiefComplaint: '',
