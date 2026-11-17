@@ -9,7 +9,8 @@ import {Link, usePathname} from '@/i18n/navigation';
 
 const NAV_ITEMS = [
   {href: '/appointments', labelKey: 'list'},
-  {href: '/appointments/new', labelKey: 'new'}
+  {href: '/appointments/new', labelKey: 'new'},
+  {href: '/patients', labelKey: 'patients'}
 ] as const;
 
 /**

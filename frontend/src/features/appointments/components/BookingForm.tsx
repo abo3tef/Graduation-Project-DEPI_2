@@ -12,7 +12,8 @@ import {
 import {useActor, useBookAppointment} from '../hooks/useAppointments';
 import {useDoctorLookups} from '../hooks/useLookups';
 import {mapFieldErrors} from '../services/appointment-errors';
-import {REASON_MAX_LENGTH, type PatientLookup} from '../types/appointment.types';
+import {PatientSelect, type PatientOption} from '@/features/patients';
+import {REASON_MAX_LENGTH} from '../types/appointment.types';
 import {addMinutesToTime, getClinicNow} from '../utils/date-time';
 import {
   hasErrors,
@@ -22,7 +23,6 @@ import {
 } from '../validation/appointment.validation';
 import {DaySchedulePanel} from './DaySchedulePanel';
 import {IdentityRequired} from './IdentityRequired';
-import {PatientCombobox} from './PatientCombobox';
 import {Alert} from './primitives/Alert';
 import {Button} from './primitives/Button';
 import {controlClass, Field, fieldAria} from './primitives/Field';
@@ -50,7 +50,7 @@ export function BookingForm() {
   const mutation = useBookAppointment();
 
   const [chosenDoctorId, setChosenDoctorId] = useState('');
-  const [patient, setPatient] = useState<PatientLookup | null>(null);
+  const [patient, setPatient] = useState<PatientOption | null>(null);
   const [date, setDate] = useState('');
   const [start, setStart] = useState('');
   const [end, setEnd] = useState('');
@@ -174,9 +174,10 @@ export function BookingForm() {
             </Field>
 
             <Field id={fieldId('patientId')} label={t('fields.patient')} required error={message(errors.patientId)}>
-              <PatientCombobox
+              <PatientSelect
                 id={fieldId('patientId')}
                 doctorId={doctorId}
+                requireDoctor
                 value={patient}
                 onChange={(next) => {
                   setPatient(next);

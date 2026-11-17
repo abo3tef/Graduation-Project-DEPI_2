@@ -7,8 +7,8 @@ import {Link, useRouter} from '@/i18n/navigation';
 import {VisitForm} from './VisitForm';
 
 /**
- * Create-visit screen. Until the shared patient picker exists (Q-04) the patient id arrives as
- * `?patientId=…` and is still editable + GUID-validated in the form (D-31).
+ * Create-visit screen. The patient is chosen with the shared patient picker (F8); a
+ * `?patientId=…` link pre-selects that patient.
  */
 export function NewVisitScreen() {
   const t = useTranslations('MedicalRecords.visitForm');

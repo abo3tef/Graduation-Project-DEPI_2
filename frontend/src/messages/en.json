@@ -170,6 +170,7 @@
     },
     "common": {
       "backHome": "Back to home",
+      "patients": "Patients",
       "backToWorkspace": "Back to medical records",
       "retry": "Try again",
       "cancel": "Cancel",
@@ -186,11 +187,8 @@
       "invalidVisitId": "Enter a valid visit identifier.",
       "openVisit": "Open visit",
       "openPatientTitle": "Open a patient medical profile",
-      "openPatientHint": "Paste the patient identifier to review their medical profile and timeline.",
-      "patientIdLabel": "Patient ID",
-      "patientIdPlaceholder": "00000000-0000-0000-0000-000000000000",
-      "invalidPatientId": "Enter a valid patient identifier.",
-      "openPatient": "Open patient profile",
+      "openPatientHint": "Search for a patient by name or phone to review their medical profile and timeline.",
+      "patientIdLabel": "Patient",
       "createVisit": "Record a new visit"
     },
     "visit": {
@@ -210,8 +208,8 @@
     "visitForm": {
       "eyebrow": "Medical visit",
       "createTitle": "Record a new visit",
-      "createDescription": "Document the consultation for a patient in your workspace. The patient identifier is required.",
-      "patientId": "Patient ID",
+      "createDescription": "Document the consultation for a patient in your workspace. Choose the patient first.",
+      "patientId": "Patient",
       "patientIdHint": "The patient must belong to your workspace.",
       "appointmentId": "Appointment ID (optional)",
       "appointmentIdHint": "Leave empty when the visit is not linked to an appointment.",
@@ -295,8 +293,8 @@
       "server": "Something went wrong. Please try again."
     },
     "validation": {
-      "patientIdRequired": "Enter the patient identifier.",
-      "patientIdInvalid": "Enter a valid patient identifier.",
+      "patientIdRequired": "Select a patient.",
+      "patientIdInvalid": "Select a valid patient.",
       "appointmentIdInvalid": "Enter a valid appointment identifier.",
       "visitDateRequired": "Enter the visit date and time.",
       "visitDateInvalid": "Enter a valid visit date and time.",
@@ -551,7 +549,8 @@
     "nav": {
       "label": "Appointments navigation",
       "list": "Appointments",
-      "new": "New booking"
+      "new": "New booking",
+      "patients": "Patients"
     },
     "title": "Appointments",
     "subtitle": "Manage the bookings of your doctors.",
@@ -632,15 +631,6 @@
       "minutes": "{minutes} min",
       "reasonCounter": "{count}/{max}",
       "submit": "Book appointment"
-    },
-    "patientSearch": {
-      "placeholder": "Search by name or phone",
-      "needsDoctor": "Select a doctor first.",
-      "minChars": "{count, plural, one {Type at least # character to search.} other {Type at least # characters to search.}}",
-      "searching": "Searching…",
-      "none": "No matching patients for this doctor.",
-      "change": "Change",
-      "results": "Matching patients"
     },
     "daySchedule": {
       "title": "Doctor’s schedule for this day",
@@ -931,6 +921,137 @@
       "doctorOnly": "This dashboard is restricted to doctors only. Please switch to a doctor account to view it.",
       "error": "Failed to load clinic dashboard data.",
       "retry": "Retry"
+    }
+  },
+  "Patients": {
+    "meta": {
+      "listTitle": "Patients",
+      "newTitle": "New patient",
+      "editTitle": "Edit patient"
+    },
+    "list": {
+      "title": "Patients",
+      "description": "Search, add and update the patients of your clinic.",
+      "new": "New patient",
+      "searchLabel": "Search patients",
+      "searchPlaceholder": "Name, phone or patient ID",
+      "genderLabel": "Gender",
+      "genderAll": "All",
+      "loading": "Loading patients…",
+      "retry": "Try again",
+      "empty": "No patients yet. Add the first one.",
+      "emptySearch": "No patients match your search.",
+      "summary": "{count, plural, one {# patient} other {# patients}}",
+      "columns": {
+        "name": "Name",
+        "dateOfBirth": "Date of birth",
+        "gender": "Gender",
+        "phone": "Phone",
+        "actions": "Actions"
+      },
+      "edit": "Edit",
+      "delete": "Delete",
+      "editNamed": "Edit {name}",
+      "deleteNamed": "Delete {name}",
+      "pagination": {
+        "label": "Patients pagination",
+        "position": "Page {page} of {total}",
+        "previous": "Previous",
+        "next": "Next"
+      }
+    },
+    "gender": {
+      "Male": "Male",
+      "Female": "Female"
+    },
+    "bloodType": {
+      "APositive": "A+",
+      "ANegative": "A-",
+      "BPositive": "B+",
+      "BNegative": "B-",
+      "ABPositive": "AB+",
+      "ABNegative": "AB-",
+      "OPositive": "O+",
+      "ONegative": "O-"
+    },
+    "form": {
+      "createTitle": "New patient",
+      "createDescription": "Enter the patient’s administrative details.",
+      "editTitle": "Edit patient",
+      "editDescription": "Update the patient’s details.",
+      "fields": {
+        "doctor": "Doctor",
+        "fullName": "Full name",
+        "dateOfBirth": "Date of birth",
+        "gender": "Gender",
+        "phone": "Phone",
+        "address": "Address",
+        "emergencyContact": "Emergency contact",
+        "bloodType": "Blood type"
+      },
+      "doctorPlaceholder": "Choose a doctor",
+      "loadingDoctors": "Loading doctors…",
+      "genderPlaceholder": "Choose gender",
+      "bloodTypeNone": "Not recorded",
+      "bloodTypeHint": "Medical information, visible to doctors only.",
+      "administrativeOnly": "You can manage administrative details only. Medical information is handled by the doctor.",
+      "validationSummary": "Review the fields marked with errors.",
+      "save": "Save patient",
+      "saving": "Saving…",
+      "cancel": "Cancel"
+    },
+    "validation": {
+      "required": "This field is required.",
+      "fullNameTooLong": "The name is too long (200 characters at most).",
+      "dateOfBirthInvalid": "Enter a valid date.",
+      "dateOfBirthFuture": "The date of birth cannot be in the future.",
+      "dateOfBirthTooOld": "The date of birth cannot be before 1900.",
+      "phoneInvalid": "Enter a valid phone number (7 digits at least).",
+      "phoneTooLong": "The phone number is too long (30 characters at most).",
+      "addressTooLong": "The address is too long (500 characters at most).",
+      "emergencyContactTooLong": "The emergency contact is too long (100 characters at most).",
+      "invalid": "This value is not valid."
+    },
+    "delete": {
+      "title": "Delete this patient?",
+      "description": "{name} will be permanently deleted. This cannot be undone.",
+      "cancel": "Cancel",
+      "confirm": "Delete patient"
+    },
+    "errors": {
+      "network": "Cannot reach the server. Check your connection and try again.",
+      "invalidResponse": "The server sent an unexpected response.",
+      "identity": "Your account cannot manage patients. Sign in again.",
+      "hasRelatedRecords": "This patient has appointments, visits, payments or other records and cannot be deleted.",
+      "patientNotFound": "This patient was not found.",
+      "doctorNotFound": "The selected doctor was not found.",
+      "medicalForbidden": "Medical information can only be changed by a doctor.",
+      "validation": "Some values are not valid. Review the form.",
+      "forbidden": "You are not allowed to do this.",
+      "notFound": "The requested item was not found.",
+      "conflict": "The request conflicts with the current data.",
+      "badRequest": "The request could not be processed. Review the values.",
+      "server": "Something went wrong on the server. Try again later.",
+      "unknown": "Something went wrong. Try again."
+    },
+    "toasts": {
+      "created": "Patient added.",
+      "updated": "Patient updated.",
+      "deleted": "Patient deleted."
+    },
+    "select": {
+      "placeholder": "Search by name or phone",
+      "needsDoctor": "Select a doctor first.",
+      "minChars": "{count, plural, one {Type at least # character to search.} other {Type at least # characters to search.}}",
+      "searching": "Searching…",
+      "none": "No matching patients.",
+      "change": "Change",
+      "results": "Matching patients"
+    },
+    "states": {
+      "identityTitle": "Sign in required",
+      "signInHint": "Sign in with a doctor or secretary account to manage patients.",
+      "loading": "Loading…"
     }
   }
 }
