@@ -275,7 +275,7 @@
       "refreshing": "Refreshing…",
       "retry": "Try again",
       "unauthorizedTitle": "Your session is not valid",
-      "unauthorizedDescription": "The token is missing or expired. Add a valid development token and try again.",
+      "unauthorizedDescription": "Your session has expired. Sign in again to continue.",
       "forbiddenTitle": "Access denied",
       "forbiddenDescription": "You do not have access to this patient record.",
       "notFoundTitle": "Visit not found",
@@ -286,7 +286,7 @@
       "serverDescription": "The server could not complete the request. Please try again."
     },
     "errors": {
-      "unauthorized": "Your session is not valid. Add a valid development token and try again.",
+      "unauthorized": "Your session is not valid. Sign in again to continue.",
       "forbidden": "You do not have access to this patient record.",
       "notFound": "This visit does not exist or is outside your workspace.",
       "conflict": "This appointment is already linked to another visit.",
@@ -405,7 +405,7 @@
       "refreshing": "Refreshing…",
       "retry": "Try again",
       "unauthorizedTitle": "Your session is not valid",
-      "unauthorizedDescription": "The token is missing or expired. Add a valid development token and try again.",
+      "unauthorizedDescription": "Your session has expired. Sign in again to continue.",
       "forbiddenTitle": "Access denied",
       "forbiddenDescription": "Only the treating doctor can open this patient's medical timeline.",
       "notFoundTitle": "Patient not found",
