@@ -7,6 +7,20 @@ The API starts without any of these values, but the affected endpoint answers `5
 pretending to work. The one hard rule: **outside `Development`/`Testing` the host refuses to start
 while `Email:Enabled` is `false`**, so a production deployment can never silently write mail to disk.
 
+## 0. Database connection (never commit credentials)
+
+`ConnectionStrings:DefaultConnection` in `appsettings.json` is intentionally empty. Supply a local
+value only through user-secrets or the `MEDILOG_CONNECTION_STRING` environment variable:
+
+```powershell
+cd backend
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "<local connection string>" --project src/Medilog.WebAPI
+```
+
+Infrastructure reads the configuration value first and falls back to `MEDILOG_CONNECTION_STRING`.
+Never place a working remote credential in a tracked appsettings file, and rotate any credential
+that was previously exposed before sharing the repository.
+
 ## 1. JWT signing key (required for sign-in)
 
 Sign-in issues an HS256 token, so `Jwt:SigningKey` must be at least 32 bytes. Store it in
@@ -118,6 +132,7 @@ the environment is `Development`.
 
 | Symptom | Cause / fix |
 |---|---|
+| Host throws "No MySQL connection string is configured" | Set `ConnectionStrings:DefaultConnection` in user-secrets or `MEDILOG_CONNECTION_STRING` |
 | `503 auth.not_configured` on login | `Jwt:SigningKey` missing or shorter than 32 bytes |
 | `503 auth.google_not_configured` | `Firebase:ProjectId` missing, or Google certificates unreachable |
 | `403 auth.email_unverified` after registering | Open the `.eml` link (or call `/verify-email`) before signing in |

@@ -1,19 +1,22 @@
-# Medical Records API — F4-C2b / F4-C3
+# Medical Records API — F4-C2b / F4-C3 / F9-C1
 
-- **Feature:** F4 — Medical Updates & Prescriptions (Doctor)
-- **Cycles:** F4-C2 — Medical Visit & Diagnosis write API (slice C2b) · F4-C3 — Medication lines
-- **Owner:** Mohamed Shalaby (Member 4)
-- **Status:** C2b implemented 2026-11-11 · C3 implemented 2026-11-11
+- **Feature:** F4 — Medical Updates & Prescriptions (Doctor) · F9 — Vital Signs & Visit Enhancements
+- **Cycles:** F4-C2 — Medical Visit & Diagnosis write API (slice C2b) · F4-C3 — Medication lines ·
+  F9-C1 — Vital Signs backend
+- **Owner:** Mohamed Shalaby (Member 4) · Anton (F9)
+- **Status:** C2b implemented 2026-11-11 · C3 implemented 2026-11-11 · F9-C1 implemented 2026-11-17
+  (Q-04 paging remediation 2026-11-17)
 - **Contract decisions:** D-16 (JWT Bearer) · D-17 (single-owner workspace) · D-18 (MVC
   controllers) · D-20 (`201` location) · D-21 (DI wiring) · D-23 (medication hard delete) ·
   D-24 (`Medications` in the visit response) · D-25 (extend `IMedicalVisitService`) ·
-  D-26 (medication request limits)
+  D-26 (medication request limits) · Q-04 (shared list/paging envelope) · Q-19 (vital-sign fields,
+  ranges and append semantics)
 - **Base route:** `/api/medical-visits`
 
-This document is the written contract for the eight endpoints implemented in
+This document is the written contract for the twelve endpoints implemented in
 `backend/src/Medilog.WebAPI/Controllers/MedicalVisitsController.cs`. It is intentionally narrow:
-the shared list/pagination contract (Q-04, see [`CONVENTIONS.md`](./CONVENTIONS.md)) is defined,
-but F4 does not expose a list endpoint in the current scope.
+the shared list/pagination contract (Q-04, see [`CONVENTIONS.md`](./CONVENTIONS.md)) is applied to
+the F9 vital-signs list, but F4 does not expose a visit list endpoint in the current scope.
 
 ## 1. Authentication and authorization
 
@@ -60,8 +63,13 @@ through configuration.
 | 7 | `PUT` | `/api/medical-visits/{visitId}/medications/{medicationId}` | `200 OK` | — |
 | 8 | `DELETE` | `/api/medical-visits/{visitId}/medications/{medicationId}` | `204 No Content` | — |
 | 9 | `DELETE` | `/api/medical-visits/{visitId}/diagnoses/{diagnosisId}` | `204 No Content` | — |
+| 10 | `POST` | `/api/medical-visits/{visitId}/vital-signs` | `201 Created` | `/api/medical-visits/{visitId}/vital-signs` (list route) |
+| 11 | `GET` | `/api/medical-visits/{visitId}/vital-signs?pageNumber=1&pageSize=10` | `200 OK` | — |
+| 12 | `PUT` | `/api/medical-visits/{visitId}/vital-signs/{vitalSignsId}` | `200 OK` | — |
 
-Route identifiers are GUIDs (`{visitId:guid}`, `{diagnosisId:guid}`, `{medicationId:guid}`).
+Route identifiers are GUIDs (`{visitId:guid}`, `{diagnosisId:guid}`, `{medicationId:guid}`,
+`{vitalSignsId:guid}`). There is deliberately no vital-signs `DELETE` route: a `DELETE` to
+`/api/medical-visits/{visitId}/vital-signs/{vitalSignsId}` returns `405 Method Not Allowed`.
 
 ## 3. Request contracts
 
@@ -170,6 +178,56 @@ patient's other records. A visit, diagnosis pair that does not match, a visit of
 and an unknown diagnosis all return the same `404`, so the response does not reveal whether the
 visit exists.
 
+### 3.9 Append a vital-signs record — `POST /api/medical-visits/{visitId}/vital-signs`
+
+```json
+{
+  "bloodPressure": "120/80",
+  "heartRate": 72,
+  "temperature": 36.8,
+  "respiratoryRate": 16,
+  "weight": 70.5,
+  "height": 175.0,
+  "spO2": 98
+}
+```
+
+| Field | Type | Required | Rules (Q-19) |
+|---|---|---|---|
+| `bloodPressure` | string? | no | `systolic/diastolic`, ≤ 20 chars; systolic 50–250, diastolic 30–150, systolic > diastolic |
+| `heartRate` | int? | no | 30–220 |
+| `temperature` | decimal? | no | 30.0–45.0 |
+| `respiratoryRate` | int? | no | 5–60 |
+| `weight` | decimal? | no | 1.0–500.0 |
+| `height` | decimal? | no | 30.0–250.0 |
+| `spO2` | int? | no | 0–100 |
+
+**At least one measurement must be supplied**; a body with all seven fields null is rejected with
+`400` (`VitalSigns.AtLeastOneRequired`). Multiple records may be appended to one visit (1:M). The
+visit and patient are taken from the route and the persisted visit, never from the body: client
+supplied `visitId`, `patientId`, `doctorId` and `id` values are ignored. A visit outside the acting
+doctor's workspace returns `404`.
+
+### 3.10 Update a vital-signs record — `PUT /api/medical-visits/{visitId}/vital-signs/{vitalSignsId}`
+
+Same shape as §3.9. The record must belong to the visit in the route, and that visit must belong
+to the acting doctor; otherwise `404`. As with the other `PUT` endpoints, the request replaces the
+measurement set: fields omitted or sent as `null` are cleared, while `id` and `visitId` remain
+unchanged. At least one measurement must still be supplied.
+
+### 3.11 List vital signs — `GET /api/medical-visits/{visitId}/vital-signs`
+
+| Query parameter | Type | Rules |
+|---|---|---|
+| `pageNumber` | integer | `>= 1`; default `1` |
+| `pageSize` | integer | `1..50`; default `10` |
+
+Paging follows the shared Q-04 contract ([`CONVENTIONS.md`](./CONVENTIONS.md) §3): only
+`PagingDefaults` supplies the limits, and there are no feature-specific values or filters in this
+Cycle. The `visitId` comes from the route and is never read from the query string. Invalid values
+return `400` with `code = validation.failed` and camelCase `errors` for `pageNumber` and/or
+`pageSize`.
+
 ## 4. Response contracts
 
 ### 4.1 Medical visit
@@ -221,6 +279,51 @@ navigation property is returned.
 }
 ```
 
+### 4.4 Vital-signs record
+
+```json
+{
+  "id": "d3e4f5a6-b7c8-4d9e-0f1a-2b3c4d5e6f70",
+  "bloodPressure": "120/80",
+  "heartRate": 72,
+  "temperature": 36.8,
+  "respiratoryRate": 16,
+  "weight": 70.5,
+  "height": 175.0,
+  "spO2": 98
+}
+```
+
+`GET …/vital-signs` returns the shared Q-04 `PagedResult` envelope of these records, ordered by
+`id` (the entity has no `CreatedAtUtc`, so `id` is the stable tie-breaker). `totalCount` and the
+page are computed in the data source (count, then ordered `Skip`/`Take` with bounded `pageSize`);
+the API never materialises an unbounded set. The response never contains `visitId`, patient,
+doctor or any navigation property.
+
+```json
+{
+  "items": [
+    {
+      "id": "d3e4f5a6-b7c8-4d9e-0f1a-2b3c4d5e6f70",
+      "bloodPressure": "120/80",
+      "heartRate": 72,
+      "temperature": 36.8,
+      "respiratoryRate": 16,
+      "weight": 70.5,
+      "height": 175.0,
+      "spO2": 98
+    }
+  ],
+  "page": 1,
+  "pageSize": 10,
+  "totalCount": 1,
+  "totalPages": 1
+}
+```
+
+A page beyond the last returns `items: []` with the requested `page`, the requested `pageSize` and
+the correct `totalCount`/`totalPages`.
+
 ## 5. Status codes
 
 | Status | When |
@@ -231,8 +334,8 @@ navigation property is returned.
 | `400 Bad Request` | Request-shape validation failure, or an appointment that does not match the patient/doctor |
 | `401 Unauthorized` | Missing/invalid token, or a token without an identity |
 | `403 Forbidden` | Authenticated caller is not a doctor, or the patient is outside the doctor's workspace |
-| `404 Not Found` | Visit/diagnosis/medication/patient/appointment not found for the acting doctor |
-| `405 Method Not Allowed` | List routes are not part of the current Cycles |
+| `404 Not Found` | Visit/diagnosis/medication/vital-signs/patient/appointment not found for the acting doctor |
+| `405 Method Not Allowed` | Visit/diagnosis/medication list routes are not part of the current Cycles, and vital signs have no `DELETE` route |
 | `409 Conflict` | The appointment is already linked to another visit |
 
 ## 6. Error responses (`ProblemDetails`)
@@ -263,6 +366,9 @@ SQL text and patient data are never written to a response.
 }
 ```
 
+Invalid `pageNumber`/`pageSize` on `GET …/vital-signs` use this same envelope, with `errors` keys
+`pageNumber` and/or `pageSize`.
+
 A malformed body or wrong value type produces the same envelope with
 `code = request.invalid` and camelCase `errors` (no `errorCodes`).
 
@@ -287,6 +393,8 @@ contains the exception details; the exception is logged on the server.
   the F4 list endpoint is not part of the current delivery scope.
 - `GET` for a single diagnosis or medication.
 - `GET …/medications` as a separate list route.
+- Filters, sorting or a larger `pageSize` on `GET …/vital-signs` — Q-04 defaults only.
+- `DELETE …/vital-signs/{vitalSignsId}` — no vital-signs delete in F9-C1 (`405`).
 - `DELETE` for visits (D-12); the permanent deletes of medication lines and diagnoses are in scope
   (D-23).
 - Restoring a deleted medication line or diagnosis (no soft delete) or `DELETE` for any other
@@ -306,5 +414,10 @@ HTTP pipeline (`WebApplicationFactory`, `TestAuthHandler`, EF Core InMemory):
 - anonymous `401`, secretary `403`, foreign visit `404`, foreign patient `403`;
 - appointment mismatch `400`, duplicate appointment linkage `409`;
 - foreign or cross-visit medication `404`; foreign doctor or cross-visit diagnosis `404`;
+- vital signs: `201` with the list-route `Location`, append + paged list (Q-04 envelope, default
+  `1`/`10`, invalid paging `400`, page beyond last empty with correct metadata, two pages without
+  duplicates and in `Id` order), `PUT`, `400` for all-null or out-of-range values, anonymous `401`,
+  secretary `403`, foreign visit `404`, no `DELETE` (`405`), client body ids ignored, and existing
+  `GET` visit still works when vitals exist;
 - `ProblemDetails` shape with no stack trace or exception text;
 - absent list routes (`405`).

@@ -71,6 +71,26 @@ public static class ErrorCodes
     /// <summary>Authentication cannot run because required configuration or secrets are missing (503).</summary>
     public const string AuthNotConfigured = "auth.not_configured";
 
+    /// <summary>The requested user does not exist in any identity table (404).</summary>
+    public const string AdminUserNotFound = "admin.user_not_found";
+
+    /// <summary>The secretary named in an assignment request does not exist (404).</summary>
+    public const string AdminSecretaryNotFound = "admin.secretary_not_found";
+
+    /// <summary>An Admin tried to deactivate their own account (403, Q-22).</summary>
+    public const string AdminSelfDeactivationForbidden = "admin.self_deactivation_forbidden";
+
+    /// <summary>An Admin tried to change their own role (403, Q-22).</summary>
+    public const string AdminSelfRoleChangeForbidden = "admin.self_role_change_forbidden";
+
+    /// <summary>Deactivating the target would remove the last active Admin (409, Q-22).</summary>
+    public const string AdminLastAdminProtected = "admin.last_admin_protected";
+
+    /// <summary>The target is an Admin or the requested role is Admin (403, Q-22).</summary>
+    public const string AdminRoleChangeForbidden = "admin.role_change_forbidden";
+
+    /// <summary>The Doctor↔Secretary transition has conflicting data and is refused (409, Q-22).</summary>
+    public const string AdminRoleChangeBlocked = "admin.role_change_blocked";
 
     public const string MethodNotAllowed = "request.method_not_allowed";
 

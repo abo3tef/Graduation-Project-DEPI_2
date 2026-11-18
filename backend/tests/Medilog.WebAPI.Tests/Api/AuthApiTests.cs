@@ -94,6 +94,26 @@ public sealed class AuthApiTests
     }
 
     [Fact]
+    public async Task Issued_token_authenticates_an_appointment_endpoint()
+    {
+        // Appointments are now role-protected at the HTTP layer as well as in the service.
+        using var factory = new WebApiFactory(useTestAuthentication: false);
+        var doctor = await SeedDoctorAsync(factory);
+        using var client = factory.CreateClient();
+
+        var login = await client.PostAsJsonAsync(LoginUrl, new { email = doctor.Email, password = Password });
+        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
+
+        using var json = JsonDocument.Parse(await login.Content.ReadAsStringAsync());
+        var accessToken = json.RootElement.GetProperty("accessToken").GetString();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+        var response = await client.GetAsync("/api/appointments");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Request_without_a_token_is_rejected_by_a_protected_endpoint()
     {
         // Arrange

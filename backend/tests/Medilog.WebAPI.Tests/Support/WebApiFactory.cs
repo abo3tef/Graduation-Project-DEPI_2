@@ -120,4 +120,21 @@ public sealed class WebApiFactory : WebApplicationFactory<Program>
         seed(dbContext);
         await dbContext.SaveChangesAsync();
     }
+
+    /// <summary>Seeds one doctor, one of their patients and one visit owned by that doctor.</summary>
+    public async Task<(Guid DoctorId, Guid PatientId, Guid VisitId)> SeedVisitAsync()
+    {
+        var doctorId = Guid.NewGuid();
+        var patientId = Guid.NewGuid();
+        var visitId = Guid.NewGuid();
+
+        await SeedAsync(db =>
+        {
+            db.Add(ApiData.Doctor(doctorId));
+            db.Add(ApiData.Patient(patientId, doctorId));
+            db.Add(ApiData.Visit(visitId, patientId, doctorId));
+        });
+
+        return (doctorId, patientId, visitId);
+    }
 }

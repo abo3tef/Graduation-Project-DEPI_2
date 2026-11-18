@@ -1,6 +1,7 @@
 using System.Net;
 using Medilog.Application.Tests.Support;
 using Medilog.Domain.Enums;
+using Medilog.WebAPI.Tests.Support;
 
 namespace Medilog.WebAPI.Tests;
 
@@ -26,7 +27,7 @@ public class HeaderIdentityTests
     }
 
     [Fact]
-    public async Task Every_route_rejects_a_request_without_identity_headers_with_403()
+    public async Task Every_route_rejects_an_anonymous_request_with_401()
     {
         await using var api = new ApiFactory();
         using var client = api.CreateClient();
@@ -35,7 +36,7 @@ public class HeaderIdentityTests
         {
             var response = await client.CallAsync(method, url, caller: null, body);
 
-            Assert.True(response.StatusCode == HttpStatusCode.Forbidden, $"{method} {url} returned {(int)response.StatusCode}");
+            Assert.True(response.StatusCode == HttpStatusCode.Unauthorized, $"{method} {url} returned {(int)response.StatusCode}");
             Assert.True(response.IsProblemJson());
         }
 
@@ -43,16 +44,19 @@ public class HeaderIdentityTests
     }
 
     [Theory]
-    [InlineData("not-a-guid", "Doctor")]
-    [InlineData("00000000-0000-0000-0000-000000000000", "Doctor")]
-    [InlineData("", "Doctor")]
-    [InlineData("VALID", "doctor")]     // role is case-sensitive
-    [InlineData("VALID", "SECRETARY")]
-    [InlineData("VALID", "0")]          // numeric roles are not accepted
-    [InlineData("VALID", "Admin")]
-    [InlineData("VALID", "")]
-    [InlineData("VALID", " Doctor")]
-    public async Task Invalid_identity_headers_are_rejected_with_403(string id, string role)
+    [InlineData("not-a-guid", "Doctor", HttpStatusCode.Unauthorized)]
+    [InlineData("00000000-0000-0000-0000-000000000000", "Doctor", HttpStatusCode.Unauthorized)]
+    [InlineData("", "Doctor", HttpStatusCode.Unauthorized)]
+    [InlineData("VALID", "doctor", HttpStatusCode.Forbidden)]     // role is case-sensitive
+    [InlineData("VALID", "SECRETARY", HttpStatusCode.Forbidden)]
+    [InlineData("VALID", "0", HttpStatusCode.Forbidden)]          // numeric roles are not accepted
+    [InlineData("VALID", "Admin", HttpStatusCode.Forbidden)]
+    [InlineData("VALID", "", HttpStatusCode.Forbidden)]
+    [InlineData("VALID", " Doctor", HttpStatusCode.Forbidden)]
+    public async Task Invalid_test_identity_is_challenged_or_forbidden(
+        string id,
+        string role,
+        HttpStatusCode expected)
     {
         await using var api = new ApiFactory();
         using var client = api.CreateClient();
@@ -62,7 +66,7 @@ public class HeaderIdentityTests
 
         var response = await client.SendAsync(request);
 
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal(expected, response.StatusCode);
     }
 
     [Fact]
@@ -81,9 +85,20 @@ public class HeaderIdentityTests
         using var roleOnly = new HttpRequestMessage(HttpMethod.Get, Base);
         roleOnly.Headers.Add("X-User-Role", "Doctor");
 
-        Assert.Equal(HttpStatusCode.Forbidden, (await client.SendAsync(noHyphens)).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.SendAsync(noHyphens)).StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, (await client.SendAsync(idOnly)).StatusCode);
-        Assert.Equal(HttpStatusCode.Forbidden, (await client.SendAsync(roleOnly)).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.SendAsync(roleOnly)).StatusCode);
+    }
+
+    [Fact]
+    public async Task An_admin_cannot_use_appointment_routes()
+    {
+        await using var api = new ApiFactory();
+        using var client = api.CreateClient();
+
+        var response = await client.CallAsync(HttpMethod.Get, Base, new Caller(Guid.NewGuid(), "Admin"));
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
     [Fact]
@@ -113,17 +128,19 @@ public class HeaderIdentityTests
     }
 
     [Fact]
-    public async Task When_header_identity_is_disabled_even_valid_headers_get_403()
+    public async Task The_real_bearer_host_never_trusts_forged_identity_headers()
     {
-        await using var api = new ApiFactory(headerIdentityEnabled: false);
-        using var client = api.CreateClient();
+        // Production CurrentUser reads only validated JWT claims. This test uses the real bearer
+        // handler with no token, so forged headers must not create an identity.
+        using var factory = new WebApiFactory(useTestAuthentication: false);
+        using var client = factory.CreateClient();
+        using var request = new HttpRequestMessage(HttpMethod.Get, Base);
+        request.Headers.Add("X-User-Id", Guid.NewGuid().ToString());
+        request.Headers.Add("X-User-Role", "Doctor");
 
-        foreach (var (method, url, body) in await AllRoutesAsync(api))
-        {
-            var response = await client.CallAsync(method, url, api.SecretaryCaller(), body);
+        var response = await client.SendAsync(request);
 
-            Assert.True(response.StatusCode == HttpStatusCode.Forbidden, $"{method} {url} returned {(int)response.StatusCode}");
-        }
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
     [Fact]
@@ -170,7 +187,7 @@ public class HeaderIdentityTests
     }
 
     [Theory]
-    [InlineData("GET", "/api/appointments", false)]                       // 403: no identity
+    [InlineData("GET", "/api/appointments", false)]                       // 401: no identity
     [InlineData("GET", "/api/appointments?pageNumber=0", true)]           // 400: validation
     [InlineData("GET", "/api/appointments/00000000-0000-0000-0000-000000000001", true)] // 404
     public async Task Error_responses_still_carry_the_cors_header_so_the_browser_can_read_them(

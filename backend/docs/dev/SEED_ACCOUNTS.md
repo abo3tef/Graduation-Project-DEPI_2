@@ -9,12 +9,20 @@
 
 | Role | Email | Password | State |
 |------|-------|----------|-------|
-| Admin | `admin@medilog.local` | `Medilog@Dev2026` | active, pre-verified |
-| Doctor | `doctor@medilog.local` | `Medilog@Dev2026` | active, pre-verified |
-| Secretary | `secretary@medilog.local` | `Medilog@Dev2026` | active, pre-verified |
+| Admin | `admin@medilog.local` | configured `Seed:Password` | active, pre-verified |
+| Doctor | `doctor@medilog.local` | configured `Seed:Password` | active, pre-verified |
+| Secretary | `secretary@medilog.local` | configured `Seed:Password` | active, pre-verified |
 
-- The password comes from `Seed:Password` in `appsettings.Development.json`. It is a local demo
-  credential, not a production secret, and is never logged.
+- The password is **not committed**. `appsettings.Development.json` ships an empty `Seed:Password`;
+  set a local demo value before enabling seeding:
+
+  ```powershell
+  cd backend
+  dotnet user-secrets set "Seed:Password" "<local demo password>" --project src/Medilog.WebAPI
+  ```
+
+  It is a development credential, not a production secret, and is never logged. With seeding
+  enabled but no password configured, the seeder fails fast instead of creating unusable accounts.
 - Accounts are created **once**: the seeder is idempotent and leaves an existing account
   untouched, so a changed password or a deactivation (F11) survives a restart.
 - The seeded doctor has no patients or appointments; use `seed-dev-data.sql` for clinic data.
@@ -51,7 +59,7 @@ dotnet run
 POST http://localhost:5xxx/api/auth/login
 Content-Type: application/json
 
-{ "email": "doctor@medilog.local", "password": "Medilog@Dev2026" }
+{ "email": "doctor@medilog.local", "password": "<the Seed:Password you configured>" }
 ```
 
 The response contains `accessToken`, `expiresAtUtc` and the account summary (`user.role` is
@@ -61,8 +69,7 @@ token expires.
 
 ## Notes
 
-- The temporary `X-User-Id` / `X-User-Role` development headers keep working while
-  `Auth:AllowHeaderIdentity` is `true` in `appsettings.Development.json`. F6-C2 removes the
-  `DevTokenPanel`; F11-C2 removes the header fallback.
+- Identity headers are no longer supported. Sign in through `/api/auth/login` and send the returned
+  token as `Authorization: Bearer <accessToken>`.
 - Do not copy these credentials into a shared or production environment, and never commit a real
-  signing key, SMTP password or Firebase service configuration.
+  signing key, database credential, SMTP password or Firebase service configuration.

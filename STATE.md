@@ -4,7 +4,7 @@
 > Records *status, decisions, blockers, next steps*. It does **not** define rules (`AGENTS.md` does) and must **not** change approved scope, ownership, or acceptance criteria.
 > **Updated by:** the contributor at the end of each Cycle, through a PR reviewed by the Tech Lead. The AI only proposes the update (`ElwakeelBuild` → `done`).
 
-- **Last updated:** 2026-11-15
+- **Last updated:** 2026-11-18
 - **Final delivery:** 2026-11-15 (night)
 - **Tech Lead:** Abdullah
 - **Integration branch:** `main`
@@ -70,11 +70,11 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 | F7-C2 Payments frontend + dashboard | Habiba | F7-C1 | Approved | Q-21 |
 | F8-C1 Patients backend | Menna | F6-C1 (A) | In progress | — (Q-17, Q-18 answered 2026-11-17) |
 | F8-C2 Patients frontend + picker | Menna | F8-C1 | Approved | — |
-| F9-C1 Vital signs backend | Anton | F6-C1 (A) | Approved | Q-19 |
+| F9-C1 Vital signs backend | Anton | F6-C1 (A) | In review | Q-19 answered; R-02 T4 deferred; R-01 Q-04 paging implemented and verified under approved plan (`docs/tasks/F9/F9-C1-R01.md`); propose `Done`, awaiting owner sign-off |
 | F9-C2 Vital signs frontend | Anton | F9-C1 | Approved | — |
 | F10-C1 Timeline backend | Merihan | F6-C1 (A), F9-C1 (vitals events) | In review | Q-20 (proposed default in §8; VitalSigns events deferred to F10-C1-T4) |
 | F10-C2 Timeline frontend | Merihan | F10-C1 | In review | Manual Doctor/Secretary/cross-doctor verification; live-data and visual RTL checks |
-| F11-C1 Admin backend | Abdullah | F6-C1 | Approved | Q-16, Q-22 |
+| F11-C1 Admin backend | Abdullah | F6-C1 | In review | None — Q-16/Q-22 defaults implemented 2026-11-18; report `docs/reports/F11-C1.md` |
 | F11-C2 Admin frontend + E2E integration | Abdullah | F11-C1, all C2 | Approved | — |
 
 ## 6. Active Tasks
@@ -86,7 +86,7 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 | Menna | F8-C1 (Patients backend) | `feature/menna-patients` | In progress | 2026-11-17 |
 | Anton | — | `feature/anton-vitals` | — | — |
 | Merihan | F10-C2 | `feature/mrehan-medical-profile` | In review | 2026-11-15 |
-| Abdullah | — | `feature/abdullah-admin-integration` | — | — |
+| Abdullah | F11-C1 (Admin backend) | `feature/abdullah-admin-integration` | In review | 2026-11-18 |
 
 ## 7. Risks
 
@@ -117,6 +117,8 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 | 2026-11-14 | **Q-15:** BCL `System.Net.Mail` SMTP behind `IEmailService` (secrets in user-secrets/env, dev file sink when unconfigured); verification/reset tokens are 32-byte CSPRNG values stored as SHA-256 hashes, single-use, previous invalidated; verification 24 h, reset 60 min; link style | F6-C1 plan — Tech Lead confirms at PR |
 | 2026-11-15 | **Q-01 / Q-21:** one Payment per Appointment (unique `appointment_id`); fields `patient_id`, `doctor_id`, `amount decimal(18,2)` (0 < amount <= 1,000,000), `method` (`Cash`\|`Card`), `status` (`Pending`\|`Partial`\|`Paid`), `paid_at_utc`, `notes` <= 500, `created_by` (no FK), `created_at_utc`. Transitions `Pending->Partial`, `Pending->Paid`, `Partial->Paid`; `Paid` is final; `POST` always creates `Pending`; `Paid` is immutable (`409 payment.paid_final`). Revenue = `SUM(amount) WHERE status = 'Paid' AND doctor_id = @doctorId`. Payable picker excludes `Cancelled`/`No-Show` and already-billed appointments. Doctor: own payments; secretary: assigned doctors; out-of-scope -> 404. | Habiba (F7-C1), confirmed by Tech Lead 2026-11-15 |
 | 2026-11-17 | **Q-17:** `DELETE /api/patients/{id}` is a hard delete allowed only for a patient with **no related records**; if the patient has any appointment, medical visit, payment (or any other clinical record) the request is rejected with `409 Conflict` (`patient.has_related_records`); nothing is cascaded. **Q-18:** a secretary views and edits administrative fields only (`fullName`, `dateOfBirth`, `gender`, `phone`, `address`, `emergencyContact`) for patients of assigned doctors (`doctor_secretaries`); `bloodType` and any medical data are never returned to nor accepted from a secretary | Tech Lead, confirmed to Menna for F8-C1 |
+| 2026-11-17 | **Q-19:** all seven Class Spec vital-sign fields (`bloodPressure`, `heartRate`, `temperature`, `respiratoryRate`, `weight`, `height`, `spO2`) are optional individually but **at least one must be supplied**. Approved ranges: BP `sys/dia` string ≤ 20 chars, systolic 50–250, diastolic 30–150, systolic > diastolic; heart rate 30–220; temperature 30.0–45.0; respiratory rate 5–60; weight 1.0–500.0; height 30.0–250.0; SpO2 0–100. Multiple records per visit are appended (1:M), edited only by the owning doctor, never deleted in F9-C1 | F9-C1 plan — owner/Tech Lead approval 2026-11-17 |
+| 2026-11-18 | **Q-16:** an Admin assigns doctors to a secretary through `GET`/`PUT /api/admin/secretaries/{secretaryId}/doctors`; `doctor_secretaries` enforces unique pairs and the assignments scope the secretary's patient/appointment access. **Q-22:** Admin cannot change their own role/status or deactivate the last active Admin; role edits are Doctor↔Secretary only and are refused when current-role data would be orphaned or would grant unintended access. The table move preserves id, credentials, status, verification, `CreatedAtUtc` and unconsumed one-time tokens; already-issued JWTs are not revoked but every admin use case rechecks that the Admin account is active | F11-C1 plan defaults — owner/Tech Lead approval recorded 2026-11-18 |
 
 ### F6-C1 plan decisions (2026-11-14, recorded before `build`)
 | ID | Decision | Approved value |
@@ -131,8 +133,9 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 | **D-39** | Email delivery | `IEmailService` + BCL SMTP; when SMTP is disabled/unconfigured in Development the message is written as `.eml` under `backend/logs/dev-mail/` (gitignored); tokens and passwords are never logged |
 | **D-40** | Seed users | Development-only, idempotent seeder (`Seed:Enabled`), pre-verified `admin@medilog.local` / `doctor@medilog.local` / `secretary@medilog.local`; passwords documented in `backend/docs/dev/SEED_ACCOUNTS.md`; never seeded in production |
 | **D-41** | Packages | No new runtime package: JWT issuing uses `Microsoft.IdentityModel.*` 8.19.2 already resolved by the approved `JwtBearer` package; SMTP, PBKDF2 and secure random are BCL |
-| **D-42** | Header identity | `Auth:AllowHeaderIdentity` stays `true` in Development until F6-C2 removes `DevTokenPanel`; removal of the fallback belongs to F11-C2 (E2E) |
+| **D-42** | Header identity | The temporary `X-User-Id` / `X-User-Role` fallback and `Auth:AllowHeaderIdentity` setting were removed on 2026-11-18 in the bounded security/config remediation (originally scheduled for F11-C2). Identity comes only from validated JWT claims; test hosts use their own in-test auth handlers |
 | **D-43** | Email normalization | Emails are trimmed and lower-cased before compare/store; one account per email across doctor/secretary/admin (application check + per-table unique index) |
+| **D-44** | MySQL provider | Keep the EF-10-aligned `MySql.EntityFrameworkCore` 10.0.12 provider used by `UseMySQL()`; the uncommitted `Pomelo.EntityFrameworkCore.MySql` 9.0.0 reference was removed (approved with the security/config remediation plan 2026-11-18) |
 
 ### Phase 1 decisions implemented in code but not written down (Tech Lead must record the actual rule — agents must not guess)
 | ID | Topic | Record by |
@@ -145,12 +148,12 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 ### Open questions for Phase 2 (a Cycle with a blocking question cannot be `Approved` without an answer or an explicit Tech Lead default)
 | ID | Question | Proposed default (needs approval) | Blocks |
 |----|----------|-----------------------------------|--------|
-| Q-16 | How are secretaries assigned to doctors after self-registration (FR-42)? Not listed in F11 | Admin assigns in F11 (`SecretaryDoctor`) | F11, secretary scope |
+| Q-16 | ~~How are secretaries assigned to doctors after self-registration (FR-42)?~~ — **Approved 2026-11-18** (see Approved table) | — | — |
 | Q-17 | ~~Patient `DELETE` rule~~ — **Approved 2026-11-17** (see Approved table) | — | — |
 | Q-18 | ~~Fields a secretary may see/edit on a patient~~ — **Approved 2026-11-17** (see Approved table) | — | — |
-| Q-19 | Vital-sign fields and valid ranges (Class Spec: BP, HR, temperature, respiratory rate, weight, height, SpO2) | All Class Spec fields, optional, plausible-range validation approved by the team; edit by owning doctor only; no delete | F9 |
+| Q-19 | ~~Vital-sign fields and valid ranges~~ — **Approved 2026-11-17** (see Approved table) | — | — |
 | Q-20 | Timeline event types and order (SRS lists visits, diagnoses, medications, labs, documents, notes; request mentions visits, medications, vitals) | Visit, Diagnosis, Medication, VitalSigns, MedicalNote; newest first with stable tie-breaker; labs/documents excluded | F10 |
-| Q-22 | Admin role editing: allowed transitions, protection for self/last Admin, effect on existing data | Admin cannot change own role or deactivate self; last active Admin protected; role change limited to Doctor↔Secretary only if no conflicting data | F11 |
+| Q-22 | ~~Admin role editing: allowed transitions, protection for self/last Admin, effect on existing data~~ — **Approved 2026-11-18** (see Approved table) | — | — |
 
 ## 9. Blockers
 
@@ -172,6 +175,7 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 | F7-C1 | Habiba | 2026-11-15 | Done for approved scope (AC-4 dashboard deferred); build clean; 421/421 tests | `docs/reports/F7-C1.md` |
 | F10-C1 | Merihan | 2026-11-15 | Build 0/0; Application 243/243, WebAPI 118/118; no model changes; MySQL not verified | `docs/reports/F10-C1.md` |
 | F10-C2 | Merihan | 2026-11-15 | Frontend implementation pushed in `a2e60e7`; typecheck/lint/build passed; 316 tests across 20 files; manual role, live-data, and visual RTL verification pending | `docs/reports/F10-C2.md` |
+| F11-C1 — Admin backend | Abdullah | 2026-11-18 | In review — five Admin-only endpoints, Q-16/Q-22, build 0 errors, 770/770 tests, no pending EF changes | `docs/reports/F11-C1.md` |
 
 ## 11. Next Steps
 
@@ -179,7 +183,7 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 2. **Tech Lead review + merge of `feature/shalaby-auth`** (F6-C1, F6-C2, F4v2-C1, F4v2-C2). Auth contract: `backend/docs/api/AUTH_API.md`; diagnosis contract: `backend/docs/api/MEDICAL_RECORDS_API.md`; frontend execution reports: `docs/reports/F6-C2.md`, `docs/reports/F4v2-C2.md`.
 3. Everyone else continues C1/C2 `plan` in parallel. F6-C1, F6-C2, F4v2-C1 and F4v2-C2 are `In review`; no further Shalaby Cycle is planned until the Tech Lead reviews the branch.
 4. Follow §4 milestones; update §5 and §6 after each `done`.
-5. Final week-end task list (F11-C2): full build/test, E2E role matrix, seed data, demo script.
+5. Final week-end task list (F11-C2): review/merge F11-C1 (`docs/reports/F11-C1.md`, `backend/docs/api/ADMIN_API.md`) first, then full build/test, E2E role matrix, seed data, demo script.
 
 ## 12. Changelog
 
@@ -198,3 +202,6 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 | 2026-11-15 | F10-C1 review fixes applied (uncommitted): pagination-overflow guard (`long` skip, two-pass count→bounded fetch, clamped window; `pageNumber=int.MaxValue` → 200/empty/metadata), ordering contract corrected to the true ordinal type order (`Diagnosis` < `MedicalNote` < `Medication` < `Visit`) in the API doc/report/service remarks, GUID tie-break aligned to canonical string order (`Id.ToString()`, matching the SQL `char(36)` column) — 4 regression tests added | AI draft — pending Merihan/Tech Lead review |
 | 2026-11-15 | F10-C2 frontend implementation pushed as `a2e60e7`; documentation/report added with typecheck, lint, production build and 316/316 tests recorded as passed; manual Doctor/Secretary/cross-doctor, live-data, and visual RTL acceptance checks remain pending | Contributor report — pending review |
 | 2026-11-17 | Q-17 and Q-18 recorded as approved (hard delete only without related records, otherwise 409; secretary sees/edits administrative fields only, never `bloodType`); F8-C1 moved to `In progress` on `feature/menna-patients` | Menna (F8 owner) — Tech Lead decision |
+| 2026-11-17 | Q-19 recorded as approved with the seven Class Spec fields, at-least-one rule and exact ranges; F9-C1 vital-signs backend implemented locally (POST/GET/PUT under `/api/medical-visits/{visitId}/vital-signs`, owner-scoped, append semantics, no delete); API contract updated in `backend/docs/api/MEDICAL_RECORDS_API.md`; execution report `docs/reports/F9-C1.md` added; review completed with full raw test suite green (741/741), status `In review`; R-02 (T4) deferred to the dedicated GET route; R-01 Q-04 pagination remediation approved, implemented and verified (747/747) at `docs/tasks/F9/F9-C1-R01.md`; propose `Done`, pending owner sign-off | AI draft — pending Anton/Tech Lead decision |
+| 2026-11-18 | F11-C1 admin backend implemented locally on `main` (no branch, commit or push): five Admin-only endpoints, Q-16 assignment replacement with unique pairs and patient/appointment scope effect, Q-22 Doctor↔Secretary table move with self/last-Admin protection, no-conflict checks and identity/timestamp/token continuity; API contract `backend/docs/api/ADMIN_API.md`, execution report `docs/reports/F11-C1.md`; build 0 errors, 770/770 tests, no pending EF changes; status `In review` | AI draft — pending Abdullah/Tech Lead review |
+| 2026-11-18 | Bounded security/config remediation implemented on `main` after explicit plan approval (`docs/reports/SECURITY_CONFIG_REMEDIATION_PLAN.md`): tracked configs reduced to empty credential placeholders, dev seed password moved to user-secrets guidance, header-identity fallback removed (D-42), appointment controller role-protected at HTTP layer, single MySQL provider kept (D-44), `AddPayments.Designer.cs` target model synced with the snapshot; docs updated; build 0 errors/0 warnings, 772/772 tests, no pending EF changes; credential rotation still requires owner confirmation. Report `docs/reports/SECURITY_CONFIG_REMEDIATION.md` | AI draft — pending Tech Lead review |

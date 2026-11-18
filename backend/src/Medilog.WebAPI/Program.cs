@@ -18,9 +18,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration, builder.Environment.ContentRootPath);
 
-// The acting user is resolved server-side from the authenticated principal
-// (decision D-11). Until Q-07 lands, the implementation also accepts the
-// X-User-Id / X-User-Role development headers when Auth:AllowHeaderIdentity is true.
+// The acting user is resolved server-side from the validated bearer principal only
+// (decision D-11). Client-supplied identity headers are never trusted.
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 

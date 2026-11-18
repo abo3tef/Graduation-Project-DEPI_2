@@ -115,4 +115,14 @@ internal static class ApiData
         "Once daily",
         "5 days",
         "Take before food");
+
+    public static VitalSigns VitalSigns(Guid id, Guid visitId) => new()
+    {
+        Id = id,
+        VisitId = visitId,
+        BloodPressure = "120/80",
+        HeartRate = 72,
+        Temperature = 36.8m,
+    };
+
 }

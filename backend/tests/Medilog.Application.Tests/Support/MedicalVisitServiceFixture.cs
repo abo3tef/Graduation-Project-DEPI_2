@@ -2,6 +2,7 @@ using AutoMapper;
 using Medilog.Application.Common;
 using Medilog.Application.Common.Abstractions;
 using Medilog.Application.Features.MedicalRecords;
+using Medilog.Application.Features.MedicalRecords.Contracts;
 using Medilog.Application.Features.MedicalRecords.Validation;
 using Medilog.Domain.Entities;
 using Medilog.Domain.Enums;
@@ -137,5 +138,16 @@ internal static class TestData
             Frequency = frequency,
             Duration = "7 days",
             Instructions = "Take after food",
+        };
+
+    public static VitalSigns VitalSigns(
+        MedicalVisit visit,
+        string? bloodPressure = "120/80",
+        int? heartRate = 72) => new()
+        {
+            VisitId = visit.Id,
+            BloodPressure = bloodPressure,
+            HeartRate = heartRate,
+            Temperature = 36.8m,
         };
 }

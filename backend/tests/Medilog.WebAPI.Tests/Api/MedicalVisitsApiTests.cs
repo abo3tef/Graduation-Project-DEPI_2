@@ -598,6 +598,34 @@ public sealed class MedicalVisitsApiTests
         Assert.Equal(HttpStatusCode.MethodNotAllowed, response.StatusCode);
     }
 
+    [Fact]
+    public async Task Get_visit_still_works_when_vital_signs_are_stored()
+    {
+        // Arrange
+        using var factory = new WebApiFactory();
+        var doctorId = Guid.NewGuid();
+        var patientId = Guid.NewGuid();
+        var visitId = Guid.NewGuid();
+        await factory.SeedAsync(db =>
+        {
+            db.Add(ApiData.Doctor(doctorId));
+            db.Add(ApiData.Patient(patientId, doctorId));
+            db.Add(ApiData.Visit(visitId, patientId, doctorId));
+            db.Add(ApiData.VitalSigns(Guid.NewGuid(), visitId));
+        });
+        using var client = factory.CreateClientFor(doctorId);
+
+        // Act
+        var response = await client.GetAsync($"{VisitsUrl}/{visitId}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var visit = await response.Content.ReadFromJsonAsync<MedicalVisitResponse>();
+        Assert.NotNull(visit);
+        Assert.Equal(visitId, visit!.Id);
+        Assert.Equal(patientId, visit.PatientId);
+    }
+
     private static async Task<JsonDocument> ReadProblemAsync(HttpResponseMessage response)
     {
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);

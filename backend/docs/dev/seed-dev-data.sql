@@ -5,16 +5,16 @@
 --
 --  * Every name, phone number and e-mail below is invented ("(DEV)" / example.test).
 --    No real person or patient data is used (AGENTS.md section 4.3).
---  * password_hash holds a placeholder, NOT a real hash: these accounts cannot log in.
---    Authentication is not implemented yet (STATE.md Q-07); the API identifies the
---    caller from the temporary X-User-Id / X-User-Role headers (Development only).
+--  * password_hash holds a placeholder, NOT a real hash: these profiles cannot log in.
+--    Identity headers are no longer accepted; use the login-ready accounts documented in
+--    SEED_ACCOUNTS.md and send the returned JWT as Authorization: Bearer <token>.
 --  * The script is idempotent: running it again changes nothing that already exists.
 --    Use the cleanup section at the bottom to remove it.
 --
 --  How to run (after applying the EF migrations to the database):
 --      mysql -u <user> -p <database> < backend/docs/dev/seed-dev-data.sql
 --
---  Identities for the API headers  (X-User-Id / X-User-Role)
+--  Clinic profile identifiers used in the scenarios below (not credentials)
 --  ---------------------------------------------------------------------------
 --  Secretary (assigned to Doctor 1, Doctor 2 and the inactive Doctor 4):
 --      aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa   Secretary

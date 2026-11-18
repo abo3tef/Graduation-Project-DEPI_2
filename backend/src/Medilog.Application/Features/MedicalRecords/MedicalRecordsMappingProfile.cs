@@ -162,5 +162,6 @@ public sealed class MedicalRecordsMappingProfile : Profile
             .ForMember(
                 destination => destination.Instructions,
                 options => options.MapFrom(source => MedicalRecordText.Normalize(source.Instructions)));
+
     }
 }

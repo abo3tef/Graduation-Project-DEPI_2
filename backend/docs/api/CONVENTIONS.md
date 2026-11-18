@@ -32,7 +32,9 @@ principal is established:
 
 Since F6-C1 the principal is a real JWT bearer token (`sub`, `role`, `doctorId`) issued by
 `/api/auth`; see [`AUTH_API.md`](AUTH_API.md). The `/api/auth/*` routes are the only anonymous ones.
-The temporary `X-User-Id` / `X-User-Role` development fallback is removed in F11-C2.
+The former `X-User-Id` / `X-User-Role` development fallback has been removed (D-42): a principal
+can only come from a validated bearer token, and every protected controller enforces roles at the
+HTTP layer as well as in the application service.
 
 ## 3. List, filtering and pagination
 

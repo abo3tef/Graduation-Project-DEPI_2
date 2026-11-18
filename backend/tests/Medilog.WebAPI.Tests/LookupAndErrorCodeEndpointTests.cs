@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using Medilog.Application.Common.Exceptions;
 using Medilog.Application.Tests.Support;
 using Medilog.Domain.Entities;
 using Medilog.Domain.Enums;
@@ -108,9 +109,9 @@ public class LookupAndErrorCodeEndpointTests
         var doctors = await client.CallAsync(HttpMethod.Get, $"{Base}/lookups/doctors", caller: null);
         var patients = await client.CallAsync(HttpMethod.Get, $"{Base}/lookups/patients?doctorId={api.Scenario.DoctorA.Id}", caller: null);
 
-        Assert.Equal(HttpStatusCode.Forbidden, doctors.StatusCode);
-        Assert.Equal(HttpStatusCode.Forbidden, patients.StatusCode);
-        Assert.Equal("identity.invalid", (await doctors.ReadJsonAsync()).GetProperty("code").GetString());
+        Assert.Equal(HttpStatusCode.Unauthorized, doctors.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, patients.StatusCode);
+        Assert.Equal(ErrorCodes.Unauthorized, (await doctors.ReadJsonAsync()).GetProperty("code").GetString());
     }
 
     [Fact]

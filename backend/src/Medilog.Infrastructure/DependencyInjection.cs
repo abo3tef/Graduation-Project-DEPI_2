@@ -2,6 +2,7 @@ using Medilog.Application.Common.Abstractions;
 using Medilog.Application.Features.Auth;
 using Medilog.Application.Interfaces;
 using Medilog.Infrastructure.Email;
+using Medilog.Infrastructure.Persistence.AccountAdmin;
 using Medilog.Infrastructure.Persistence.Appointments;
 using Medilog.Infrastructure.Persistence.Context;
 using Medilog.Infrastructure.Persistence.MedicalRecords;
@@ -52,6 +53,7 @@ public static class DependencyInjection
 
         // Appointment persistence port (Application-owned) and clinic clock.
         services.AddScoped<IAppointmentStore, AppointmentStore>();
+        services.AddScoped<IAdminAccountTransition, AdminAccountTransition>();
         services.AddScoped<IMedicalRecordStore, MedicalRecordStore>();
         services.AddScoped<IPaymentStore, PaymentStore>();
         services.TryAddSingleton(TimeProvider.System);

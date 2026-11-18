@@ -1,5 +1,6 @@
 using System.Reflection;
 using FluentValidation;
+using Medilog.Application.Features.Admin;
 using Medilog.Application.Features.Appointments;
 using Medilog.Application.Features.Auth;
 using Medilog.Application.Features.Dashboard;
@@ -51,6 +52,10 @@ public static class DependencyInjection
 
         // Patient management use cases (F8). Requires an ICurrentUser, which the WebAPI host provides.
         services.AddScoped<IPatientService, PatientService>();
+
+        // Admin account management (F11-C1). The persistence port for role-table moves is
+        // registered by AddInfrastructure.
+        services.AddScoped<IAdminService, AdminService>();
 
         return services;
     }

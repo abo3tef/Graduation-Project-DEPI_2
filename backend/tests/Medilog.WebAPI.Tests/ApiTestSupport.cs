@@ -1,14 +1,20 @@
 using System.Net.Http.Json;
+using System.Security.Claims;
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using Medilog.Application.Interfaces;
 using Medilog.Application.Tests.Support;
 using Medilog.Domain.Entities;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Medilog.WebAPI.Tests;
 
@@ -19,12 +25,10 @@ namespace Medilog.WebAPI.Tests;
 /// </summary>
 internal sealed class ApiFactory : WebApplicationFactory<Program>
 {
-    private readonly bool _headerIdentityEnabled;
     private readonly IClinicClock? _clockOverride;
 
-    public ApiFactory(bool headerIdentityEnabled = true, IClinicClock? clockOverride = null)
+    public ApiFactory(IClinicClock? clockOverride = null)
     {
-        _headerIdentityEnabled = headerIdentityEnabled;
         _clockOverride = clockOverride;
     }
 
@@ -37,7 +41,6 @@ internal sealed class ApiFactory : WebApplicationFactory<Program>
         builder.ConfigureAppConfiguration((_, configuration) =>
             configuration.AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["Auth:AllowHeaderIdentity"] = _headerIdentityEnabled ? "true" : "false",
                 ["Seed:Enabled"] = "false",
                 ["ConnectionStrings:DefaultConnection"] = "Server=unused;Database=unused;User=unused;Password=unused"
             }));
@@ -49,6 +52,65 @@ internal sealed class ApiFactory : WebApplicationFactory<Program>
             services.RemoveAll<IClinicClock>();
             services.AddSingleton<IClinicClock>(_clockOverride ?? Scenario.Clock);
         });
+
+        // Test-only authentication: these headers are meaningful only inside this host. Production
+        // CurrentUser reads claims from the validated bearer principal and never reads headers.
+        builder.ConfigureTestServices(services =>
+        {
+            services
+                .AddAuthentication(options =>
+                {
+                    options.DefaultScheme = HeaderTestAuthHandler.SchemeName;
+                    options.DefaultAuthenticateScheme = HeaderTestAuthHandler.SchemeName;
+                    options.DefaultChallengeScheme = HeaderTestAuthHandler.SchemeName;
+                })
+                .AddScheme<AuthenticationSchemeOptions, HeaderTestAuthHandler>(
+                    HeaderTestAuthHandler.SchemeName,
+                    _ => { });
+        });
+    }
+}
+
+/// <summary>
+/// Test-only identity handler used by the legacy appointment API tests. It accepts the historic
+/// <c>X-User-*</c> headers so test scenarios stay readable; no production code accepts them.
+/// </summary>
+internal sealed class HeaderTestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions>
+{
+    public const string SchemeName = "HeaderTest";
+
+    public HeaderTestAuthHandler(
+        IOptionsMonitor<AuthenticationSchemeOptions> options,
+        ILoggerFactory logger,
+        UrlEncoder encoder)
+        : base(options, logger, encoder)
+    {
+    }
+
+    protected override Task<AuthenticateResult> HandleAuthenticateAsync()
+    {
+        if (!Request.Headers.TryGetValue("X-User-Id", out var idValues) ||
+            !Guid.TryParseExact(idValues.ToString(), "D", out var userId) ||
+            userId == Guid.Empty)
+        {
+            return Task.FromResult(AuthenticateResult.NoResult());
+        }
+
+        var identity = new ClaimsIdentity(SchemeName);
+        identity.AddClaim(new Claim(ClaimTypes.NameIdentifier, userId.ToString("D")));
+        identity.AddClaim(new Claim("sub", userId.ToString("D")));
+
+        if (Request.Headers.TryGetValue("X-User-Role", out var roleValues))
+        {
+            var role = roleValues.ToString();
+            identity.AddClaim(new Claim(ClaimTypes.Role, role));
+            identity.AddClaim(new Claim("role", role));
+        }
+
+        var principal = new ClaimsPrincipal(identity);
+
+        return Task.FromResult(
+            AuthenticateResult.Success(new AuthenticationTicket(principal, SchemeName)));
     }
 }
 

@@ -3,6 +3,7 @@ using Medilog.Application.Features.Appointments;
 using Medilog.Application.Features.Appointments.Lookups;
 using Medilog.Application.Features.Appointments.Requests;
 using Medilog.Application.Features.Appointments.Responses;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Medilog.WebAPI.Controllers;
@@ -13,11 +14,12 @@ namespace Medilog.WebAPI.Controllers;
 /// live in <see cref="IAppointmentService"/> and the domain. Responses carry only
 /// administrative appointment data; no medical data is exposed here.
 /// </summary>
-// TODO (Q-07): Add [Authorize(Roles = "Doctor,Secretary")] once authentication is implemented by its owner.
+[Authorize(Roles = "Doctor,Secretary")]
 [ApiController]
 [Route("api/appointments")]
 [Produces("application/json")]
 [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
 [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
 public sealed class AppointmentsController : ControllerBase
 {

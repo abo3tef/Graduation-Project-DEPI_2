@@ -89,8 +89,10 @@ public sealed class MedilogDbContext : DbContext, IApplicationDbContext
 
     /// <summary>
     /// Applies the approved audit behavior without a second audit mechanism:
-    /// creation timestamps are assigned on insert and protected afterwards,
-    /// and update timestamps are assigned on every update.
+    /// creation timestamps are assigned on insert when the caller did not supply one,
+    /// protected afterwards, and update timestamps are assigned on every update.
+    /// An explicit value is preserved so a role-table move can carry the original creation
+    /// instant to the new account table.
     /// </summary>
     private void ApplyAuditRules()
     {
@@ -101,7 +103,11 @@ public sealed class MedilogDbContext : DbContext, IApplicationDbContext
             switch (entry.State)
             {
                 case EntityState.Added:
-                    entry.Entity.CreatedAtUtc = utcNow;
+                    if (entry.Entity.CreatedAtUtc == default)
+                    {
+                        entry.Entity.CreatedAtUtc = utcNow;
+                    }
+
                     break;
                 case EntityState.Modified:
                     entry.Property(nameof(CreatedEntity.CreatedAtUtc)).IsModified = false;

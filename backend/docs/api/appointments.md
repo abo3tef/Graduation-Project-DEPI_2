@@ -9,30 +9,32 @@
 
 Base path: `/api/appointments`
 
-## 1. Temporary identity (read this first)
+## 1. Authentication (F6 / current)
 
-Authentication is **not implemented** (STATE.md Q-07, deferred by the Tech Lead). Until the real
-authentication lands, the acting user is read from two request headers:
+Every appointment route requires a Bearer JWT issued by `POST /api/auth/login` (or the Google
+sign-in endpoint). The controller is `[Authorize(Roles = "Doctor,Secretary")]`; the application
+service re-checks the authenticated identity, account state and doctor/secretary scope.
 
-| Header | Value |
+```http
+Authorization: Bearer <accessToken>
+```
+
+| Case | Status |
 |---|---|
-| `X-User-Id` | The user's GUID in hyphenated form (`xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`), not the empty GUID |
-| `X-User-Role` | Exactly `Doctor` or `Secretary` (case-sensitive; numbers or other names are rejected) |
+| No token / invalid token | `401` with the shared error envelope |
+| Admin role or other non-allowed role | `403` |
+| Unknown, inactive or out-of-scope caller | `403` / `404` from the application service |
 
-Local test identities (synthetic doctors, a secretary with assignments, patients and appointments) are created by
-`backend/docs/dev/seed-dev-data.sql`.
+Client-supplied identity headers (`X-User-Id`, `X-User-Role`) are **not** trusted: production reads
+identity only from validated token claims. Local test identities (synthetic doctors, a secretary
+with assignments, patients and appointments) can be created with
+`backend/docs/dev/seed-dev-data.sql`; sign in through `/api/auth/login` to obtain a token.
 
-Rules:
-- The headers are honored **only when `Auth:AllowHeaderIdentity` is `true`** (set in
-  `appsettings.Development.json`; `false` in `appsettings.json`). With the flag off every request is `403`.
-- Missing or invalid headers, an unknown user, or an inactive account → `403`.
-- Anyone who can reach the API can forge these headers. **This is for development and testing only** and must
-  never be exposed beyond a developer machine. `HeaderCurrentUser`, the flag and this section are removed when
-  authentication is implemented; the controller then gets `[Authorize(Roles = "Doctor,Secretary")]`
-  (`// TODO (Q-07)` in `AppointmentsController`).
-- The creator of an appointment is always the identified user; `createdBy`, `status` and `id` in a request body are ignored.
+The creator of an appointment is always the identified user; `createdBy`, `status` and `id` in a
+request body are ignored.
 
-CORS: the `Frontend` policy (default origin `http://localhost:3000`) allows any header, so the two headers above can be sent from the browser.
+CORS: the `Frontend` policy (default origin `http://localhost:3000`) allows the `Authorization`
+header.
 
 ## 2. Who can do what
 
