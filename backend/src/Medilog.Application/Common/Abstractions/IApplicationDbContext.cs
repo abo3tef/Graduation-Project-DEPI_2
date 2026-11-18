@@ -13,6 +13,8 @@ namespace Medilog.Application.Common.Abstractions;
 /// </remarks>
 public interface IApplicationDbContext
 {
+    DbSet<VitalSigns> VitalSigns { get; }
+
     DbSet<MedicalVisit> MedicalVisits { get; }
 
     DbSet<Diagnosis> Diagnoses { get; }

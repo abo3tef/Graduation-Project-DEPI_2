@@ -25,6 +25,18 @@ export type MedicationResponse = {
   instructions: string | null;
 };
 
+export type SaveVitalSignsRequest = {
+  bloodPressure: string | null;
+  heartRate: number | null;
+  temperature: number | null;
+  respiratoryRate: number | null;
+  weight: number | null;
+  height: number | null;
+  spO2: number | null;
+};
+
+export type VitalSignsResponse = SaveVitalSignsRequest & {id: string};
+
 export type MedicalVisitResponse = {
   id: string;
   patientId: string;
@@ -36,6 +48,7 @@ export type MedicalVisitResponse = {
   clinicalNotes: string | null;
   diagnoses: DiagnosisResponse[];
   medications: MedicationResponse[];
+  vitalSigns: VitalSignsResponse[];
 };
 
 export type CreateMedicalVisitRequest = {

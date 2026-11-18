@@ -19,6 +19,7 @@ public static class DependencyInjection
     {
         // Use cases (decision D-08): plain application services, no MediatR.
         services.AddScoped<IMedicalVisitService, MedicalVisitService>();
+        services.AddScoped<IVitalSignsService, VitalSignsService>();
 
         // FluentValidation (AGENTS.md §3.2): every validator in this assembly is
         // registered centrally, close to the use case it validates.

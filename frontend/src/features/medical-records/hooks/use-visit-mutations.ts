@@ -6,6 +6,30 @@ import {notify} from '@/lib/utils/toast';
 import {createMedicalVisit, updateMedicalVisit} from '../api';
 import {medicalRecordKeys} from '../keys';
 import type {CreateMedicalVisitRequest, UpdateMedicalVisitRequest} from '../types';
+import {ApiError} from '@/lib/api';
+import {readMedicalToken} from '../use-medical-credentials';
+import {readCredentialScope} from '../credential-scope';
+
+const pendingScopes = new WeakMap<object, number>();
+
+function captureScope(variables: object): number {
+  if (!readMedicalToken()) {
+    throw new ApiError({kind: 'unauthorized', status: 401});
+  }
+  const scope = readCredentialScope();
+  pendingScopes.set(variables, scope);
+  return scope;
+}
+
+function isCurrentScope(scope: number | undefined): boolean {
+  return Boolean(readMedicalToken()) && scope !== undefined && scope === readCredentialScope();
+}
+
+function requireCapturedScope(variables: object): void {
+  if (!isCurrentScope(pendingScopes.get(variables))) {
+    throw new ApiError({kind: 'unauthorized', status: 401});
+  }
+}
 
 type CreateVariables = {
   payload: CreateMedicalVisitRequest;
@@ -24,12 +48,19 @@ export function useCreateVisitMutation() {
   const t = useTranslations('MedicalRecords.notifications');
 
   return useMutation({
-    mutationFn: ({payload}: CreateVariables) => createMedicalVisit(payload),
-    onSuccess: (visit) => {
-      queryClient.setQueryData(medicalRecordKeys.visit(visit.id), visit);
+    onMutate: captureScope,
+    mutationFn: (variables: CreateVariables) => {
+      requireCapturedScope(variables);
+      return createMedicalVisit(variables.payload);
+    },
+    onSuccess: (visit, _variables, scope) => {
+      if (scope === undefined || !isCurrentScope(scope)) return;
+      queryClient.setQueryData(medicalRecordKeys.visitDetail(visit.id, scope), visit);
+
       notify.success(t('created'));
     },
-    onError: () => {
+    onError: (_error, _variables, scope) => {
+      if (scope === undefined || !isCurrentScope(scope)) return;
       notify.error(t('saveFailed'));
     }
   });
@@ -40,12 +71,19 @@ export function useUpdateVisitMutation(visitId: string) {
   const t = useTranslations('MedicalRecords.notifications');
 
   return useMutation({
-    mutationFn: ({payload}: UpdateVariables) => updateMedicalVisit(visitId, payload),
-    onSuccess: (visit) => {
-      queryClient.setQueryData(medicalRecordKeys.visit(visit.id), visit);
+    onMutate: captureScope,
+    mutationFn: (variables: UpdateVariables) => {
+      requireCapturedScope(variables);
+      return updateMedicalVisit(visitId, variables.payload);
+    },
+    onSuccess: (visit, _variables, scope) => {
+      if (scope === undefined || !isCurrentScope(scope)) return;
+      queryClient.setQueryData(medicalRecordKeys.visitDetail(visit.id, scope), visit);
+
       notify.success(t('updated'));
     },
-    onError: () => {
+    onError: (_error, _variables, scope) => {
+      if (!isCurrentScope(scope)) return;
       notify.error(t('saveFailed'));
     }
   });

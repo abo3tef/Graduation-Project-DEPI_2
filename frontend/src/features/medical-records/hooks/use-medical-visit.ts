@@ -5,6 +5,8 @@ import {ApiError} from '@/lib/api';
 import {getMedicalVisit} from '../api';
 import {medicalRecordKeys} from '../keys';
 import {isGuid} from '../validation';
+import {useMedicalCredentials} from '../use-medical-credentials';
+import {readCredentialScope} from '../credential-scope';
 
 const NON_RETRYABLE_KINDS: readonly string[] = [
   'unauthorized',
@@ -19,10 +21,18 @@ const NON_RETRYABLE_KINDS: readonly string[] = [
  * so a malformed URL never reaches the API.
  */
 export function useMedicalVisit(visitId: string) {
+  const identity = useMedicalCredentials();
   return useQuery({
-    queryKey: medicalRecordKeys.visit(visitId),
-    queryFn: ({signal}) => getMedicalVisit(visitId, signal),
-    enabled: isGuid(visitId),
+    queryKey: medicalRecordKeys.visitDetail(visitId, identity.credentialScope),
+    queryFn: ({signal}) => {
+      if (!identity.isReady || !identity.token || identity.credentialScope !== readCredentialScope()) {
+        throw new ApiError({kind: 'unauthorized', status: 401});
+      }
+      return getMedicalVisit(visitId, signal);
+    },
+    enabled: identity.isReady && Boolean(identity.token) && isGuid(visitId),
+    placeholderData: undefined,
+    gcTime: 0,
     retry: (failureCount, error) => {
       if (error instanceof ApiError && NON_RETRYABLE_KINDS.includes(error.kind)) {
         return false;
