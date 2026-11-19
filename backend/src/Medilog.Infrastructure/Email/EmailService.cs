@@ -17,9 +17,12 @@ namespace Medilog.Infrastructure.Email;
 /// development sink, so no mail package is added (D-41).
 /// </para>
 /// <para>
-/// The message body may contain a one-time link, so it is never logged: the log records only the
-/// sink file name, and SMTP failures are rethrown with a generic <c>503 auth.not_configured</c>
-/// style failure instead of the SMTP detail.
+/// With SMTP enabled the message body is never logged, and SMTP failures are rethrown with a
+/// generic <c>503 auth.not_configured</c> style failure instead of the SMTP detail. The development
+/// sink is only reachable in the Development environment (the host refuses a disabled email service
+/// elsewhere), so it intentionally writes the full message - including the one-time verification or
+/// reset link - to the console as well as to the <c>.eml</c> file. That makes the flow testable
+/// without SMTP credentials; no token ever reaches a log outside Development.
 /// </para>
 /// </remarks>
 public sealed class EmailService : IEmailService
@@ -103,10 +106,15 @@ public sealed class EmailService : IEmailService
 
         await File.WriteAllTextAsync(path, content, Encoding.UTF8, cancellationToken);
 
-        // No recipient, subject or body in the log: they are personal data and contain the token.
+        // Development only: show the real link so the registration -> verification flow can be
+        // exercised without an SMTP server. Program.cs refuses this sink outside Development.
         _logger.LogInformation(
-            "SMTP is disabled, so a development email was written to {File}.",
-            fileName);
+            "SMTP is disabled, so a development email was written to {File}.\n" +
+            "To: {Recipient}\nSubject: {Subject}\n{Body}",
+            fileName,
+            message.To,
+            message.Subject,
+            message.Body);
     }
 
     private string BuildMimeMessage(EmailMessage message) =>

@@ -5,7 +5,7 @@ import {useTranslations} from 'next-intl';
 import {Link} from '@/i18n/navigation';
 import {isApiError} from '@/lib/api';
 import {authErrorMessageKey, authFieldErrors} from '../errors/authErrorMessageKey';
-import {useRegister} from '../hooks/useAuthMutations';
+import {useRegister, useResendVerification} from '../hooks/useAuthMutations';
 import {
   REGISTER_FIELDS,
   hasErrors,
@@ -19,7 +19,12 @@ import {AuthCard, FormAlert, SubmitButton} from './AuthCard';
 import {AuthField} from './AuthField';
 import {GoogleSignInButton} from './GoogleSignInButton';
 import {PasswordField} from './PasswordField';
-import {fieldErrorClassName, hintClassName, linkClassName} from './auth-styles';
+import {
+  fieldErrorClassName,
+  hintClassName,
+  linkClassName,
+  secondaryButtonClassName
+} from './auth-styles';
 
 const EMPTY_FORM: RegisterFormValues = {
   fullName: '',
@@ -41,13 +46,25 @@ export function RegisterForm() {
   const common = useTranslations('Auth.common');
   const errorMessages = useTranslations('Auth.errors');
   const registration = useRegister();
+  const resend = useResendVerification();
   const [values, setValues] = useState<RegisterFormValues>(EMPTY_FORM);
   const [errors, setErrors] = useState<AuthFieldErrors<RegisterField>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [created, setCreated] = useState<AccountSummary | null>(null);
+  const [resent, setResent] = useState(false);
+  const [resendError, setResendError] = useState<string | null>(null);
 
   function update<K extends keyof RegisterFormValues>(key: K, value: RegisterFormValues[K]): void {
     setValues((current) => ({...current, [key]: value}));
+  }
+
+  function onResend(email: string): void {
+    setResent(false);
+    setResendError(null);
+    resend.mutate(email, {
+      onSuccess: () => setResent(true),
+      onError: (failure) => setResendError(errorMessages(authErrorMessageKey(failure)))
+    });
   }
 
   if (created) {
@@ -61,6 +78,18 @@ export function RegisterForm() {
         }
       >
         <FormAlert tone="success">{t('register.checkEmail', {email: created.email})}</FormAlert>
+        <div className="grid gap-2">
+          <button
+            type="button"
+            disabled={resend.isPending}
+            onClick={() => onResend(created.email)}
+            className={`${secondaryButtonClassName} w-full`}
+          >
+            {resend.isPending ? common('submitting') : t('verify.resend')}
+          </button>
+          {resent ? <FormAlert tone="success">{t('verify.resent')}</FormAlert> : null}
+          {resendError ? <FormAlert>{resendError}</FormAlert> : null}
+        </div>
       </AuthCard>
     );
   }

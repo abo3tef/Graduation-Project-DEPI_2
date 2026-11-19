@@ -1,8 +1,8 @@
 import type {SessionUserRole} from '../session/session-store';
 
 /**
- * Where each role belongs after signing in (F6-C2). Admins have no management screens until F11
- * (D-C2-1), so they land on the public home page with a signed-in notice.
+ * Where each role belongs after signing in. Admin account management is part of F11-C2, so an
+ * Admin now lands on the administration workspace instead of the public home page.
  */
 export function landingPathFor(role: SessionUserRole | null): string {
   switch (role) {
@@ -10,6 +10,8 @@ export function landingPathFor(role: SessionUserRole | null): string {
       return '/dashboard';
     case 'Secretary':
       return '/appointments';
+    case 'Admin':
+      return '/admin';
     default:
       return '/';
   }
@@ -20,9 +22,9 @@ export function landingPathFor(role: SessionUserRole | null): string {
  * (AGENTS.md §5). Keeping it here means the login redirect and the route guard cannot disagree.
  */
 const ALLOWED_PREFIXES: Readonly<Record<SessionUserRole, readonly string[]>> = {
-  Doctor: ['/dashboard', '/appointments', '/medical-records'],
-  Secretary: ['/appointments'],
-  Admin: []
+  Doctor: ['/dashboard', '/appointments', '/patients', '/payments', '/medical-records'],
+  Secretary: ['/appointments', '/patients', '/payments'],
+  Admin: ['/admin']
 };
 
 export function isPathAllowedForRole(role: SessionUserRole, path: string): boolean {

@@ -36,6 +36,20 @@ export function DoctorDashboardScreen() {
             <span className="hidden sm:inline-block text-xs font-bold text-muted">
               {t('title')}
             </span>
+            <nav aria-label={nav('appointments')} className="hidden items-center gap-1 lg:flex">
+              <Link href="/appointments" className="rounded-full px-3 py-2 text-xs font-bold text-muted transition-colors hover:text-foreground">
+                {nav('appointments')}
+              </Link>
+              <Link href="/patients" className="rounded-full px-3 py-2 text-xs font-bold text-muted transition-colors hover:text-foreground">
+                {nav('patients')}
+              </Link>
+              <Link href="/payments" className="rounded-full px-3 py-2 text-xs font-bold text-muted transition-colors hover:text-foreground">
+                {nav('payments')}
+              </Link>
+              <Link href="/medical-records" className="rounded-full px-3 py-2 text-xs font-bold text-muted transition-colors hover:text-foreground">
+                {nav('medicalRecords')}
+              </Link>
+            </nav>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">

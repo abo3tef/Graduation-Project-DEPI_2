@@ -59,6 +59,10 @@ public sealed class AuthRegistrationApiTests
         var message = Assert.Single(email.Messages);
         Assert.Equal("new.doctor@medilog.test", message.To);
         Assert.Contains("verify-email?token=", message.Body, StringComparison.Ordinal);
+        Assert.Contains(
+            "email=new.doctor%40medilog.test",
+            message.Body,
+            StringComparison.Ordinal);
         Assert.DoesNotContain(Password, message.Body, StringComparison.Ordinal);
     }
 

@@ -45,7 +45,16 @@ internal static class AuthEmailReader
             .Split('\n', StringSplitOptions.TrimEntries)
             .First(line => line.StartsWith("http", StringComparison.Ordinal));
 
-        return Uri.UnescapeDataString(
-            new Uri(link).Query.Replace("?token=", string.Empty, StringComparison.Ordinal));
+        // The verification link may also carry &email= for the resend form; only token authorizes.
+        foreach (var part in new Uri(link).Query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var pair = part.Split('=', 2);
+            if (pair[0] == "token")
+            {
+                return Uri.UnescapeDataString(pair[1]);
+            }
+        }
+
+        throw new InvalidOperationException("The emailed link does not contain a token.");
     }
 }

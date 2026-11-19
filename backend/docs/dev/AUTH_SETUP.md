@@ -21,6 +21,12 @@ Infrastructure reads the configuration value first and falls back to `MEDILOG_CO
 Never place a working remote credential in a tracked appsettings file, and rotate any credential
 that was previously exposed before sharing the repository.
 
+Startup applies the checked-in migrations through `DatabaseInitializer` before seeding. Set
+`Database:ApplyMigrationsOnStartup=false` in user-secrets to manage the schema yourself with
+`dotnet ef database update`. A local **MariaDB** server is supported automatically by
+`MariaDbCompatibilityInterceptor` (it adapts `GET_LOCK` and the collation only when the server
+reports MariaDB); MySQL 8 is unaffected.
+
 ## 1. JWT signing key (required for sign-in)
 
 Sign-in issues an HS256 token, so `Jwt:SigningKey` must be at least 32 bytes. Store it in
@@ -133,6 +139,9 @@ the environment is `Development`.
 | Symptom | Cause / fix |
 |---|---|
 | Host throws "No MySQL connection string is configured" | Set `ConnectionStrings:DefaultConnection` in user-secrets or `MEDILOG_CONNECTION_STRING` |
+| `InvalidCastException: DBNull to Int64` in `AcquireDatabaseLockAsync` | MariaDB server: the compatibility interceptor rewrites `GET_LOCK` and normalizes the scalar; confirm it is registered in `AddInfrastructure` |
+| `Unknown collation: 'utf8mb4_0900_ai_ci'` | MySQL 8-only collation on MariaDB: the same interceptor substitutes `utf8mb4_unicode_ci` |
+| "Database initialization failed" at startup | Server unreachable or credentials wrong; check the logged inner exception and the connection string in user-secrets |
 | `503 auth.not_configured` on login | `Jwt:SigningKey` missing or shorter than 32 bytes |
 | `503 auth.google_not_configured` | `Firebase:ProjectId` missing, or Google certificates unreachable |
 | `403 auth.email_unverified` after registering | Open the `.eml` link (or call `/verify-email`) before signing in |

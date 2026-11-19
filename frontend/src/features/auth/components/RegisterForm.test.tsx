@@ -153,6 +153,36 @@ describe('RegisterForm', () => {
     });
   });
 
+  it('offers a resend action on the check-email screen', async () => {
+    const user = userEvent.setup();
+    let requestCount = 0;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        requestCount += 1;
+        return new Response(requestCount === 1 ? JSON.stringify(ACCOUNT) : null, {
+          status: requestCount === 1 ? 201 : 204,
+          headers: {'content-type': 'application/json'}
+        });
+      })
+    );
+    renderWithIntl(<RegisterForm />);
+
+    await fillValidForm(user);
+    await user.click(submit());
+    const heading = await screen.findByRole('heading', {name: 'Check your inbox'});
+    expect(heading).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', {name: 'Send a new link'}));
+
+    expect(
+      await screen.findByText('If the address has a pending account, a new link is on its way.')
+    ).toBeInTheDocument();
+    const resent = (fetch as unknown as {mock: {calls: [string, RequestInit][]}}).mock.calls[1];
+    expect(resent[0]).toBe('http://api.test/api/auth/resend-verification');
+    expect(JSON.parse(String(resent[1].body))).toEqual({email: 'new.doctor@example.test'});
+  });
+
   it('never sends a specialization for a secretary', async () => {
     const user = userEvent.setup();
     reply({...ACCOUNT, role: 'Secretary', doctorId: null});

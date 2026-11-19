@@ -176,6 +176,18 @@ describe('auth api', () => {
     expect(calls[0]).toEqual({method: 'POST', path: `/api/auth/${path}`, body: expected});
   });
 
+  it('sends the link email with a verification request when the link supplies it', async () => {
+    install(undefined, 204);
+
+    await expect(verifyEmail({token: ' t ', email: ' a@b.test '})).resolves.toBeUndefined();
+
+    expect(calls[0]).toEqual({
+      method: 'POST',
+      path: '/api/auth/verify-email',
+      body: {token: 't', email: 'a@b.test'}
+    });
+  });
+
   it('throws the shared ApiError with the stable code so screens can translate it', async () => {
     problem(403, 'auth.email_unverified');
 

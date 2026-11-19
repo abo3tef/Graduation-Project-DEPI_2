@@ -61,6 +61,9 @@ public sealed class WebApiFactory : WebApplicationFactory<Program>
                 ["Jwt:SigningKey"] = TestSigningKey,
                 ["Jwt:AccessTokenMinutes"] = "1440",
                 ["Seed:Enabled"] = "false",
+
+                // The test host uses an in-memory database; there is no schema to migrate.
+                ["Database:ApplyMigrationsOnStartup"] = "false",
             }));
 
         builder.ConfigureTestServices(services =>

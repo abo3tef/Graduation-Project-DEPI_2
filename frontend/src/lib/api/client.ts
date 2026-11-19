@@ -7,7 +7,7 @@ import {
 import {notifyUnauthorized} from './unauthorized-handler';
 import {buildQueryString, type QueryValue} from './query-string';
 
-export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
 export type ApiRequestOptions = {
   method?: HttpMethod;
@@ -17,15 +17,17 @@ export type ApiRequestOptions = {
 };
 
 /**
- * Base URL of the API. Read from `NEXT_PUBLIC_API_BASE_URL` (see `.env.example`)
- * with a literal property access so Next.js can inline it at build time.
+ * Base URL of the API. `NEXT_PUBLIC_API_URL` is the documented variable; the older
+ * `NEXT_PUBLIC_API_BASE_URL` name remains as a fallback for existing local environments.
+ * Both use literal property access so Next.js can inline them at build time.
  */
 export function getApiBaseUrl(): string {
-  const value = process.env.NEXT_PUBLIC_API_BASE_URL;
+  const value = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
 
   if (!value || value.trim() === '') {
     throw new Error(
-      'NEXT_PUBLIC_API_BASE_URL is not set. Copy frontend/.env.example to .env.local.'
+      'NEXT_PUBLIC_API_URL (or NEXT_PUBLIC_API_BASE_URL) is not set. ' +
+        'Copy frontend/.env.example to .env.local.'
     );
   }
 
@@ -53,7 +55,7 @@ function isAbortError(error: unknown, signal?: AbortSignal): boolean {
  * The only function that talks to the API. It:
  * - builds the URL and query string,
  * - sends JSON,
- * - asks the registered auth-headers providers for the caller's identity on every call,
+ * - asks the registered bearer-token provider for the current credential on every call,
  * - turns error responses into `ApiError` (never leaking raw bodies to screens),
  * - turns connection failures into `ApiError` with status `0`.
  * Aborted requests are rethrown unchanged so React Query can handle them.

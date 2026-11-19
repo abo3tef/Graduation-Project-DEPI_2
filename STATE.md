@@ -4,7 +4,7 @@
 > Records *status, decisions, blockers, next steps*. It does **not** define rules (`AGENTS.md` does) and must **not** change approved scope, ownership, or acceptance criteria.
 > **Updated by:** the contributor at the end of each Cycle, through a PR reviewed by the Tech Lead. The AI only proposes the update (`ElwakeelBuild` → `done`).
 
-- **Last updated:** 2026-11-18
+- **Last updated:** 2026-11-18 (bounded closure verification)
 - **Final delivery:** 2026-11-15 (night)
 - **Tech Lead:** Abdullah
 - **Integration branch:** `main`
@@ -16,7 +16,7 @@
 
 Every AI session starts with, in this order:
 1. `AGENTS.md`
-2. `docs/PROJECT_OVERVIEW.md` — ⚠ still missing
+2. `docs/PROJECT_OVERVIEW.md`
 3. `STATE.md`
 4. `.ai/skills/ElwakeelManage.md` (planning) **or** `.ai/skills/ElwakeelBuild.md` (implementing)
 5. The Cycle file `docs/tasks/<Feature>/<CycleId>.md` and only the code it touches
@@ -160,9 +160,9 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 | Date | Blocker | Blocking | Owner |
 |------|---------|----------|-------|
 | 2026-11-14 | Firebase project + SMTP account/secrets not confirmed | F6 live demo only (no longer F6-C1: the automated checks use a fake Firebase validator and the `.eml` sink) | Shalaby / Tech Lead |
-| 2026-11-14 | `docs/PROJECT_OVERVIEW.md` missing | Session Start Kit | Tech Lead |
 | 2026-11-14 | Phase 1 decisions not written down (§8) | F10, F11 | Tech Lead |
 | 2026-11-15 | No reachable MySQL instance while building F6-C1 | Applies/verifies the auth migration against a real database | Shalaby / Tech Lead |
+| 2026-11-18 | Full frontend Vitest result not conclusively observed in this execution environment: default worker startup stalled, while bounded one- and four-worker runs executed tests but ended before a final summary. The changed API-client file passed 27/27. | Final frontend test-gate confirmation only; lint, typecheck, production build, and backend gate are verified | Tech Lead / environment owner |
 
 ## 10. Execution Reports
 
@@ -205,3 +205,4 @@ Status: `Draft` · `Approved` · `In progress` · `In review` · `Done` · `Bloc
 | 2026-11-17 | Q-19 recorded as approved with the seven Class Spec fields, at-least-one rule and exact ranges; F9-C1 vital-signs backend implemented locally (POST/GET/PUT under `/api/medical-visits/{visitId}/vital-signs`, owner-scoped, append semantics, no delete); API contract updated in `backend/docs/api/MEDICAL_RECORDS_API.md`; execution report `docs/reports/F9-C1.md` added; review completed with full raw test suite green (741/741), status `In review`; R-02 (T4) deferred to the dedicated GET route; R-01 Q-04 pagination remediation approved, implemented and verified (747/747) at `docs/tasks/F9/F9-C1-R01.md`; propose `Done`, pending owner sign-off | AI draft — pending Anton/Tech Lead decision |
 | 2026-11-18 | F11-C1 admin backend implemented locally on `main` (no branch, commit or push): five Admin-only endpoints, Q-16 assignment replacement with unique pairs and patient/appointment scope effect, Q-22 Doctor↔Secretary table move with self/last-Admin protection, no-conflict checks and identity/timestamp/token continuity; API contract `backend/docs/api/ADMIN_API.md`, execution report `docs/reports/F11-C1.md`; build 0 errors, 770/770 tests, no pending EF changes; status `In review` | AI draft — pending Abdullah/Tech Lead review |
 | 2026-11-18 | Bounded security/config remediation implemented on `main` after explicit plan approval (`docs/reports/SECURITY_CONFIG_REMEDIATION_PLAN.md`): tracked configs reduced to empty credential placeholders, dev seed password moved to user-secrets guidance, header-identity fallback removed (D-42), appointment controller role-protected at HTTP layer, single MySQL provider kept (D-44), `AddPayments.Designer.cs` target model synced with the snapshot; docs updated; build 0 errors/0 warnings, 772/772 tests, no pending EF changes; credential rotation still requires owner confirmation. Report `docs/reports/SECURITY_CONFIG_REMEDIATION.md` | AI draft — pending Tech Lead review |
+| 2026-11-18 | Bounded closure execution: added `docs/PROJECT_OVERVIEW.md`, configuration guidance and `backend/.env.example`, and `backend/docs/api/API_CATALOG.md`; removed all frontend `X-User-*`/development-identity references and retained central bearer-token attachment. Backend restore/build passed with 0 warnings/0 errors and 788/788 tests. Frontend lint, typecheck, production build and changed API-client tests (27/27) passed. Do **not** mark the full frontend suite green yet: its final result was not observed in this environment (see §9 blocker). | AI execution — closure documentation/status only, not a feature-cycle status change |

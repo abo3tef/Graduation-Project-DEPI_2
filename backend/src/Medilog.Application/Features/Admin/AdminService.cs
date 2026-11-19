@@ -62,19 +62,7 @@ public sealed class AdminService : IAdminService
                 ? parsedStatus
                 : null;
 
-        var users = AllUsers();
-
-        if (role.HasValue)
-        {
-            users = users.Where(user => user.Role == role.Value);
-        }
-
-        if (status.HasValue)
-        {
-            users = users.Where(user => user.Status == status.Value);
-        }
-
-        users = Filter(users, query.Search);
+        var users = BuildListQuery(role, status, query.Search);
         var totalCount = await users.CountAsync(cancellationToken);
 
         // A long skip avoids int overflow for an absurd page number; a page past the end is empty.
@@ -85,16 +73,13 @@ public sealed class AdminService : IAdminService
             return new PagedResult<AdminUserResponse>([], query.PageNumber, query.PageSize, totalCount);
         }
 
-        // Email is not unique across the three identity tables, so the id is the stable tie-breaker.
         var page = await users
-            .OrderBy(user => user.Email)
-            .ThenBy(user => user.Id)
             .Skip((int)skip)
             .Take(query.PageSize)
             .ToListAsync(cancellationToken);
 
         return new PagedResult<AdminUserResponse>(
-            page.Select(ToResponse).ToList(),
+            page.Select(row => ToResponse(ToRecord(row))).ToList(),
             query.PageNumber,
             query.PageSize,
             totalCount);
@@ -297,14 +282,41 @@ public sealed class AdminService : IAdminService
         return userId;
     }
 
+    /// <summary>
+    /// The filtered, deterministically ordered query used by the paged list endpoint. Kept separate
+    /// from the async call so its translation can be asserted against a relational provider.
+    /// </summary>
+    internal IQueryable<AdminUserRow> BuildListQuery(
+        UserRole? role,
+        AccountStatus? status,
+        string? search)
+    {
+        var users = AllUsers();
+
+        if (role.HasValue)
+        {
+            users = users.Where(user => user.Role == role.Value);
+        }
+
+        if (status.HasValue)
+        {
+            users = users.Where(user => user.Status == status.Value);
+        }
+
+        // Email is not unique across the three identity tables, so the id is the stable tie-breaker.
+        return Filter(users, search)
+            .OrderBy(user => user.Email)
+            .ThenBy(user => user.Id);
+    }
+
     /// <summary>One role-neutral, credential-free query over the three identity tables.</summary>
     /// <remarks>
-    /// The set operation must run on a simple server-side projection: projecting directly to
-    /// <see cref="AdminUserRecord"/> before <c>Union</c> makes EF Core treat the projection as a
-    /// client operation, which neither the InMemory nor the relational provider can compose.
-    /// The final DTO mapping is applied only after the union.
+    /// The three branches stay anonymous so the <c>UNION</c> is a plain server-side set operation.
+    /// Only after the union do we project to <see cref="AdminUserRow"/>, whose member-initializer
+    /// projection stays composable for the filters and deterministic ordering applied by callers.
+    /// Mapping to <see cref="AdminUserRecord"/> happens in memory after paging.
     /// </remarks>
-    private IQueryable<AdminUserRecord> AllUsers()
+    internal IQueryable<AdminUserRow> AllUsers()
     {
         var admins = _dbContext.Admins.AsNoTracking().Select(admin => new
         {
@@ -345,22 +357,27 @@ public sealed class AdminService : IAdminService
             secretary.CreatedAtUtc,
         });
 
-        return admins.Union(doctors).Union(secretaries).Select(user => new AdminUserRecord(
-            user.Id,
-            user.Role,
-            user.FullName,
-            user.Email,
-            user.Phone,
-            user.Specialization,
-            user.Status,
-            user.EmailVerified,
-            user.CreatedAtUtc));
+        return admins.Union(doctors).Union(secretaries).Select(user => new AdminUserRow
+        {
+            Id = user.Id,
+            Role = user.Role,
+            FullName = user.FullName,
+            Email = user.Email,
+            Phone = user.Phone,
+            Specialization = user.Specialization,
+            Status = user.Status,
+            EmailVerified = user.EmailVerified,
+            CreatedAtUtc = user.CreatedAtUtc,
+        });
     }
 
-    private async Task<AdminUserRecord?> FindUserAsync(Guid id, CancellationToken cancellationToken) =>
-        await AllUsers().FirstOrDefaultAsync(user => user.Id == id, cancellationToken);
+    private async Task<AdminUserRecord?> FindUserAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var row = await AllUsers().FirstOrDefaultAsync(user => user.Id == id, cancellationToken);
+        return row is null ? null : ToRecord(row);
+    }
 
-    private static IQueryable<AdminUserRecord> Filter(IQueryable<AdminUserRecord> users, string? search)
+    private static IQueryable<AdminUserRow> Filter(IQueryable<AdminUserRow> users, string? search)
     {
         var term = search?.Trim();
 
@@ -488,6 +505,17 @@ public sealed class AdminService : IAdminService
 
     private AdminUserResponse ToResponse(AdminUserRecord record) =>
         _mapper.Map<AdminUserResponse>(record);
+
+    private static AdminUserRecord ToRecord(AdminUserRow row) => new(
+        row.Id,
+        row.Role,
+        row.FullName,
+        row.Email,
+        row.Phone,
+        row.Specialization,
+        row.Status,
+        row.EmailVerified,
+        row.CreatedAtUtc);
 
     private static AdminUserRecord ToRecord(Medilog.Domain.Entities.Admin entity) => new(
         entity.Id, UserRole.Admin, entity.FullName, entity.Email, null, null,

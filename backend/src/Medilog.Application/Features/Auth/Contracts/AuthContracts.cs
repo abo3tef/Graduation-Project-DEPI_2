@@ -31,7 +31,12 @@ public sealed record RegisterRequest(
 /// <summary>
 /// Confirms the email address of a newly registered account with the token from the email link.
 /// </summary>
-public sealed record VerifyEmailRequest(string Token);
+/// <remarks>
+/// <see cref="Email"/> is optional and carried in the emailed link only to prefill the resend form
+/// when verification fails. The single-use token alone authorizes the change (AGENTS.md §5), so a
+/// mismatched address cannot reveal or change another account. Token-only clients stay compatible.
+/// </remarks>
+public sealed record VerifyEmailRequest(string Token, string? Email = null);
 
 /// <summary>
 /// Requests another verification email. The response is the same whether or not the account

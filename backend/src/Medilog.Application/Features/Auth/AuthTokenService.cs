@@ -55,7 +55,7 @@ public sealed class AuthTokenService
         CancellationToken cancellationToken)
     {
         var rawToken = await StoreTokenAsync(userId, userType, AuthTokenPurpose.EmailVerification, cancellationToken);
-        var link = _linkBuilder.BuildEmailVerificationLink(rawToken);
+        var link = _linkBuilder.BuildEmailVerificationLink(rawToken, email);
         var body = AuthEmailTemplates.VerificationBody(
             fullName,
             link,

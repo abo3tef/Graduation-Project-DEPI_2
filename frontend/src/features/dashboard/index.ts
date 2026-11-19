@@ -7,4 +7,3 @@ export * from './components/DashboardStatCards';
 export * from './components/TodayAppointmentsTable';
 export * from './components/AppointmentStatusBadge';
 export * from './components/DoctorDashboardScreen';
-export {DashboardPage} from './components/DashboardPage';

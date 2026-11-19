@@ -12,6 +12,8 @@ import {linkClassName} from './auth-styles';
 type VerifyEmailScreenProps = {
   /** The single-use token from the emailed link (`?token=`), absent when the link is broken. */
   token?: string | null;
+  /** Address from the same link (`?email=`), used only to prefill the resend form. */
+  email?: string | null;
 };
 
 type VerifyStatus = 'missing' | 'verifying' | 'success' | 'failed';
@@ -20,7 +22,7 @@ type VerifyStatus = 'missing' | 'verifying' | 'success' | 'failed';
  * Email-verification screen (FR-01, Q-11). Opening the emailed link verifies the account once on
  * mount; a broken or rejected link offers a new one and never reveals whether an address exists.
  */
-export function VerifyEmailScreen({token = null}: VerifyEmailScreenProps) {
+export function VerifyEmailScreen({token = null, email: linkedEmail = null}: VerifyEmailScreenProps) {
   const t = useTranslations('Auth');
   const common = useTranslations('Auth.common');
   const errorMessages = useTranslations('Auth.errors');
@@ -28,7 +30,7 @@ export function VerifyEmailScreen({token = null}: VerifyEmailScreenProps) {
   const resend = useResendVerification();
   const [status, setStatus] = useState<VerifyStatus>(token ? 'verifying' : 'missing');
   const [error, setError] = useState<string | null>(null);
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(linkedEmail ?? '');
   const [emailError, setEmailError] = useState<string | null>(null);
   const [resent, setResent] = useState(false);
   const [resendError, setResendError] = useState<string | null>(null);
@@ -41,7 +43,7 @@ export function VerifyEmailScreen({token = null}: VerifyEmailScreenProps) {
 
     attempted.current = true;
     verifyToken(
-      {token},
+      {token, email: linkedEmail ?? undefined},
       {
         onSuccess: () => setStatus('success'),
         onError: (failure) => {
@@ -50,7 +52,7 @@ export function VerifyEmailScreen({token = null}: VerifyEmailScreenProps) {
         }
       }
     );
-  }, [token, verifyToken, errorMessages]);
+  }, [token, linkedEmail, verifyToken, errorMessages]);
 
   function onResend(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault();

@@ -41,10 +41,16 @@ public sealed class AuthLinkBuilder : IAuthLinkBuilder
         _baseUrl = options.AppBaseUrl.TrimEnd('/');
     }
 
-    public string BuildEmailVerificationLink(string token) => BuildLink("verify-email", token);
+    public string BuildEmailVerificationLink(string token, string? email = null) =>
+        BuildLink("verify-email", token, email);
 
     public string BuildPasswordResetLink(string token) => BuildLink("reset-password", token);
 
-    private string BuildLink(string path, string token) =>
-        $"{_baseUrl}/{path}?token={Uri.EscapeDataString(token)}";
+    private string BuildLink(string path, string token, string? email = null)
+    {
+        var link = $"{_baseUrl}/{path}?token={Uri.EscapeDataString(token)}";
+        return string.IsNullOrWhiteSpace(email)
+            ? link
+            : $"{link}&email={Uri.EscapeDataString(email.Trim())}";
+    }
 }

@@ -16,6 +16,14 @@ public sealed class VerifyEmailRequestValidator : AbstractValidator<VerifyEmailR
             .WithMessage("A verification token is required.")
             .MaximumLength(512)
             .WithMessage("The verification token is not valid.");
+
+        // The link supplies the address for UX only; accepting it never authorizes the change.
+        RuleFor(request => request.Email)
+            .MaximumLength(AuthRules.EmailMaxLength)
+            .WithMessage("The email address is too long.")
+            .EmailAddress()
+            .When(request => request.Email is not null)
+            .WithMessage("The email address is not valid.");
     }
 }
 

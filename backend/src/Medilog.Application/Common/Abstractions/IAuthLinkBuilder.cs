@@ -9,8 +9,11 @@ namespace Medilog.Application.Common.Abstractions;
 /// </remarks>
 public interface IAuthLinkBuilder
 {
-    /// <summary>Link that confirms a new account's email address.</summary>
-    string BuildEmailVerificationLink(string token);
+    /// <summary>
+    /// Link that confirms a new account's email address. The optional address is echoed in the link
+    /// only so the verification screen can prefill its resend form; it is never proof of identity.
+    /// </summary>
+    string BuildEmailVerificationLink(string token, string? email = null);
 
     /// <summary>Link that lets a user choose a new password.</summary>
     string BuildPasswordResetLink(string token);

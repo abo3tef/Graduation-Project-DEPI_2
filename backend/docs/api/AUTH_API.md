@@ -15,7 +15,7 @@ error envelope (`application/problem+json`, `code`, `traceId`, `errors`) is desc
 |---|---|---|---|---|
 | `POST` | `/api/auth/login` | `email`, `password` | `200` + token | `400` validation, `401` credentials, `403` account state, `503` not configured |
 | `POST` | `/api/auth/register` | `fullName`, `email`, `password`, `phone?`, `role`, `specialization?` | `201` + account summary (no `Location`, see §5) | `400` validation, `409` email exists, `503` email |
-| `POST` | `/api/auth/verify-email` | `token` | `204` | `400` validation, `401` invalid token |
+| `POST` | `/api/auth/verify-email` | `token`, `email?` | `204` | `400` validation, `401` invalid token |
 | `POST` | `/api/auth/resend-verification` | `email` | `204` (always) | `400` validation, `503` email |
 | `POST` | `/api/auth/forgot-password` | `email` | `204` (always) | `400` validation, `503` email |
 | `POST` | `/api/auth/reset-password` | `token`, `newPassword` | `204` | `400` validation, `401` invalid token |
@@ -81,10 +81,16 @@ Password policy (register and reset): 8–128 characters with at least one upper
 lower-case letter, one digit and one symbol.
 
 The email contains a link to the frontend (`Auth:AppBaseUrl`), e.g.
-`https://<frontend>/verify-email?token=<one-time token>`. The token is single-use and expires after
-24 hours. `POST /api/auth/verify-email` with that value answers `204` and activates the account;
-`resend-verification` invalidates the previous link and always answers `204`, whether or not the
-address has an account.
+`https://<frontend>/verify-email?token=<one-time token>&email=<url-encoded address>`. The token is
+single-use and expires after 24 hours. `POST /api/auth/verify-email` accepts `token` and an optional
+`email`; the address is copied from the link only to prefill the resend form, and the token alone
+authorizes verification. Token-only clients remain compatible. Verification answers `204` and
+activates the account; `resend-verification` invalidates the previous link and always answers `204`,
+whether or not the address has an account.
+
+In Development with SMTP disabled, the verification link and full message body are also written to
+the API console so the register → verify → sign-in flow can be exercised without SMTP. With SMTP
+enabled, message bodies and tokens are never logged.
 
 ## 4. Password recovery
 

@@ -87,10 +87,20 @@ internal sealed class AuthFixture : IDisposable
     public string LastToken()
     {
         var message = Email.Messages[^1];
-        var query = new Uri(message.Body.Split('\n', StringSplitOptions.TrimEntries)
+        var link = new Uri(message.Body.Split('\n', StringSplitOptions.TrimEntries)
             .First(line => line.StartsWith("https://", StringComparison.Ordinal)));
 
-        return Uri.UnescapeDataString(query.Query.Replace("?token=", string.Empty, StringComparison.Ordinal));
+        // The verification link may also carry ?email= for the resend form; only token authorizes.
+        foreach (var part in link.Query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var pair = part.Split('=', 2);
+            if (pair[0] == "token")
+            {
+                return Uri.UnescapeDataString(pair[1]);
+            }
+        }
+
+        throw new InvalidOperationException("The emailed link does not contain a token.");
     }
 
     /// <summary>Address of the account that received the most recent email.</summary>
@@ -226,12 +236,16 @@ internal sealed class TestAuthLinkBuilder : IAuthLinkBuilder
 {
     public const string BaseUrl = "https://app.medilog.test";
 
-    public string BuildEmailVerificationLink(string token) => Build("verify-email", token);
+    public string BuildEmailVerificationLink(string token, string? email = null) =>
+        Build("verify-email", token, email);
 
     public string BuildPasswordResetLink(string token) => Build("reset-password", token);
 
-    private static string Build(string path, string token) =>
-        $"{BaseUrl}/{path}?token={Uri.EscapeDataString(token)}";
+    private static string Build(string path, string token, string? email = null)
+    {
+        var link = $"{BaseUrl}/{path}?token={Uri.EscapeDataString(token)}";
+        return string.IsNullOrWhiteSpace(email) ? link : $"{link}&email={Uri.EscapeDataString(email)}";
+    }
 }
 
 /// <summary>

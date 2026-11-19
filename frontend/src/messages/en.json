@@ -19,7 +19,13 @@
     "howItWorks": "How it works",
     "security": "Security",
     "contact": "Contact",
+    "dashboard": "Dashboard",
+    "appointments": "Appointments",
+    "newAppointment": "New booking",
+    "patients": "Patients",
+    "payments": "Payments",
     "medicalRecords": "Medical records",
+    "admin": "Administration",
     "login": "Sign in",
     "lightMode": "Light mode",
     "darkMode": "Dark mode",
@@ -223,13 +229,23 @@
     "workspace": {
       "eyebrow": "Doctor workspace",
       "title": "Medical records",
-      "description": "Open a visit to review its clinical content and keep it up to date.",
-      "openVisitTitle": "Open an existing visit",
-      "openVisitHint": "Paste the identifier of the visit you want to review.",
-      "visitIdLabel": "Visit ID",
-      "visitIdPlaceholder": "00000000-0000-0000-0000-000000000000",
-      "invalidVisitId": "Enter a valid visit identifier.",
-      "openVisit": "Open visit",
+      "description": "Choose a patient to review their real visits, clinical content and medical timeline.",
+      "browseVisitsTitle": "Visit browser",
+      "browseVisitsHint": "Choose one of your patients, then select a visit to review its clinical content.",
+      "patientLabel": "Patient",
+      "selectPatientPrompt": "Select a patient to see their visits.",
+      "visitsLoading": "Loading visits…",
+      "visitsErrorTitle": "Could not load visits",
+      "visitsRetry": "Retry",
+      "visitsEmpty": "This patient has no recorded visits.",
+      "visitCount": "{count, plural, =0 {No visits} one {# visit} other {# visits}}",
+      "visitDateLabel": "Visit date",
+      "chiefComplaintLabel": "Chief complaint",
+      "notProvided": "Not provided",
+      "openVisitAction": "Open",
+      "previousPage": "Previous",
+      "nextPage": "Next",
+      "pageStatus": "Page {page} of {totalPages}",
       "openPatientTitle": "Open a patient medical profile",
       "openPatientHint": "Search for a patient by name or phone to review their medical profile and timeline.",
       "patientIdLabel": "Patient",
@@ -813,7 +829,8 @@
       "googleNotConfigured": "Google sign-in is not configured in this build.",
       "googleCancelled": "Google sign-in was cancelled.",
       "googleFailed": "Google sign-in could not be completed.",
-      "expiredNotice": "Your session expired. Sign in again to continue."
+      "expiredNotice": "Your session expired. Sign in again to continue.",
+      "verifyNeeded": "Your email is not verified yet. Resend the link using the address below."
     },
     "register": {
       "title": "Create your account",
@@ -1096,6 +1113,92 @@
       "identityTitle": "Sign in required",
       "signInHint": "Sign in with a doctor or secretary account to manage patients.",
       "loading": "Loading…"
+    }
+  },
+  "Admin": {
+    "meta": {
+      "title": "Account administration — Medilog"
+    },
+    "page": {
+      "eyebrow": "Administration",
+      "title": "Account administration",
+      "description": "Review accounts, change account state or role, and manage secretary assignments."
+    },
+    "filters": {
+      "label": "Account filters",
+      "searchLabel": "Search",
+      "searchPlaceholder": "Name, email or phone",
+      "roleLabel": "Role",
+      "statusLabel": "Status",
+      "allRoles": "All roles",
+      "allStatuses": "All statuses",
+      "clear": "Clear filters"
+    },
+    "table": {
+      "caption": "Accounts",
+      "name": "Name",
+      "email": "Email",
+      "role": "Role",
+      "status": "Status",
+      "verified": "Email verified",
+      "created": "Created",
+      "actions": "Actions",
+      "you": "you"
+    },
+    "roles": {
+      "Admin": "Administrator",
+      "Doctor": "Doctor",
+      "Secretary": "Secretary"
+    },
+    "statuses": {
+      "Active": "Active",
+      "Inactive": "Inactive"
+    },
+    "flags": {
+      "yes": "Yes",
+      "no": "No"
+    },
+    "actions": {
+      "activate": "Activate",
+      "deactivate": "Deactivate",
+      "changeRole": "Change role",
+      "assignDoctors": "Assign doctors"
+    },
+    "dialogs": {
+      "statusTitle": "Change account status",
+      "statusMessage": "{name} will be {status}.",
+      "roleTitle": "Change account role",
+      "roleMessage": "Select the new role for {name}.",
+      "newRoleLabel": "New role",
+      "assignmentTitle": "Doctor assignments",
+      "assignmentMessage": "Choose the doctors assigned to {name}.",
+      "doctorSearchLabel": "Search doctors",
+      "doctorSearchPlaceholder": "Search by name or email",
+      "selectedLabel": "Selected doctors",
+      "noDoctors": "No matching doctors.",
+      "confirm": "Confirm",
+      "cancel": "Cancel"
+    },
+    "states": {
+      "loading": "Loading accounts…",
+      "errorTitle": "Could not load accounts",
+      "retry": "Retry",
+      "empty": "No accounts match these filters.",
+      "count": "{count, plural, =0 {No accounts} one {# account} other {# accounts}}",
+      "previousPage": "Previous page",
+      "nextPage": "Next page",
+      "pageStatus": "Page {page} of {totalPages}"
+    },
+    "notifications": {
+      "statusUpdated": "Account status updated.",
+      "roleUpdated": "Account role updated.",
+      "assignmentsUpdated": "Doctor assignments updated.",
+      "error": "The request could not be completed.",
+      "selfDeactivationForbidden": "You cannot deactivate your own account.",
+      "lastAdminProtected": "The last active administrator cannot be deactivated.",
+      "roleChangeBlocked": "This role change is blocked by existing account data.",
+      "roleChangeForbidden": "Administrator accounts cannot change role.",
+      "selfRoleChangeForbidden": "You cannot change your own role."
     }
   }
 }

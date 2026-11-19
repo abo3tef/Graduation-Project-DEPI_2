@@ -5,7 +5,7 @@ describe('landingPathFor', () => {
   it.each([
     ['Doctor', '/dashboard'],
     ['Secretary', '/appointments'],
-    ['Admin', '/']
+    ['Admin', '/admin']
   ] as const)('%s lands on %s', (role, expected) => {
     expect(landingPathFor(role)).toBe(expected);
   });
@@ -20,16 +20,25 @@ describe('isPathAllowedForRole', () => {
     expect(isPathAllowedForRole('Doctor', '/dashboard')).toBe(true);
     expect(isPathAllowedForRole('Doctor', '/appointments')).toBe(true);
     expect(isPathAllowedForRole('Doctor', '/appointments/new')).toBe(true);
+    expect(isPathAllowedForRole('Doctor', '/patients')).toBe(true);
+    expect(isPathAllowedForRole('Doctor', '/payments')).toBe(true);
     expect(isPathAllowedForRole('Doctor', '/medical-records/visits/new')).toBe(true);
   });
 
-  it('keeps a secretary out of the clinical areas', () => {
+  it('lets a secretary use the approved administrative workflows', () => {
     expect(isPathAllowedForRole('Secretary', '/appointments')).toBe(true);
+    expect(isPathAllowedForRole('Secretary', '/patients')).toBe(true);
+    expect(isPathAllowedForRole('Secretary', '/payments')).toBe(true);
+  });
+
+  it('keeps a secretary out of clinical and doctor-only areas', () => {
     expect(isPathAllowedForRole('Secretary', '/medical-records')).toBe(false);
     expect(isPathAllowedForRole('Secretary', '/dashboard')).toBe(false);
   });
 
-  it('gives an admin no signed-in area until F11', () => {
+  it('gives an admin access to the administration area only', () => {
+    expect(isPathAllowedForRole('Admin', '/admin')).toBe(true);
+    expect(isPathAllowedForRole('Admin', '/admin/users')).toBe(true);
     expect(isPathAllowedForRole('Admin', '/dashboard')).toBe(false);
     expect(isPathAllowedForRole('Admin', '/')).toBe(false);
   });
@@ -53,6 +62,8 @@ describe('isPathAllowedForRole', () => {
 describe('resolveRedirectTarget', () => {
   it('honours a next value the role may open', () => {
     expect(resolveRedirectTarget('Doctor', '/appointments/new')).toBe('/appointments/new');
+    expect(resolveRedirectTarget('Secretary', '/patients')).toBe('/patients');
+    expect(resolveRedirectTarget('Admin', '/admin')).toBe('/admin');
   });
 
   it('ignores a next value the role may not open', () => {

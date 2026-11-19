@@ -19,7 +19,13 @@
     "howItWorks": "كيف تعمل",
     "security": "الأمان",
     "contact": "تواصل معنا",
+    "dashboard": "لوحة التحكم",
+    "appointments": "المواعيد",
+    "newAppointment": "حجز جديد",
+    "patients": "المرضى",
+    "payments": "المدفوعات",
     "medicalRecords": "السجلات الطبية",
+    "admin": "إدارة الحسابات",
     "login": "تسجيل الدخول",
     "lightMode": "الوضع الفاتح",
     "darkMode": "الوضع الداكن",
@@ -223,13 +229,23 @@
     "workspace": {
       "eyebrow": "مساحة عمل الطبيب",
       "title": "السجلات الطبية",
-      "description": "افتح زيارة لعرض محتواها الطبي وتحديثه.",
-      "openVisitTitle": "فتح زيارة موجودة",
-      "openVisitHint": "الصق معرّف الزيارة التي تريد مراجعتها.",
-      "visitIdLabel": "معرّف الزيارة",
-      "visitIdPlaceholder": "00000000-0000-0000-0000-000000000000",
-      "invalidVisitId": "أدخل معرّف زيارة صحيحًا.",
-      "openVisit": "فتح الزيارة",
+      "description": "اختر مريضًا لمراجعة زياراته الحقيقية ومحتواه الطبي وجدوله الزمني.",
+      "browseVisitsTitle": "متصفح الزيارات",
+      "browseVisitsHint": "اختر أحد مرضاك، ثم اختر زيارة لمراجعة محتواها الطبي.",
+      "patientLabel": "المريض",
+      "selectPatientPrompt": "اختر مريضًا لعرض زياراته.",
+      "visitsLoading": "جارٍ تحميل الزيارات…",
+      "visitsErrorTitle": "تعذر تحميل الزيارات",
+      "visitsRetry": "إعادة المحاولة",
+      "visitsEmpty": "لا توجد زيارات مسجّلة لهذا المريض.",
+      "visitCount": "{count, plural, =0 {لا توجد زيارات} one {زيارة واحدة} other {# زيارات}}",
+      "visitDateLabel": "تاريخ الزيارة",
+      "chiefComplaintLabel": "الشكوى الأساسية",
+      "notProvided": "غير مُسجّل",
+      "openVisitAction": "فتح",
+      "previousPage": "السابق",
+      "nextPage": "التالي",
+      "pageStatus": "الصفحة {page} من {totalPages}",
       "openPatientTitle": "فتح الملف الطبي لمريض",
       "openPatientHint": "ابحث عن مريض بالاسم أو الهاتف لمراجعة ملفه الطبي وجدوله الزمني.",
       "patientIdLabel": "المريض",
@@ -813,7 +829,8 @@
       "googleNotConfigured": "تسجيل الدخول بجوجل غير مُهيّأ في هذه النسخة.",
       "googleCancelled": "تم إلغاء تسجيل الدخول بجوجل.",
       "googleFailed": "تعذّر إكمال تسجيل الدخول بجوجل.",
-      "expiredNotice": "انتهت صلاحية الجلسة. سجّل الدخول من جديد للمتابعة."
+      "expiredNotice": "انتهت صلاحية الجلسة. سجّل الدخول من جديد للمتابعة.",
+      "verifyNeeded": "لم يتم تأكيد بريدك الإلكتروني بعد. أعد إرسال الرابط باستخدام العنوان أدناه."
     },
     "register": {
       "title": "أنشئ حسابك",
@@ -1096,6 +1113,92 @@
       "identityTitle": "تسجيل الدخول مطلوب",
       "signInHint": "سجّل الدخول بحساب طبيب أو سكرتير لإدارة المرضى.",
       "loading": "جارٍ التحميل…"
+    }
+  },
+  "Admin": {
+    "meta": {
+      "title": "إدارة الحسابات — Medilog"
+    },
+    "page": {
+      "eyebrow": "الإدارة",
+      "title": "إدارة الحسابات",
+      "description": "راجع الحسابات وغيّر حالتها أو دورها، وأدر إسناد الأطباء إلى السكرتيرات."
+    },
+    "filters": {
+      "label": "تصفية الحسابات",
+      "searchLabel": "بحث",
+      "searchPlaceholder": "الاسم أو البريد الإلكتروني أو الهاتف",
+      "roleLabel": "الدور",
+      "statusLabel": "الحالة",
+      "allRoles": "كل الأدوار",
+      "allStatuses": "كل الحالات",
+      "clear": "مسح التصفية"
+    },
+    "table": {
+      "caption": "الحسابات",
+      "name": "الاسم",
+      "email": "البريد الإلكتروني",
+      "role": "الدور",
+      "status": "الحالة",
+      "verified": "البريد مؤكّد",
+      "created": "تاريخ الإنشاء",
+      "actions": "الإجراءات",
+      "you": "أنت"
+    },
+    "roles": {
+      "Admin": "مدير",
+      "Doctor": "طبيب",
+      "Secretary": "سكرتير"
+    },
+    "statuses": {
+      "Active": "نشط",
+      "Inactive": "غير نشط"
+    },
+    "flags": {
+      "yes": "نعم",
+      "no": "لا"
+    },
+    "actions": {
+      "activate": "تفعيل",
+      "deactivate": "إلغاء تفعيل",
+      "changeRole": "تغيير الدور",
+      "assignDoctors": "إسناد الأطباء"
+    },
+    "dialogs": {
+      "statusTitle": "تغيير حالة الحساب",
+      "statusMessage": "سيصبح حساب {name} {status}.",
+      "roleTitle": "تغيير دور الحساب",
+      "roleMessage": "اختر الدور الجديد لحساب {name}.",
+      "newRoleLabel": "الدور الجديد",
+      "assignmentTitle": "إسناد الأطباء",
+      "assignmentMessage": "اختر الأطباء المسندين إلى {name}.",
+      "doctorSearchLabel": "البحث عن الأطباء",
+      "doctorSearchPlaceholder": "ابحث بالاسم أو البريد الإلكتروني",
+      "selectedLabel": "الأطباء المختارون",
+      "noDoctors": "لا يوجد أطباء مطابقون.",
+      "confirm": "تأكيد",
+      "cancel": "إلغاء"
+    },
+    "states": {
+      "loading": "جارٍ تحميل الحسابات…",
+      "errorTitle": "تعذر تحميل الحسابات",
+      "retry": "إعادة المحاولة",
+      "empty": "لا توجد حسابات مطابقة لهذه التصفية.",
+      "count": "{count, plural, =0 {لا توجد حسابات} one {حساب واحد} other {# حسابات}}",
+      "previousPage": "الصفحة السابقة",
+      "nextPage": "الصفحة التالية",
+      "pageStatus": "الصفحة {page} من {totalPages}"
+    },
+    "notifications": {
+      "statusUpdated": "تم تحديث حالة الحساب.",
+      "roleUpdated": "تم تحديث دور الحساب.",
+      "assignmentsUpdated": "تم تحديث إسناد الأطباء.",
+      "error": "تعذر إكمال الطلب.",
+      "selfDeactivationForbidden": "لا يمكنك إلغاء تفعيل حسابك الخاص.",
+      "lastAdminProtected": "لا يمكن إلغاء تفعيل آخر مدير نشط.",
+      "roleChangeBlocked": "يمنع تغيير الدور وجود بيانات مرتبطة بالحساب الحالي.",
+      "roleChangeForbidden": "لا يمكن تغيير دور حسابات المديرين.",
+      "selfRoleChangeForbidden": "لا يمكنك تغيير دورك الخاص."
     }
   }
 }

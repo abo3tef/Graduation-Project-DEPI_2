@@ -22,8 +22,10 @@ async function VerifyEmailContent({
 }) {
   const query = await searchParams;
   const token = typeof query.token === 'string' ? query.token : null;
+  // The address in the link only prefills the resend form; it never proves account ownership.
+  const email = typeof query.email === 'string' ? query.email : null;
 
-  return <VerifyEmailScreen token={token} />;
+  return <VerifyEmailScreen token={token} email={email} />;
 }
 
 export default function VerifyEmailPage({searchParams}: VerifyEmailPageProps) {

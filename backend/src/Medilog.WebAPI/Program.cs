@@ -5,6 +5,7 @@ using Medilog.Application.Common.Abstractions;
 using Medilog.Application.Common.Exceptions;
 using Medilog.Application.Interfaces;
 using Medilog.Infrastructure;
+using Medilog.Infrastructure.Persistence;
 using Medilog.Infrastructure.Persistence.Seed;
 using Medilog.Infrastructure.Security;
 using Medilog.WebAPI.Common;
@@ -158,6 +159,15 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Apply the checked-in EF Core migrations before any startup database work. The initializer
+// logs a clear, actionable error on failure and keeps the development seeder from querying
+// tables that do not yet exist.
+using (var migrationScope = app.Services.CreateScope())
+{
+    await migrationScope.ServiceProvider.GetRequiredService<DatabaseInitializer>()
+        .InitializeAsync(app.Lifetime.ApplicationStopping);
+}
 
 // Development-only demo accounts (decision D-40). Gated on both the environment and the explicit
 // Seed:Enabled switch, so production and test hosts never touch the database here.

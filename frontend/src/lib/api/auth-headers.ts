@@ -12,11 +12,9 @@ const providers = new Set<AuthHeadersProvider>();
  * merged in registration order (a later provider wins on a shared header name).
  * Returns an unregister function.
  *
- * Today two development mechanisms contribute here: the temporary
- * `X-User-Id` / `X-User-Role` headers (appointments) and the development
- * `Authorization: Bearer …` token (medical records). When real authentication is
- * delivered (STATE.md Q-07), register a provider that returns the production
- * credential instead; no screen or hook changes.
+ * Authentication is bearer-token only. The auth feature registers the current
+ * session token here, so screens and feature API modules never construct their
+ * own authorization headers.
  */
 export function registerAuthHeadersProvider(provider: AuthHeadersProvider): () => void {
   providers.add(provider);

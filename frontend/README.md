@@ -107,22 +107,22 @@ The secretary appointment screens live in `src/features/appointments` and are se
 documented in `backend/docs/api/appointments.md`.
 
 ```bash
-cp .env.example .env.local     # then check NEXT_PUBLIC_API_BASE_URL
+cp .env.example .env.local     # then check NEXT_PUBLIC_API_URL
 npm run dev                    # http://localhost:3000
 ```
 
 1. Start the API in Development with a MySQL connection string (`dotnet run` in
    `backend/src/Medilog.WebAPI`) and load the synthetic data in
    `backend/docs/dev/seed-dev-data.sql`.
-2. `NEXT_PUBLIC_API_BASE_URL` must be the exact URL the API serves. The backend `http` profile
+2. `NEXT_PUBLIC_API_URL` must be the exact URL the API serves (`NEXT_PUBLIC_API_BASE_URL` remains
+   as a backward-compatible fallback). The backend `http` profile
    serves `http://localhost:5208`; the `https` profile redirects `5208` to `7206`, and a browser
    CORS preflight fails on a redirect.
-3. **Temporary development identity (STATE.md Q-07):** real sign-in does not exist yet, so the API
-   reads `X-User-Id` / `X-User-Role` headers. They are sent by `src/lib/api` from one provider
-   (`src/features/auth/dev-identity`), only when `NEXT_PUBLIC_DEV_IDENTITY=true` in a
-   **non-production** build; production builds never send them. Use the "Acting as" button in the
-   top bar to enter an id and role (ids of the seed data are listed at the top of the SQL file).
-   When authentication is delivered, only the provider and `useActingIdentity` change.
+3. Sign in through `/login`. The central API client sends the resulting access token as
+   `Authorization: Bearer <accessToken>` for protected calls. No development identity headers are
+   supported. Configure the local backend credentials described in
+   [`../backend/docs/dev/AUTH_SETUP.md`](../backend/docs/dev/AUTH_SETUP.md) before using seeded
+   accounts.
 
 Quality gates: `npm run lint`, `npm run typecheck`, `npm test` (Vitest + Testing Library, jsdom),
 `npm run build`.

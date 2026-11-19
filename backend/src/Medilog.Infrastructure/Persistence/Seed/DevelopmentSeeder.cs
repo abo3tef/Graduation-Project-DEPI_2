@@ -1,3 +1,4 @@
+using System.Data;
 using Medilog.Application.Common.Abstractions;
 using Medilog.Domain.Entities;
 using Medilog.Domain.Enums;
@@ -74,6 +75,16 @@ public sealed class DevelopmentSeeder
                 "It is a development-only demo credential.");
         }
 
+        // A fresh or partially migrated database must not turn into a startup crash loop: the
+        // initializer normally creates these tables first, but seeding stays safe on its own.
+        if (!await AccountTablesExistAsync(cancellationToken))
+        {
+            _logger.LogWarning(
+                "Skipping development seeding: the admins, doctors and secretaries tables are not " +
+                "all present yet. Apply the migrations and restart.");
+            return 0;
+        }
+
         var verifiedAt = _clock.GetUtcNow();
         var created = 0;
 
@@ -130,5 +141,34 @@ public sealed class DevelopmentSeeder
         }
 
         return created;
+    }
+
+    private async Task<bool> AccountTablesExistAsync(CancellationToken cancellationToken)
+    {
+        // Unit tests use the in-memory provider, which has no information_schema but always has the
+        // model's tables. Only the relational MySQL/MariaDB path needs the physical table check.
+        if (!_dbContext.Database.IsRelational())
+        {
+            return true;
+        }
+
+        const string sql = """
+            SELECT COUNT(*) FROM information_schema.TABLES
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME IN ('admins', 'doctors', 'secretaries')
+            """;
+
+        var connection = _dbContext.Database.GetDbConnection();
+
+        if (connection.State != ConnectionState.Open)
+        {
+            await connection.OpenAsync(cancellationToken);
+        }
+
+        await using var command = connection.CreateCommand();
+        command.CommandText = sql;
+
+        var count = Convert.ToInt32(await command.ExecuteScalarAsync(cancellationToken));
+        return count == 3;
     }
 }

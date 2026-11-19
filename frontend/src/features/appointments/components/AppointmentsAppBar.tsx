@@ -4,13 +4,17 @@ import {FiActivity} from 'react-icons/fi';
 import {useTranslations} from 'next-intl';
 import {ThemeToggle} from '@/components/layout/ThemeToggle';
 import {LocaleSwitcher} from '@/components/shared/LocaleSwitcher';
-import {SessionBadge} from '@/features/auth';
+import {SessionBadge, useSession} from '@/features/auth';
 import {Link, usePathname} from '@/i18n/navigation';
 
 const NAV_ITEMS = [
-  {href: '/appointments', labelKey: 'list'},
-  {href: '/appointments/new', labelKey: 'new'},
-  {href: '/patients', labelKey: 'patients'}
+  {href: '/dashboard', labelKey: 'dashboard', roles: ['Doctor']},
+  {href: '/appointments', labelKey: 'appointments', roles: ['Doctor', 'Secretary']},
+  {href: '/appointments/new', labelKey: 'newAppointment', roles: ['Doctor', 'Secretary']},
+  {href: '/patients', labelKey: 'patients', roles: ['Doctor', 'Secretary']},
+  {href: '/payments', labelKey: 'payments', roles: ['Doctor', 'Secretary']},
+  {href: '/medical-records', labelKey: 'medicalRecords', roles: ['Doctor']},
+  {href: '/admin', labelKey: 'admin', roles: ['Admin']}
 ] as const;
 
 /**
@@ -22,6 +26,10 @@ export function AppointmentsAppBar() {
   const t = useTranslations('Appointments.nav');
   const navigation = useTranslations('Navigation');
   const pathname = usePathname();
+  const session = useSession();
+  const visibleItems = NAV_ITEMS.filter(
+    (item) => session.role !== null && (item.roles as readonly string[]).includes(session.role)
+  );
 
   return (
     <header className="sticky top-0 z-20 border-b border-border/60 bg-background/85 backdrop-blur-xl">
@@ -35,8 +43,10 @@ export function AppointmentsAppBar() {
           </Link>
 
           <nav aria-label={t('label')} className="flex items-center gap-1">
-            {NAV_ITEMS.map((item) => {
-              const current = pathname === item.href;
+            {visibleItems.map((item) => {
+              const current =
+                pathname === item.href ||
+                (item.href !== '/appointments' && pathname.startsWith(`${item.href}/`));
 
               return (
                 <Link
@@ -47,7 +57,7 @@ export function AppointmentsAppBar() {
                     current ? 'bg-brand-soft text-brand' : 'text-muted hover:text-foreground'
                   }`}
                 >
-                  {t(item.labelKey)}
+                  {navigation(item.labelKey)}
                 </Link>
               );
             })}

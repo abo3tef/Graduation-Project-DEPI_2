@@ -62,6 +62,17 @@ describe('VerifyEmailScreen', () => {
     expect(JSON.parse(String(calls()[0]?.[1].body))).toEqual({token: 'verify-token'});
   });
 
+  it('forwards the link email for resend prefill without treating it as proof', async () => {
+    installFetch([{status: 204}]);
+    renderWithIntl(<VerifyEmailScreen token="verify-token" email="doctor@medilog.test" />);
+
+    expect(await screen.findByRole('heading', {name: 'Email verified'})).toBeInTheDocument();
+    expect(JSON.parse(String(calls()[0]?.[1].body))).toEqual({
+      token: 'verify-token',
+      email: 'doctor@medilog.test'
+    });
+  });
+
   it('explains a broken link and offers a new one', async () => {
     installFetch([{status: 204}]);
     renderWithIntl(<VerifyEmailScreen />);
@@ -80,6 +91,13 @@ describe('VerifyEmailScreen', () => {
     expect(await screen.findByText('This link is invalid or has expired.')).toBeInTheDocument();
     expect(screen.queryByText(/English text/)).not.toBeInTheDocument();
     expect(screen.getByRole('button', {name: 'Send a new link'})).toBeInTheDocument();
+  });
+
+  it('prefills the resend form from a rejected link', async () => {
+    installFetch([{status: 401, body: {code: 'auth.token_invalid', detail: 'English text'}}]);
+    renderWithIntl(<VerifyEmailScreen token="used-token" email="doctor@medilog.test" />);
+
+    expect(await screen.findByLabelText('Email')).toHaveValue('doctor@medilog.test');
   });
 
   it('resends a link and shows the same answer for any address', async () => {

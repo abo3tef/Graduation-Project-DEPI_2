@@ -5,7 +5,7 @@ import {useTranslations} from 'next-intl';
 import {Link, useRouter} from '@/i18n/navigation';
 import {isApiError} from '@/lib/api';
 import {authErrorMessageKey, authFieldErrors} from '../errors/authErrorMessageKey';
-import {useLogin} from '../hooks/useAuthMutations';
+import {useLogin, useResendVerification} from '../hooks/useAuthMutations';
 import {useSession} from '../hooks/useSession';
 import {landingPathFor} from '../routing/landing';
 import {
@@ -19,7 +19,7 @@ import {AuthCard, FormAlert, SubmitButton} from './AuthCard';
 import {AuthField} from './AuthField';
 import {GoogleSignInButton} from './GoogleSignInButton';
 import {PasswordField} from './PasswordField';
-import {linkClassName} from './auth-styles';
+import {linkClassName, secondaryButtonClassName} from './auth-styles';
 
 type LoginFormProps = {
   /** `?next=` stored by the route guard; honoured only when the role may open it. */
@@ -36,10 +36,14 @@ export function LoginForm({next = null, expired = false}: LoginFormProps) {
   const router = useRouter();
   const session = useSession();
   const login = useLogin();
+  const resend = useResendVerification();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<AuthFieldErrors<LoginField>>({});
   const [formError, setFormError] = useState<string | null>(null);
+  const [unverified, setUnverified] = useState(false);
+  const [resent, setResent] = useState(false);
+  const [resendError, setResendError] = useState<string | null>(null);
 
   // A signed-in user who opens the login screen goes to their own landing page (D-C2-1).
   useEffect(() => {
@@ -62,6 +66,9 @@ export function LoginForm({next = null, expired = false}: LoginFormProps) {
     const nextErrors = validateLoginForm({email, password});
     setErrors(nextErrors);
     setFormError(null);
+    setUnverified(false);
+    setResent(false);
+    setResendError(null);
 
     if (hasErrors(nextErrors)) {
       return;
@@ -79,9 +86,23 @@ export function LoginForm({next = null, expired = false}: LoginFormProps) {
           if (!hasErrors(mapped)) {
             setFormError(errorMessages(authErrorMessageKey(error)));
           }
+
+          // The user already typed the right address; offer a resend without leaving this screen.
+          if (isApiError(error) && error.code === 'auth.email_unverified') {
+            setUnverified(true);
+          }
         }
       }
     );
+  }
+
+  function onResend(): void {
+    setResent(false);
+    setResendError(null);
+    resend.mutate(email, {
+      onSuccess: () => setResent(true),
+      onError: (failure) => setResendError(errorMessages(authErrorMessageKey(failure)))
+    });
   }
 
   return (
@@ -99,6 +120,21 @@ export function LoginForm({next = null, expired = false}: LoginFormProps) {
     >
       {expired ? <FormAlert tone="info">{t('login.expiredNotice')}</FormAlert> : null}
       {formError ? <FormAlert>{formError}</FormAlert> : null}
+      {unverified ? (
+        <div className="mb-4 grid gap-2">
+          <p className="text-xs text-muted">{t('login.verifyNeeded')}</p>
+          <button
+            type="button"
+            disabled={resend.isPending || email.trim() === ''}
+            onClick={onResend}
+            className={`${secondaryButtonClassName} w-full`}
+          >
+            {resend.isPending ? common('submitting') : t('verify.resend')}
+          </button>
+          {resent ? <FormAlert tone="success">{t('verify.resent')}</FormAlert> : null}
+          {resendError ? <FormAlert>{resendError}</FormAlert> : null}
+        </div>
+      ) : null}
 
       <div className="mb-4">
         <GoogleSignInButton next={next} onError={setFormError} />

@@ -256,6 +256,46 @@ public sealed class AuthRequestValidatorTests
         Assert.Contains(result.Errors, failure => failure.PropertyName == nameof(VerifyEmailRequest.Token));
     }
 
+    [Fact]
+    public void Verification_request_accepts_a_token_without_an_email()
+    {
+        // Arrange: token-only clients must stay compatible with the original contract.
+        var request = new VerifyEmailRequest("token-value");
+
+        // Act
+        var result = _verifyEmailValidator.Validate(request);
+
+        // Assert
+        Assert.True(result.IsValid);
+    }
+
+    [Fact]
+    public void Verification_request_accepts_a_valid_email_for_resend_prefill()
+    {
+        // Arrange
+        var request = new VerifyEmailRequest("token-value", "new.doctor@medilog.test");
+
+        // Act
+        var result = _verifyEmailValidator.Validate(request);
+
+        // Assert
+        Assert.True(result.IsValid);
+    }
+
+    [Fact]
+    public void Verification_request_rejects_an_invalid_email()
+    {
+        // Arrange
+        var request = new VerifyEmailRequest("token-value", "not-an-email");
+
+        // Act
+        var result = _verifyEmailValidator.Validate(request);
+
+        // Assert
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, failure => failure.PropertyName == nameof(VerifyEmailRequest.Email));
+    }
+
     [Theory]
     [InlineData("")]
     [InlineData("  ")]

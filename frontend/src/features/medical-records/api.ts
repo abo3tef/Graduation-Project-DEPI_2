@@ -1,4 +1,4 @@
-import {ApiError, readPagedResult, request, requestVoid} from '@/lib/api';
+import {ApiError, createInvalidResponseError, readPagedResult, request, requestVoid} from '@/lib/api';
 import {DEFAULT_PAGE_SIZE, type PagedResult} from '@/types/paging';
 import {expectDiagnosis, expectMedicalVisit, expectMedication, expectVitalSigns} from './guards';
 import type {
@@ -18,6 +18,45 @@ import type {
 import {readMedicalToken} from './use-medical-credentials';
 
 const BASE_PATH = '/api/medical-visits';
+const PATIENT_BASE_PATH = '/api/patients';
+
+type JsonRecord = Record<string, unknown>;
+
+function isRecord(value: unknown): value is JsonRecord {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function asRecord(value: unknown): JsonRecord {
+  if (!isRecord(value)) {
+    throw createInvalidResponseError(200);
+  }
+
+  return value;
+}
+
+function requiredText(value: unknown): string {
+  if (typeof value !== 'string') {
+    throw createInvalidResponseError(200);
+  }
+
+  return value;
+}
+
+function optionalText(value: unknown): string | null {
+  if (value === null || typeof value === 'string') {
+    return value;
+  }
+
+  throw createInvalidResponseError(200);
+}
+
+function requiredArray(value: unknown): unknown[] {
+  if (!Array.isArray(value)) {
+    throw createInvalidResponseError(200);
+  }
+
+  return value;
+}
 
 function requireVitalSignsToken(token: string): void {
   if (!token.trim() || token !== readMedicalToken()) {
@@ -73,6 +112,78 @@ export async function getMedicalVisit(
   );
 
   return expectMedicalVisit(data);
+}
+
+/**
+ * The patient-history endpoint (`/api/patients/{id}/medical-visits`) returns the F10 visit
+ * summary (`visitId`, `name` inside diagnoses/medications, plus notes and lab results), while
+ * `expectMedicalVisit` validates the visit-centric contract of `/api/medical-visits`. Translate
+ * the summary into that contract so both routes give the UI one validated, typed shape.
+ * An item already using the visit-centric shape is passed through unchanged.
+ */
+function asVisitResponse(value: unknown, patientId: string): unknown {
+  if (!isRecord(value)) {
+    return value; // expectMedicalVisit rejects it at the boundary.
+  }
+
+  if (typeof value.id === 'string') {
+    return value;
+  }
+
+  const visitId = requiredText(value.visitId);
+
+  return {
+    id: visitId,
+    patientId,
+    doctorId: requiredText(value.doctorId),
+    appointmentId: null,
+    visitDate: requiredText(value.visitDate),
+    chiefComplaint: optionalText(value.chiefComplaint),
+    symptoms: optionalText(value.symptoms),
+    clinicalNotes: optionalText(value.clinicalNotes),
+    diagnoses: requiredArray(value.diagnoses).map((entry) => {
+      const diagnosis = asRecord(entry);
+
+      return {
+        id: requiredText(diagnosis.id),
+        visitId,
+        patientId,
+        diagnosisName: requiredText(diagnosis.name),
+        description: optionalText(diagnosis.description),
+        diagnosisDate: requiredText(diagnosis.diagnosisDate)
+      };
+    }),
+    medications: requiredArray(value.medications).map((entry) => {
+      const medication = asRecord(entry);
+
+      return {
+        id: requiredText(medication.id),
+        visitId,
+        patientId,
+        medicationName: requiredText(medication.name),
+        dosage: requiredText(medication.dosage),
+        frequency: requiredText(medication.frequency),
+        duration: optionalText(medication.duration),
+        instructions: optionalText(medication.instructions)
+      };
+    }),
+    vitalSigns: requiredArray(value.vitalSigns)
+  };
+}
+
+/** One page of a patient's previous visits (newest first, ordering supplied by the backend). */
+export async function listPatientMedicalVisits(
+  patientId: string,
+  pageNumber = 1,
+  pageSize = DEFAULT_PAGE_SIZE,
+  signal?: AbortSignal
+): Promise<PagedResult<MedicalVisitResponse>> {
+  const data = await request<unknown>(
+    `${PATIENT_BASE_PATH}/${encodeURIComponent(patientId)}/medical-visits`,
+    {query: {pageNumber, pageSize}, signal}
+  );
+
+  return readPagedResult(data, (item) => expectMedicalVisit(asVisitResponse(item, patientId)));
 }
 
 export async function createMedicalVisit(

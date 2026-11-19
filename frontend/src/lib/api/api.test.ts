@@ -122,21 +122,29 @@ describe('apiRequest', () => {
     );
   });
 
-  it('asks the auth-headers provider on every call and sends JSON bodies', async () => {
-    let id = 'one';
-    registerAuthHeadersProvider(() => ({'X-User-Id': id, 'X-User-Role': 'Secretary'}));
+  it('prefers NEXT_PUBLIC_API_URL when both base URL variables are set', async () => {
+    vi.stubEnv('NEXT_PUBLIC_API_URL', 'http://preferred.test/');
+    fetchMock.mockResolvedValue(jsonResponse(200, {ok: true}));
+
+    await apiRequest('/x');
+
+    expect(fetchMock.mock.calls[0]?.[0]).toBe('http://preferred.test/x');
+  });
+
+  it('asks the bearer-token provider on every call and sends JSON bodies', async () => {
+    let token = 'one';
+    registerAuthHeadersProvider(() => ({Authorization: `Bearer ${token}`}));
     fetchMock.mockImplementation(async () => jsonResponse(201, {id: 'x'}));
 
     await apiRequest('/api/appointments', {method: 'POST', body: {reason: 'r'}});
-    id = 'two';
+    token = 'two';
     await apiRequest('/api/appointments', {method: 'POST', body: {reason: 'r'}});
 
     const first = fetchMock.mock.calls[0]?.[1];
     const second = fetchMock.mock.calls[1]?.[1];
-    expect((first?.headers as Record<string, string>)['X-User-Id']).toBe('one');
-    expect((second?.headers as Record<string, string>)['X-User-Id']).toBe('two');
+    expect((first?.headers as Record<string, string>).Authorization).toBe('Bearer one');
+    expect((second?.headers as Record<string, string>).Authorization).toBe('Bearer two');
     expect((first?.headers as Record<string, string>)['Content-Type']).toBe('application/json');
-    expect((first?.headers as Record<string, string>)['X-User-Role']).toBe('Secretary');
     expect(first?.method).toBe('POST');
     expect(first?.body).toBe(JSON.stringify({reason: 'r'}));
   });
@@ -206,8 +214,9 @@ describe('apiRequest', () => {
   });
 
   it('fails clearly when the base URL is missing', () => {
+    vi.stubEnv('NEXT_PUBLIC_API_URL', '');
     vi.stubEnv('NEXT_PUBLIC_API_BASE_URL', '');
 
-    expect(() => getApiBaseUrl()).toThrow(/NEXT_PUBLIC_API_BASE_URL/);
+    expect(() => getApiBaseUrl()).toThrow(/NEXT_PUBLIC_API_URL/);
   });
 });

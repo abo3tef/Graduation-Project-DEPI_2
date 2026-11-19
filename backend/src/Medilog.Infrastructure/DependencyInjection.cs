@@ -2,6 +2,7 @@ using Medilog.Application.Common.Abstractions;
 using Medilog.Application.Features.Auth;
 using Medilog.Application.Interfaces;
 using Medilog.Infrastructure.Email;
+using Medilog.Infrastructure.Persistence;
 using Medilog.Infrastructure.Persistence.AccountAdmin;
 using Medilog.Infrastructure.Persistence.Appointments;
 using Medilog.Infrastructure.Persistence.Context;
@@ -49,7 +50,14 @@ public static class DependencyInjection
             }
 
             options.UseMySQL(connectionString);
+
+            // Local MariaDB uses the same wire protocol but differs in GET_LOCK semantics and in
+            // the MySQL-8-only collation used by the model. The shim is inert on a real MySQL server.
+            options.AddInterceptors(new MariaDbCompatibilityInterceptor());
         });
+
+        // Applied by the WebAPI host before the development seeder runs.
+        services.AddScoped<DatabaseInitializer>();
 
         // Appointment persistence port (Application-owned) and clinic clock.
         services.AddScoped<IAppointmentStore, AppointmentStore>();

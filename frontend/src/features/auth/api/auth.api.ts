@@ -46,9 +46,12 @@ export async function register(input: RegisterInput): Promise<AccountSummary> {
 }
 
 export async function verifyEmail(input: VerifyEmailInput): Promise<void> {
+  const email = input.email?.trim() ?? '';
+
   await apiRequestVoid(`${BASE_PATH}/verify-email`, {
     method: 'POST',
-    body: {token: input.token.trim()}
+    // The address only lets the API echo a UX hint back; the single-use token is the authority.
+    body: email === '' ? {token: input.token.trim()} : {token: input.token.trim(), email}
   });
 }
 

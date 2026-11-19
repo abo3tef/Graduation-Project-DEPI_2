@@ -46,6 +46,8 @@ export type RegisterInput = {
 
 export type VerifyEmailInput = {
   token: string;
+  /** Copied from the emailed link for resend prefill only; the token alone authorizes verification. */
+  email?: string;
 };
 
 export type ResetPasswordInput = {

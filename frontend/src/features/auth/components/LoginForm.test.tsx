@@ -178,6 +178,39 @@ describe('LoginForm', () => {
     );
   });
 
+  it('offers a resend action using the typed address after an unverified login', async () => {
+    const user = userEvent.setup();
+    let requestCount = 0;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        requestCount += 1;
+        return new Response(
+          requestCount === 1 ? JSON.stringify({status: 403, code: 'auth.email_unverified'}) : null,
+          {
+            status: requestCount === 1 ? 403 : 204,
+            headers: {'content-type': 'application/problem+json'}
+          }
+        );
+      })
+    );
+    renderWithIntl(<LoginForm />);
+
+    await user.type(email(), 'doctor@medilog.test');
+    await user.type(password(), 'Medilog@2026');
+    await user.click(submit());
+    expect(await screen.findByText(/Your email is not verified yet/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', {name: 'Send a new link'}));
+
+    expect(
+      await screen.findByText('If the address has a pending account, a new link is on its way.')
+    ).toBeInTheDocument();
+    const resent = (fetch as unknown as {mock: {calls: [string, RequestInit][]}}).mock.calls[1];
+    expect(resent[0]).toBe('http://api.test/api/auth/resend-verification');
+    expect(JSON.parse(String(resent[1].body))).toEqual({email: 'doctor@medilog.test'});
+  });
+
   it('shows the expiry notice only when the watcher said so', async () => {
     renderWithIntl(<LoginForm expired />);
 
