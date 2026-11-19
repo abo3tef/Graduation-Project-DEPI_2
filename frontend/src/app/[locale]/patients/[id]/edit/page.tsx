@@ -6,9 +6,8 @@ type PageProps = {
   params: Promise<{locale: string; id: string}>;
 };
 
-export async function generateMetadata({params}: PageProps): Promise<Metadata> {
-  const {locale} = await params;
-  const t = await getTranslations({locale, namespace: 'Patients.meta'});
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('Patients.meta');
 
   return {title: t('editTitle')};
 }

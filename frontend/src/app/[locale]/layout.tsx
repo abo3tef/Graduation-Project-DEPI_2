@@ -1,10 +1,13 @@
 import type {Metadata} from 'next';
+import {Suspense} from 'react';
 import {Cairo} from 'next/font/google';
 import {NextIntlClientProvider, hasLocale} from 'next-intl';
 import {getTranslations} from 'next-intl/server';
 import {notFound} from 'next/navigation';
 import {routing} from '@/i18n/routing';
 import {Providers} from './providers';
+import {Header} from '@/components/layout/Header';
+import {Footer} from '@/components/layout/Footer';
 import '../globals.css';
 
 const cairo = Cairo({
@@ -78,7 +81,15 @@ export default async function LocaleLayout({
     >
       <body className="min-h-full bg-background font-sans text-foreground">
         <NextIntlClientProvider>
-          <Providers locale={locale}>{children}</Providers>
+          <Providers locale={locale}>
+            <Suspense fallback={null}>
+              <Header />
+            </Suspense>
+            {children}
+            <Suspense fallback={null}>
+              <Footer />
+            </Suspense>
+          </Providers>
         </NextIntlClientProvider>
       </body>
     </html>

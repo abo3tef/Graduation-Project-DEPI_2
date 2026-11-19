@@ -1,9 +1,12 @@
 'use client';
 
 import {useState, type FormEvent} from 'react';
+import {useQuery} from '@tanstack/react-query';
 import {useTranslations} from 'next-intl';
 import {Link} from '@/i18n/navigation';
 import {isApiError} from '@/lib/api';
+import {useLocale} from 'next-intl';
+import {getSpecializations} from '../api/auth.api';
 import {authErrorMessageKey, authFieldErrors} from '../errors/authErrorMessageKey';
 import {useRegister, useResendVerification} from '../hooks/useAuthMutations';
 import {
@@ -45,6 +48,12 @@ export function RegisterForm() {
   const t = useTranslations('Auth');
   const common = useTranslations('Auth.common');
   const errorMessages = useTranslations('Auth.errors');
+  const locale = useLocale();
+  const specializations = useQuery({
+    queryKey: ['public', 'specializations'],
+    queryFn: getSpecializations,
+    staleTime: 1000 * 60 * 60
+  });
   const registration = useRegister();
   const resend = useResendVerification();
   const [values, setValues] = useState<RegisterFormValues>(EMPTY_FORM);
@@ -234,14 +243,35 @@ export function RegisterForm() {
         />
 
         {values.role === 'Doctor' ? (
-          <AuthField
-            label={common('specialization')}
-            name="specialization"
-            required={false}
-            value={values.specialization}
-            onChange={(value) => update('specialization', value)}
-            error={errors.specialization ? common(errors.specialization) : undefined}
-          />
+          <div>
+            <label htmlFor="specialization" className="mb-1 block text-xs font-bold text-foreground">
+              {common('specialization')} *
+            </label>
+            <select
+              id="specialization"
+              name="specialization"
+              required
+              value={values.specialization}
+              onChange={(event) => update('specialization', event.target.value)}
+              disabled={specializations.isPending}
+              className="min-h-11 w-full rounded-xl border border-border bg-background px-3 text-sm text-foreground outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20"
+            >
+              <option value="">
+                {specializations.isPending ? common('submitting') : t('register.specializationPlaceholder')}
+              </option>
+              {Array.isArray(specializations.data) ? specializations.data.map((specialization) => (
+                <option key={specialization.key} value={specialization.nameEn}>
+                  {locale === 'ar' ? specialization.nameAr : specialization.nameEn}
+                </option>
+              )) : null}
+            </select>
+            {specializations.isError ? (
+              <p role="alert" className={fieldErrorClassName}>{t('register.specializationLoadError')}</p>
+            ) : null}
+            {errors.specialization ? (
+              <p className={fieldErrorClassName}>{common(errors.specialization)}</p>
+            ) : null}
+          </div>
         ) : (
           <input type="hidden" name="specialization" value="" />
         )}

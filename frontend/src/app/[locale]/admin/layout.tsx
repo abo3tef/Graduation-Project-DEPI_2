@@ -1,5 +1,3 @@
-import {Suspense} from 'react';
-import {AppointmentsAppBar} from '@/features/appointments';
 import {RequireRole} from '@/features/auth';
 
 /**
@@ -8,13 +6,6 @@ import {RequireRole} from '@/features/auth';
  */
 export default function AdminLayout({children}: {children: React.ReactNode}) {
   return (
-    <>
-      <Suspense fallback={null}>
-        <AppointmentsAppBar />
-      </Suspense>
-      <Suspense fallback={null}>
-        <RequireRole roles={['Admin']}>{children}</RequireRole>
-      </Suspense>
-    </>
+    <RequireRole roles={['Admin']}>{children}</RequireRole>
   );
 }

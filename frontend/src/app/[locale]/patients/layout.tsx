@@ -1,6 +1,4 @@
-import {Suspense} from 'react';
 import {RequireRole} from '@/features/auth';
-import {AppointmentsAppBar} from '@/features/appointments';
 
 /**
  * Patient management (F8) is the doctor's and the secretary's area. The guard is UX only: the API
@@ -9,16 +7,8 @@ import {AppointmentsAppBar} from '@/features/appointments';
  */
 export default function PatientsLayout({children}: {children: React.ReactNode}) {
   return (
-    <>
-      {/* The bar reads the pathname and the page may read route params: both stream in. */}
-      <Suspense fallback={null}>
-        <AppointmentsAppBar />
-      </Suspense>
-      <main className="mx-auto w-[min(1180px,calc(100%-40px))] py-8">
-        <Suspense fallback={null}>
-          <RequireRole roles={['Doctor', 'Secretary']}>{children}</RequireRole>
-        </Suspense>
-      </main>
-    </>
+    <main className="mx-auto w-[min(1180px,calc(100%-40px))] py-8">
+      <RequireRole roles={['Doctor', 'Secretary']}>{children}</RequireRole>
+    </main>
   );
 }

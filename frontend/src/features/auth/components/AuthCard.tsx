@@ -14,10 +14,22 @@ type AuthCardProps = {
 /** The shared shell of every auth screen: one heading, one short explanation, one action area. */
 export function AuthCard({title, subtitle, children, footer}: AuthCardProps) {
   return (
-    <section className={cardClassName}>
-      <h1 className="text-2xl font-black tracking-tight text-foreground">{title}</h1>
-      {subtitle ? <p className="mt-1 text-sm text-muted">{subtitle}</p> : null}
-      <div className="mt-6">{children}</div>
+    <section className={`${cardClassName} relative overflow-hidden`}>
+      <div className="pointer-events-none absolute -end-24 -top-24 size-48 rounded-full bg-brand/10 blur-3xl" aria-hidden />
+      <div className="relative">
+        <div className="mb-5 flex items-center gap-3">
+          <span className="grid size-11 place-items-center rounded-2xl bg-brand text-[#06211f] shadow-lg shadow-brand/20">
+            <span className="text-lg font-black">M</span>
+          </span>
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-brand">Medilog</p>
+            <p className="text-[11px] text-muted">Smart medical records</p>
+          </div>
+        </div>
+        <h1 className="text-2xl font-black tracking-tight text-foreground">{title}</h1>
+        {subtitle ? <p className="mt-1 text-sm leading-6 text-muted">{subtitle}</p> : null}
+      </div>
+      <div className="relative mt-7">{children}</div>
       {footer ? <div className="mt-6 text-center text-xs text-muted">{footer}</div> : null}
     </section>
   );

@@ -1,9 +1,17 @@
+'use client';
+
 import {FiActivity, FiArrowUpRight} from 'react-icons/fi';
 import {useTranslations} from 'next-intl';
 import {Link} from '@/i18n/navigation';
+import {usePathname} from '@/i18n/navigation';
 
 export function Footer() {
   const t = useTranslations('Footer');
+  const pathname = usePathname();
+
+  if (pathname === '/dashboard' || pathname === '/admin' || pathname.startsWith('/admin/')) {
+    return null;
+  }
 
   return (
     <footer className="relative mx-auto mb-[18px] w-[min(1180px,calc(100%-40px))] overflow-hidden rounded-[25px] bg-[#071522] px-14 pb-6 pt-13 text-[#f2f7fb] max-sm:px-6 max-sm:py-10" id="contact">

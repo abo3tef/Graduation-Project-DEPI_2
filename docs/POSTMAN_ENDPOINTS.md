@@ -203,7 +203,7 @@ Details: `backend/docs/api/AUTH_API.md`.
 | `password` | body | `string` | yes | 8–128 chars with upper-case, lower-case, digit and symbol. Placeholder only below |
 | `phone` | body | `string?` | no | ≤ 30 |
 | `role` | body | `UserRole` (string) | yes | `Doctor` or `Secretary` only; `Admin` → `400` |
-| `specialization` | body | `string?` | no | ≤ 150; only accepted when `role` = `Doctor` |
+| `specialization` | body | `string?` | **yes for Doctor** | ≤ 150; required when `role` = `Doctor`, rejected for `Secretary` |
 
 ```json
 {
@@ -222,13 +222,46 @@ Details: `backend/docs/api/AUTH_API.md`.
   "fullName": "New Doctor",
   "email": "new.doctor@example.test",
   "role": "Doctor",
-  "doctorId": "1f8f6f0a-6d4c-4a54-9a5e-2f2b0c9d1a11"
+  "doctorId": "1f8f6f0a-6d4c-4a54-9a5e-2f2b0c9d1a11",
+  "specialization": "Cardiology"
 }
 ```
 
-- **Errors:** `400 validation.failed` (including `Admin` role, weak password, specialization with
-  Secretary); `409 auth.email_already_registered`; `503 auth.not_configured`. A failed email send
-  never leaks whether the address exists.
+- **Errors:** `400 validation.failed` (including `Admin` role, weak password, missing Doctor
+  specialization, or specialization with Secretary); `409 auth.email_already_registered`;
+  `503 auth.not_configured`. A failed email send never leaks whether the address exists.
+
+### GET http://localhost:5208/api/specializations
+
+- **Auth:** Public.
+- **Success:** `200 OK` — an array of curated specialization options.
+
+```json
+[
+  { "key": "cardiology", "nameEn": "Cardiology", "nameAr": "أمراض القلب" },
+  { "key": "general-medicine", "nameEn": "General Medicine", "nameAr": "طب عام" }
+]
+```
+
+### GET http://localhost:5208/api/testimonials
+
+- **Auth:** Public.
+- **Success:** `200 OK` — approved testimonials ordered by `displayOrder`, bilingual fields,
+  maximum six records.
+
+```json
+[
+  {
+    "id": "10000000-0000-0000-0000-000000000001",
+    "quoteAr": "أستطيع رؤية التاريخ الكامل للمريض قبل بدء الزيارة.",
+    "quoteEn": "I can see the patient's full history before the visit starts.",
+    "nameAr": "د. سارة خالد",
+    "nameEn": "Dr. Sarah Khaled",
+    "roleAr": "طبيبة أمراض باطنية",
+    "roleEn": "Internal medicine doctor"
+  }
+]
+```
 
 ### POST http://localhost:5208/api/auth/verify-email
 
@@ -1500,7 +1533,7 @@ No route, query or body parameters.
 
 ---
 
-## Endpoint count / checklist (48)
+## Endpoint count / checklist (50)
 
 Auth — 7 (Public)
 - [x] `POST /api/auth/login`
@@ -1510,6 +1543,10 @@ Auth — 7 (Public)
 - [x] `POST /api/auth/forgot-password`
 - [x] `POST /api/auth/reset-password`
 - [x] `POST /api/auth/google`
+
+Public platform data — 2
+- [x] `GET /api/specializations`
+- [x] `GET /api/testimonials`
 
 Admin — 5 (Bearer `Admin`)
 - [x] `GET /api/admin/users`

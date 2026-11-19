@@ -1,5 +1,3 @@
-import {Suspense} from 'react';
-import {AppointmentsAppBar} from '@/features/appointments';
 import {RequireRole} from '@/features/auth';
 
 /**
@@ -8,15 +6,8 @@ import {RequireRole} from '@/features/auth';
  */
 export default function PaymentsLayout({children}: {children: React.ReactNode}) {
   return (
-    <>
-      <Suspense fallback={null}>
-        <AppointmentsAppBar />
-      </Suspense>
-      <main className="mx-auto w-[min(1180px,calc(100%-40px))] py-8">
-        <Suspense fallback={null}>
-          <RequireRole roles={['Doctor', 'Secretary']}>{children}</RequireRole>
-        </Suspense>
-      </main>
-    </>
+    <main className="mx-auto w-[min(1180px,calc(100%-40px))] py-8">
+      <RequireRole roles={['Doctor', 'Secretary']}>{children}</RequireRole>
+    </main>
   );
 }

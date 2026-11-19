@@ -140,6 +140,49 @@ public sealed class DevelopmentSeeder
                 created);
         }
 
+        if (!await _dbContext.Testimonials.AnyAsync(cancellationToken))
+        {
+            _dbContext.Testimonials.AddRange(
+                new Testimonial
+                {
+                    Id = Guid.Parse("10000000-0000-0000-0000-000000000001"),
+                    QuoteAr = "أستطيع رؤية التاريخ الكامل للمريض قبل بدء الزيارة، دون البحث في ملفات متفرقة.",
+                    QuoteEn = "I can see the patient's full history before the visit starts, without searching through scattered files.",
+                    NameAr = "د. سارة خالد",
+                    NameEn = "Dr. Sarah Khaled",
+                    RoleAr = "طبيبة أمراض باطنية",
+                    RoleEn = "Internal medicine doctor",
+                    IsApproved = true,
+                    DisplayOrder = 1
+                },
+                new Testimonial
+                {
+                    Id = Guid.Parse("10000000-0000-0000-0000-000000000002"),
+                    QuoteAr = "تنظيم المواعيد والمتابعة اليومية وفّر لفريقنا ساعات من الاتصالات والتنسيق.",
+                    QuoteEn = "Organizing appointments and daily follow-ups saved our team hours of calls and coordination.",
+                    NameAr = "منى علي",
+                    NameEn = "Mona Ali",
+                    RoleAr = "مديرة عيادة",
+                    RoleEn = "Clinic manager",
+                    IsApproved = true,
+                    DisplayOrder = 2
+                },
+                new Testimonial
+                {
+                    Id = Guid.Parse("10000000-0000-0000-0000-000000000003"),
+                    QuoteAr = "واجهة واضحة وسريعة، والمعلومات الحساسة تظهر للشخص المصرح له فقط.",
+                    QuoteEn = "The interface is clear and fast, and sensitive information stays visible only to the right person.",
+                    NameAr = "د. عمر حسن",
+                    NameEn = "Dr. Omar Hassan",
+                    RoleAr = "طبيب أسنان",
+                    RoleEn = "Dentist",
+                    IsApproved = true,
+                    DisplayOrder = 3
+                });
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+
         return created;
     }
 

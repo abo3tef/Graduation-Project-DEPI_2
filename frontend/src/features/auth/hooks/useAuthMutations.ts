@@ -1,7 +1,11 @@
 'use client';
 
 import {useMutation} from '@tanstack/react-query';
+import {useTranslations} from 'next-intl';
 import {useRouter} from '@/i18n/navigation';
+import {isApiError} from '@/lib/api';
+import {notify} from '@/lib/utils/toast';
+import {authErrorMessageKey} from '../errors/authErrorMessageKey';
 import {
   forgotPassword,
   login,
@@ -35,12 +39,18 @@ function useSignInMutation<TInput>(
   mutationFn: (input: TInput) => Promise<AuthSession>
 ) {
   const router = useRouter();
+  const errorMessages = useTranslations('Auth.errors');
+  const toast = useTranslations('Auth.toast');
 
   return useMutation({
     mutationFn: (variables: SignInVariables<TInput>) => mutationFn(variables.input),
     onSuccess: (result, variables) => {
       setSession(result);
+      notify.success(toast('signedIn'));
       router.replace(resolveRedirectTarget(result.user.role, variables.next));
+    },
+    onError: (error) => {
+      notify.error(isApiError(error) ? errorMessages(authErrorMessageKey(error)) : errorMessages('unknown'));
     }
   });
 }
@@ -54,21 +64,51 @@ export function useGoogleSignIn() {
 }
 
 export function useRegister() {
-  return useMutation({mutationFn: (input: RegisterInput) => register(input)});
+  const toast = useTranslations('Auth.toast');
+  const errorMessages = useTranslations('Auth.errors');
+  return useMutation({
+    mutationFn: (input: RegisterInput) => register(input),
+    onSuccess: () => notify.success(toast('accountCreated')),
+    onError: (error) => notify.error(isApiError(error) ? errorMessages(authErrorMessageKey(error)) : errorMessages('unknown'))
+  });
 }
 
 export function useVerifyEmail() {
-  return useMutation({mutationFn: (input: VerifyEmailInput) => verifyEmail(input)});
+  const toast = useTranslations('Auth.toast');
+  const errorMessages = useTranslations('Auth.errors');
+  return useMutation({
+    mutationFn: (input: VerifyEmailInput) => verifyEmail(input),
+    onSuccess: () => notify.success(toast('emailVerified')),
+    onError: (error) => notify.error(isApiError(error) ? errorMessages(authErrorMessageKey(error)) : errorMessages('unknown'))
+  });
 }
 
 export function useResendVerification() {
-  return useMutation({mutationFn: (email: string) => resendVerification(email)});
+  const toast = useTranslations('Auth.toast');
+  const errorMessages = useTranslations('Auth.errors');
+  return useMutation({
+    mutationFn: (email: string) => resendVerification(email),
+    onSuccess: () => notify.success(toast('verificationSent')),
+    onError: (error) => notify.error(isApiError(error) ? errorMessages(authErrorMessageKey(error)) : errorMessages('unknown'))
+  });
 }
 
 export function useForgotPassword() {
-  return useMutation({mutationFn: (email: string) => forgotPassword(email)});
+  const toast = useTranslations('Auth.toast');
+  const errorMessages = useTranslations('Auth.errors');
+  return useMutation({
+    mutationFn: (email: string) => forgotPassword(email),
+    onSuccess: () => notify.success(toast('resetSent')),
+    onError: (error) => notify.error(isApiError(error) ? errorMessages(authErrorMessageKey(error)) : errorMessages('unknown'))
+  });
 }
 
 export function useResetPassword() {
-  return useMutation({mutationFn: (input: ResetPasswordInput) => resetPassword(input)});
+  const toast = useTranslations('Auth.toast');
+  const errorMessages = useTranslations('Auth.errors');
+  return useMutation({
+    mutationFn: (input: ResetPasswordInput) => resetPassword(input),
+    onSuccess: () => notify.success(toast('passwordChanged')),
+    onError: (error) => notify.error(isApiError(error) ? errorMessages(authErrorMessageKey(error)) : errorMessages('unknown'))
+  });
 }

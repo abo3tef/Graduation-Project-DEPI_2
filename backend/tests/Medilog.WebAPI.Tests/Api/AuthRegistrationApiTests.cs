@@ -166,6 +166,7 @@ public sealed class AuthRegistrationApiTests
             email = "new.doctor@medilog.test",
             password = Password,
             role = "Doctor",
+            specialization = "Cardiology",
         });
         Assert.Equal(HttpStatusCode.Created, register.StatusCode);
 
@@ -202,6 +203,7 @@ public sealed class AuthRegistrationApiTests
             email = "new.doctor@medilog.test",
             password = Password,
             role = "Doctor",
+            specialization = "Cardiology",
         });
 
         // Act
@@ -250,6 +252,7 @@ public sealed class AuthRegistrationApiTests
             email = "new.doctor@medilog.test",
             password = Password,
             role = "Doctor",
+            specialization = "Cardiology",
         });
 
         // Act
@@ -280,6 +283,7 @@ public sealed class AuthRegistrationApiTests
             email = "new.doctor@medilog.test",
             password = Password,
             role = "Doctor",
+            specialization = "Cardiology",
         });
 
         var token = AuthEmailReader.ReadToken(email.Messages[^1]);

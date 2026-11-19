@@ -22,7 +22,9 @@ error envelope (`application/problem+json`, `code`, `traceId`, `errors`) is desc
 | `POST` | `/api/auth/google` | `idToken` | `200` + token | `400` validation, `401` invalid token, `403` account state, `503` not configured |
 
 `role` accepts only `Doctor` or `Secretary` (closed allow-list; `Admin` is rejected with `400`).
-`phone` and `specialization` are optional; a `specialization` is only accepted for a doctor.
+`phone` is optional. `specialization` is mandatory for Doctor registration, returned in auth/account
+responses for doctors, and rejected for Secretary registration. Curated options are available from
+`GET /api/specializations`.
 
 ## 2. Sign-in response
 

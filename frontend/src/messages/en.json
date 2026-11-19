@@ -148,7 +148,71 @@
     ],
     "ctaEyebrow": "Ready for the next step?",
     "ctaTitle": "Build a smarter clinic today",
-    "ctaDescription": "Organize your day, understand your data, and deliver better care with Medilog."
+    "ctaDescription": "Organize your day, understand your data, and deliver better care with Medilog.",
+    "testimonialsStateError": "Testimonials could not be loaded.",
+    "testimonialsStateEmpty": "No approved testimonials are available yet."
+  },
+  "FeatureDetails": {
+    "organized-records": {
+      "back": "Back to features",
+      "eyebrow": "Organized records",
+      "title": "One clear patient record",
+      "description": "Keep medical history, diagnoses, prescriptions, vital signs, and visit notes together in a chronological, accessible patient profile.",
+      "benefits": [
+        {"title": "Complete history", "description": "Review prior visits and findings before the next appointment."},
+        {"title": "Clear diagnoses", "description": "Record and update diagnoses without losing the clinical context."},
+        {"title": "Safe prescriptions", "description": "Keep medication, dosage, frequency, duration, and instructions connected to the visit."},
+        {"title": "Doctor-scoped access", "description": "Clinical records remain restricted to the doctor responsible for the patient."}
+      ],
+      "workflowTitle": "From visit to timeline",
+      "workflowDescription": "A visit, its measurements, findings, diagnoses, and medications appear as one complete record in the patient timeline.",
+      "cta": "Create account"
+    },
+    "appointments": {
+      "back": "Back to features",
+      "eyebrow": "Clutter-free appointments",
+      "title": "A calmer clinic schedule",
+      "description": "Manage bookings, patient visits, daily schedules, status changes, and cancellations from a single organized workspace.",
+      "benefits": [
+        {"title": "Daily overview", "description": "See today's appointments and upcoming visits at a glance."},
+        {"title": "Patient tracking", "description": "Open the correct patient file and keep visit context connected."},
+        {"title": "Conflict-aware booking", "description": "Use validated schedules to avoid overlapping appointments."},
+        {"title": "Responsive updates", "description": "Cancel or reschedule appointments while keeping the team informed."}
+      ],
+      "workflowTitle": "Plan the day",
+      "workflowDescription": "Start with the daily schedule, confirm patients, and move smoothly from booking to medical visit.",
+      "cta": "Create account"
+    },
+    "data-decisions": {
+      "back": "Back to features",
+      "eyebrow": "Data-driven decisions",
+      "title": "Turn clinic activity into insight",
+      "description": "Bring visits, appointments, patient activity, and operational trends into a clear dashboard for better decisions.",
+      "benefits": [
+        {"title": "Live clinic activity", "description": "Track today's and upcoming workload."},
+        {"title": "Patient and visit trends", "description": "Understand how the clinic is used over time."},
+        {"title": "Role-based insight", "description": "Doctors and administrators see the information relevant to their responsibilities."},
+        {"title": "Clear next steps", "description": "Use accurate records to prioritize follow-ups and resources."}
+      ],
+      "workflowTitle": "Review, understand, act",
+      "workflowDescription": "Use the dashboard for a concise daily view, then open patient and appointment workflows for details.",
+      "cta": "Create account"
+    },
+    "connected-team": {
+      "back": "Back to features",
+      "eyebrow": "Connected team",
+      "title": "Collaboration with clear responsibilities",
+      "description": "Connect doctors, secretaries, and administrators while keeping sensitive clinical access limited to authorized roles.",
+      "benefits": [
+        {"title": "Doctor workspace", "description": "Doctors manage clinical visits, diagnoses, vitals, and prescriptions."},
+        {"title": "Secretary workflow", "description": "Secretaries manage appointments and approved patient administration."},
+        {"title": "Admin control", "description": "Administrators review accounts and manage active staff roles."},
+        {"title": "Secure boundaries", "description": "Backend authorization prevents secretaries from entering clinical workflows."}
+      ],
+      "workflowTitle": "One clinic, clear roles",
+      "workflowDescription": "Each team member sees the tools needed for their role while patient data stays protected.",
+      "cta": "Create account"
+    }
   },
   "Footer": {
     "brand": "Medilog",
@@ -169,6 +233,33 @@
     "project": "Graduation project"
   },
   "MedicalRecords": {
+    "prescription": {
+      "title": "Medical Prescription",
+      "print": "Print Prescription",
+      "clinic": "Clinic",
+      "patient": "Patient",
+      "patientNameUnavailable": "Patient name unavailable",
+      "patientId": "ID",
+      "age": "Age",
+      "gender": "Gender",
+      "genderMale": "Male",
+      "genderFemale": "Female",
+      "doctor": "Doctor",
+      "date": "Date",
+      "visit": "Visit",
+      "diagnosis": "Diagnosis",
+      "diagnosisAndSummary": "Diagnosis and clinical summary",
+      "clinicalSummary": "Clinical summary",
+      "medications": "Medications",
+      "medicationName": "Medication",
+      "dosage": "Dosage",
+      "frequency": "Frequency",
+      "duration": "Duration",
+      "instructions": "Instructions / notes",
+      "noMedications": "No medications prescribed.",
+      "signature": "Doctor's signature / stamp",
+      "notProvided": "Not provided"
+    },
     "vitalSigns": {
       "addAction": "Add vital signs",
       "editAction": "Edit",
@@ -281,6 +372,41 @@
       "submitEdit": "Save changes",
       "submitting": "Saving…",
       "readOnlyNote": "The patient and the appointment link stay unchanged."
+    },
+    "unifiedVisit": {
+      "visitSection": "Visit details",
+      "diagnosisSection": "Diagnosis",
+      "diagnosisTitle": "Diagnosis and clinical findings",
+      "diagnosisName": "Diagnosis",
+      "diagnosisDate": "Diagnosis date",
+      "diagnosisDescription": "Clinical description",
+      "vitalsSection": "Vital signs",
+      "vitalsTitle": "Measurements",
+      "prescriptionSection": "Prescription",
+      "prescriptionTitle": "Prescription items",
+      "medicationName": "Medication",
+      "dosage": "Dosage",
+      "frequency": "Frequency",
+      "duration": "Duration",
+      "instructions": "Instructions / notes",
+      "addMedication": "Add medication",
+      "removeMedication": "Remove",
+      "medicationNumber": "Medication {number}",
+      "medicationNameRequired": "Enter the medication name.",
+      "dosageRequired": "Enter the dosage.",
+      "frequencyRequired": "Enter the frequency.",
+      "saveVisit": "Save complete visit",
+      "saving": "Saving visit…",
+      "savingVisit": "Saving visit details…",
+      "savingDiagnosis": "Saving diagnosis…",
+      "savingVitals": "Saving vital signs…",
+      "savingPrescription": "Saving prescription items…",
+      "complete": "Visit saved.",
+      "retrying": "Retrying…",
+      "retryPartial": "Retry failed items",
+      "partialFailure": "The visit was created, but some details could not be saved.",
+      "partialFailureDescription": "Retry the failed items. Successfully saved items will not be submitted again.",
+      "visitSaveFailed": "The visit could not be saved. Please review the form and try again."
     },
     "diagnosis": {
       "title": "Diagnoses",
@@ -840,7 +966,9 @@
       "haveAccount": "Already have an account?",
       "signIn": "Sign in",
       "checkEmailTitle": "Check your inbox",
-      "checkEmail": "We sent a verification link to {email}. Open it to activate the account, then sign in."
+      "checkEmail": "We sent a verification link to {email}. Open it to activate the account, then sign in.",
+      "specializationPlaceholder": "Select a specialization",
+      "specializationLoadError": "Could not load the specialization list."
     },
     "verify": {
       "title": "Verifying your email",
@@ -884,6 +1012,14 @@
       "network": "The server could not be reached.",
       "server": "A server error occurred. Try again later.",
       "unknown": "Something went wrong. Try again."
+    },
+    "toast": {
+      "signedIn": "Welcome back. You are signed in.",
+      "accountCreated": "Account created. Check your inbox to verify it.",
+      "emailVerified": "Email verified successfully.",
+      "verificationSent": "A new verification link is on its way.",
+      "resetSent": "If an account exists, a reset link is on its way.",
+      "passwordChanged": "Password changed successfully."
     },
     "guard": {
       "loading": "Checking your session…",
@@ -967,6 +1103,12 @@
       "noReason": "Not specified",
       "empty": "No appointments today",
       "emptyHint": "Appointments booked for today will appear here as soon as they are scheduled."
+    },
+    "upcoming": {
+      "title": "Upcoming appointments",
+      "subtitle": "Your schedule for today and the next seven days",
+      "empty": "No upcoming appointments",
+      "emptyHint": "New appointments will appear here when they are booked."
     },
     "statuses": {
       "Scheduled": "Scheduled",
@@ -1123,6 +1265,19 @@
       "eyebrow": "Administration",
       "title": "Account administration",
       "description": "Review accounts, change account state or role, and manage secretary assignments."
+    },
+    "overview": {
+      "label": "Account overview",
+      "total": "Total accounts",
+      "active": "Active on this page",
+      "verified": "Verified on this page",
+      "page": "Loaded records",
+      "distributionTitle": "Role distribution",
+      "distributionHint": "Live distribution for the records currently loaded.",
+      "liveEyebrow": "Live control center",
+      "liveTitle": "Your clinic access, clearly organized.",
+      "liveDescription": "Changes made here are sent directly to the API and reflected in the account table after refresh.",
+      "liveStatus": "Connected to account service"
     },
     "filters": {
       "label": "Account filters",

@@ -2,7 +2,7 @@
 
 import {useState} from 'react';
 import {useTranslations} from 'next-intl';
-import {FiRefreshCw} from 'react-icons/fi';
+import {FiActivity, FiCheckCircle, FiRefreshCw, FiShield, FiUsers} from 'react-icons/fi';
 import {useSession} from '@/features/auth';
 import {DEFAULT_PAGE_SIZE} from '@/types/paging';
 import {useAdminErrorMessage, useAdminUsers} from '../hooks';
@@ -34,6 +34,11 @@ export function AdminDashboardScreen() {
   const query = useAdminUsers(filters);
   const users = query.data?.items ?? [];
   const isEmpty = !query.isPending && !query.isError && users.length === 0;
+  const activeCount = users.filter((user) => user.status === 'Active').length;
+  const verifiedCount = users.filter((user) => user.emailVerified).length;
+  const doctorsCount = users.filter((user) => user.role === 'Doctor').length;
+  const secretariesCount = users.filter((user) => user.role === 'Secretary').length;
+  const roleTotal = Math.max(doctorsCount + secretariesCount, 1);
 
   function updateFilters(patch: Partial<AdminUserFilters>): void {
     setFilters((current) => ({...current, ...patch}));
@@ -54,6 +59,62 @@ export function AdminDashboardScreen() {
           {t('page.description')}
         </p>
       </header>
+
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label={t('overview.label')}>
+        {[
+          {label: t('overview.total'), value: query.data?.totalCount ?? 0, icon: FiUsers, tone: 'text-brand bg-brand-soft'},
+          {label: t('overview.active'), value: activeCount, icon: FiActivity, tone: 'text-emerald-500 bg-emerald-500/10'},
+          {label: t('overview.verified'), value: verifiedCount, icon: FiCheckCircle, tone: 'text-sky-500 bg-sky-500/10'},
+          {label: t('overview.page'), value: users.length, icon: FiShield, tone: 'text-amber-500 bg-amber-500/10'}
+        ].map((stat) => {
+          const Icon = stat.icon;
+          return (
+            <article key={stat.label} className="rounded-2xl border border-border bg-surface p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-brand/40">
+              <div className="flex items-start justify-between gap-3">
+                <p className="text-xs font-semibold text-muted">{stat.label}</p>
+                <span className={`grid size-10 place-items-center rounded-xl ${stat.tone}`}><Icon className="size-5" /></span>
+              </div>
+              <p className="mt-4 text-3xl font-black tracking-tight">{query.isPending ? '—' : stat.value.toLocaleString()}</p>
+            </article>
+          );
+        })}
+      </section>
+
+      <section className="grid gap-5 lg:grid-cols-[1.2fr_.8fr]">
+        <div className="rounded-2xl border border-border bg-surface p-5 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-base font-black">{t('overview.distributionTitle')}</h2>
+              <p className="mt-1 text-xs text-muted">{t('overview.distributionHint')}</p>
+            </div>
+            <FiUsers className="size-5 text-brand" aria-hidden />
+          </div>
+          <div className="mt-6 grid gap-4">
+            {[
+              {label: t('roles.Doctor'), value: doctorsCount, tone: 'bg-brand'},
+              {label: t('roles.Secretary'), value: secretariesCount, tone: 'bg-sky-500'}
+            ].map((item) => (
+              <div key={item.label}>
+                <div className="mb-2 flex justify-between text-xs font-bold">
+                  <span>{item.label}</span><span className="text-muted">{item.value}</span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-surface-2">
+                  <div className={`h-full rounded-full ${item.tone} transition-all`} style={{width: `${(item.value / roleTotal) * 100}%`}} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="rounded-2xl border border-brand/20 bg-gradient-to-br from-brand/15 via-surface to-surface p-5 shadow-sm">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand">{t('overview.liveEyebrow')}</p>
+          <h2 className="mt-3 text-xl font-black">{t('overview.liveTitle')}</h2>
+          <p className="mt-2 text-sm leading-7 text-muted">{t('overview.liveDescription')}</p>
+          <div className="mt-5 flex items-center gap-2 text-xs font-bold text-brand">
+            <span className="size-2 rounded-full bg-brand shadow-[0_0_0_5px_rgba(45,212,191,.12)]" />
+            {t('overview.liveStatus')}
+          </div>
+        </div>
+      </section>
 
       <AdminFilters
         filters={filters}

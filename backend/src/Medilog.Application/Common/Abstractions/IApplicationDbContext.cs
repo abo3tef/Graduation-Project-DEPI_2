@@ -37,6 +37,8 @@ public interface IApplicationDbContext
 
     DbSet<Payment> Payments { get; }
 
+    DbSet<Testimonial> Testimonials { get; }
+
     DbSet<Allergy> Allergies { get; }
 
     DbSet<ChronicCondition> ChronicConditions { get; }

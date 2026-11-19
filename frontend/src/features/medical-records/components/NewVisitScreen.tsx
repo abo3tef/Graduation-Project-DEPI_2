@@ -4,7 +4,7 @@ import {FiArrowLeft} from 'react-icons/fi';
 import {useSearchParams} from 'next/navigation';
 import {useTranslations} from 'next-intl';
 import {Link, useRouter} from '@/i18n/navigation';
-import {VisitForm} from './VisitForm';
+import {UnifiedVisitForm} from './UnifiedVisitForm';
 
 /**
  * Create-visit screen. The patient is chosen with the shared patient picker (F8); a
@@ -28,7 +28,7 @@ export function NewVisitScreen() {
         {commonT('backToWorkspace')}
       </Link>
 
-      <header>
+      <header className="mx-auto w-full max-w-5xl">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand">
           {t('eyebrow')}
         </p>
@@ -38,16 +38,15 @@ export function NewVisitScreen() {
         </p>
       </header>
 
-      <div className="max-w-3xl">
+      <div className="mx-auto w-full max-w-5xl">
         <section
           aria-labelledby="new-visit-title"
-          className="rounded-2xl border border-border bg-surface p-5 sm:p-6"
+          className="rounded-2xl border border-border bg-surface p-5 sm:p-7"
         >
           <h2 id="new-visit-title" className="sr-only">
             {t('createTitle')}
           </h2>
-          <VisitForm
-            mode="create"
+          <UnifiedVisitForm
             initialPatientId={initialPatientId}
             onSuccess={(visit) =>
               router.push(`/medical-records/visits/${visit.id}`)

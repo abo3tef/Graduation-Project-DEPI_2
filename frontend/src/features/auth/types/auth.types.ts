@@ -23,6 +23,7 @@ export type AccountSummary = {
   readonly email: string;
   readonly role: AuthUserRole;
   readonly doctorId: string | null;
+  readonly specialization: string | null;
 };
 
 /** Registration accepts only these two roles (a closed allow-list; `Admin` is seeded, never registered). */
@@ -90,7 +91,8 @@ function readUser(value: unknown): AuthUser {
     fullName: text(source.fullName),
     email: text(source.email),
     role,
-    doctorId: optionalText(source.doctorId)
+    doctorId: optionalText(source.doctorId),
+    specialization: optionalText(source.specialization)
   };
 }
 
@@ -117,6 +119,7 @@ export function readAccountSummary(value: unknown): AccountSummary {
     fullName: text(source.fullName),
     email: text(source.email),
     role,
-    doctorId: optionalText(source.doctorId)
+    doctorId: optionalText(source.doctorId),
+    specialization: optionalText(source.specialization)
   };
 }

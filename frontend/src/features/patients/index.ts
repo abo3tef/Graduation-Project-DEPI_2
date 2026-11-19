@@ -4,4 +4,4 @@ export {EditPatientScreen, NewPatientScreen} from './components/PatientFormScree
 export {PatientSelect} from './components/PatientSelect';
 export type {PatientSelectProps} from './components/PatientSelect';
 export {usePatient} from './hooks/usePatients';
-export type {PatientOption} from './types/patient.types';
+export type {Patient, PatientOption} from './types/patient.types';

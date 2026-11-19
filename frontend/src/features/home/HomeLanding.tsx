@@ -1,6 +1,7 @@
 'use client';
 
 import {motion} from 'framer-motion';
+import {useQuery} from '@tanstack/react-query';
 import {
   FiActivity,
   FiArrowLeft,
@@ -16,13 +17,12 @@ import {
 } from 'react-icons/fi';
 import {useLocale, useTranslations} from 'next-intl';
 import {Link} from '@/i18n/navigation';
-import {Footer} from '@/components/layout/Footer';
-import {Header} from '@/components/layout/Header';
-import {SignedInNotice} from '@/features/auth';
 import {fadeIn, scaleIn, slideUp, staggerContainer} from '@/lib/animations';
+import {getTestimonials} from './testimonials.api';
 
 const featureIcons = [FiClipboard, FiCalendar, FiActivity, FiUsers] as const;
 const workflowIcons = [FiUsers, FiClipboard, FiCalendar] as const;
+const featureSlugs = ['organized-records', 'appointments', 'data-decisions', 'connected-team'] as const;
 
 function MedicalIllustration() {
   return (
@@ -52,16 +52,17 @@ function MedicalIllustration() {
 
 export function HomeLanding() {
   const t = useTranslations('Home');
-  const isArabic = useLocale() === 'ar';
+  const locale = useLocale();
+  const isArabic = locale === 'ar';
+  const testimonials = useQuery({
+    queryKey: ['public', 'testimonials', locale],
+    queryFn: () => getTestimonials(locale === 'ar' ? 'ar' : 'en')
+  });
   const Arrow = isArabic ? FiArrowLeft : FiArrowRight;
   const tickerItems = [t('ticker.one'), t('ticker.two'), t('ticker.three'), t('ticker.four'), t('ticker.five'), t('ticker.six')];
 
   return (
     <div className="min-h-screen overflow-hidden bg-background">
-      <Header />
-      <div className="pt-4">
-        <SignedInNotice />
-      </div>
       <main>
         <section className="relative mx-auto grid min-h-[620px] w-[min(1180px,calc(100%-40px))] grid-cols-1 items-center gap-12 py-20 lg:grid-cols-[1fr_1fr]">
           <div className="pointer-events-none absolute -right-40 -top-32 size-[360px] rounded-full bg-[#10b7a5] opacity-20 blur-[90px]" />
@@ -86,7 +87,7 @@ export function HomeLanding() {
 
         <section className="mx-auto w-[min(1180px,calc(100%-40px))] py-24" id="features">
           <motion.div className="mx-auto mb-12 max-w-[610px] text-center" initial="hidden" whileInView="visible" viewport={{once: true, amount: .3}} variants={slideUp}><span className="text-xs font-extrabold text-brand-strong">{t('featuresEyebrow')}</span><h2 className="my-3 text-3xl font-black leading-tight tracking-[-.03em] sm:text-4xl">{t('featuresTitle')}</h2><p className="text-sm leading-8 text-muted">{t('featuresDescription')}</p></motion.div>
-          <motion.div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" initial="hidden" whileInView="visible" viewport={{once: true, amount: .15}} variants={staggerContainer}>{featureIcons.map((Icon, index) => <motion.article className="min-h-[275px] rounded-2xl border border-border bg-surface p-6 transition hover:-translate-y-2 hover:border-brand hover:shadow-2xl" key={index} variants={slideUp}><span className="grid size-11 place-items-center rounded-xl bg-brand-soft text-brand-strong"><Icon className="size-5" /></span><h3 className="mt-5 text-base font-bold">{t(`featuresList.${index}.title`)}</h3><p className="mt-2 min-h-16 text-xs leading-7 text-muted">{t(`featuresList.${index}.description`)}</p><Link className="mt-3 inline-flex items-center gap-1 text-[11px] font-extrabold text-brand-strong" href="/#contact">{t('learnMore')} <Arrow className="size-3" /></Link></motion.article>)}</motion.div>
+          <motion.div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" initial="hidden" whileInView="visible" viewport={{once: true, amount: .15}} variants={staggerContainer}>{featureIcons.map((Icon, index) => <motion.article className="min-h-[275px] rounded-2xl border border-border bg-surface p-6 transition hover:-translate-y-2 hover:border-brand hover:shadow-2xl" key={index} variants={slideUp}><span className="grid size-11 place-items-center rounded-xl bg-brand-soft text-brand-strong"><Icon className="size-5" /></span><h3 className="mt-5 text-base font-bold">{t(`featuresList.${index}.title`)}</h3><p className="mt-2 min-h-16 text-xs leading-7 text-muted">{t(`featuresList.${index}.description`)}</p><Link className="mt-3 inline-flex items-center gap-1 text-[11px] font-extrabold text-brand-strong" href={`/features/${featureSlugs[index]}`}>{t('learnMore')} <Arrow className="size-3" /></Link></motion.article>)}</motion.div>
         </section>
 
         <section className="border-y border-border bg-surface/60">
@@ -109,14 +110,23 @@ export function HomeLanding() {
 
         <section className="mx-auto mb-24 w-[min(1180px,calc(100%-40px))]">
           <div className="mx-auto mb-10 max-w-[600px] text-center"><span className="text-xs font-extrabold text-brand-strong">{t('storyEyebrow')}</span><h2 className="my-3 text-3xl font-black sm:text-4xl">{t('storyTitle')}</h2><p className="text-sm leading-8 text-muted">{t('storyDescription')}</p></div>
-          <div className="grid gap-4 md:grid-cols-3">
-            {[0, 1, 2].map((index) => <motion.article key={index} className="rounded-2xl border border-border bg-surface p-6" initial={{opacity: 0, y: 20}} whileInView={{opacity: 1, y: 0}} viewport={{once: true}} transition={{delay: index * .1}}><div className="mb-5 flex gap-1 text-brand">{[1, 2, 3, 4, 5].map((star) => <span key={star}>★</span>)}</div><p className="min-h-24 text-sm leading-7 text-muted">“{t(`testimonials.${index}.quote`)}”</p><div className="mt-5 border-t border-border pt-4"><strong className="block text-sm">{t(`testimonials.${index}.name`)}</strong><span className="text-[11px] text-muted">{t(`testimonials.${index}.role`)}</span></div></motion.article>)}
-          </div>
+          {testimonials.isPending ? (
+            <div className="grid gap-4 md:grid-cols-3" role="status">
+              {[0, 1, 2].map((index) => <div key={index} className="h-48 animate-pulse rounded-2xl border border-border bg-surface" />)}
+            </div>
+          ) : testimonials.isError ? (
+            <div role="alert" className="rounded-2xl border border-danger/30 bg-danger/5 p-6 text-center text-sm text-danger">{t('testimonialsStateError')}</div>
+          ) : testimonials.data?.length === 0 ? (
+            <div className="rounded-2xl border border-border bg-surface p-6 text-center text-sm text-muted">{t('testimonialsStateEmpty')}</div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-3">
+              {testimonials.data?.map((testimonial, index) => <motion.article key={testimonial.id} className="rounded-2xl border border-border bg-surface p-6" initial={{opacity: 0, y: 20}} whileInView={{opacity: 1, y: 0}} viewport={{once: true}} transition={{delay: index * .1}}><div className="mb-5 flex gap-1 text-brand">{[1, 2, 3, 4, 5].map((star) => <span key={star}>★</span>)}</div><p className="min-h-24 text-sm leading-7 text-muted">“{isArabic ? testimonial.quoteAr : testimonial.quoteEn}”</p><div className="mt-5 border-t border-border pt-4"><strong className="block text-sm">{isArabic ? testimonial.nameAr : testimonial.nameEn}</strong><span className="text-[11px] text-muted">{isArabic ? testimonial.roleAr : testimonial.roleEn}</span></div></motion.article>)}
+            </div>
+          )}
         </section>
 
         <section className="mx-auto mb-24 w-[min(920px,calc(100%-40px))] rounded-3xl border border-brand/20 bg-gradient-to-br from-[#123f48] to-[#0d2539] px-5 py-14 text-center"><span className="text-xs font-extrabold text-brand">{t('ctaEyebrow')}</span><h2 className="my-3 text-3xl font-black sm:text-4xl">{t('ctaTitle')}</h2><p className="mx-auto mb-6 max-w-[520px] text-sm leading-8 text-muted">{t('ctaDescription')}</p><Link href="/#contact" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand px-6 text-xs font-extrabold text-[#06211f] transition hover:-translate-y-1 hover:bg-[#78f3dc]">{t('primaryCta')} <Arrow className="size-4" /></Link></section>
       </main>
-      <Footer />
     </div>
   );
 }

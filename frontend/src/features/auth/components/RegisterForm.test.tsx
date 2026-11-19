@@ -21,33 +21,61 @@ const ACCOUNT = {
   fullName: 'New Doctor',
   email: 'new.doctor@example.test',
   role: 'Doctor',
-  doctorId: '11111111-1111-4111-8111-111111111111'
+  doctorId: '11111111-1111-4111-8111-111111111111',
+  specialization: 'Cardiology'
 };
 
 function reply(body: unknown, status = 201): void {
   vi.stubGlobal(
     'fetch',
-    vi.fn(async () =>
-      new Response(JSON.stringify(body), {
+    vi.fn(async (input: string | URL | Request) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
+      if (url.endsWith('/api/specializations')) {
+        return new Response(JSON.stringify([
+          {key: 'cardiology', nameEn: 'Cardiology', nameAr: 'أمراض القلب'}
+        ]), {
+          status: 200,
+          headers: {'content-type': 'application/json'}
+        });
+      }
+      return new Response(JSON.stringify(body), {
         status,
         headers: {'content-type': status >= 400 ? 'application/problem+json' : 'application/json'}
-      })
-    )
+      });
+    })
   );
 }
 
 /** A spy that fails the test if the form sends anything. */
 function installSpyFetch(): void {
-  vi.stubGlobal('fetch', vi.fn());
+  vi.stubGlobal('fetch', vi.fn(async (input: string | URL | Request) => {
+    const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
+    if (url.endsWith('/api/specializations')) {
+      return new Response(JSON.stringify([
+        {key: 'cardiology', nameEn: 'Cardiology', nameAr: 'أمراض القلب'}
+      ]), {status: 200, headers: {'content-type': 'application/json'}});
+    }
+    return new Response(JSON.stringify({}), {status: 400, headers: {'content-type': 'application/problem+json'}});
+  }));
 }
 
 const submit = () => screen.getByRole('button', {name: /^(Create account|Please wait…)$/});
+function authRegisterCalls(): number {
+  const mock = (fetch as unknown as {mock: {calls: [string | URL | Request, ...unknown[]][]}}).mock;
+  return mock.calls.filter(([input]) => {
+    const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
+    return url.endsWith('/api/auth/register');
+  }).length;
+}
 
 async function fillValidForm(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByLabelText('Full name'), 'New Doctor');
   await user.type(screen.getByLabelText('Email'), 'new.doctor@example.test');
   await user.type(screen.getByLabelText('Password'), 'Medilog@2026');
   await user.type(screen.getByLabelText('Confirm password'), 'Medilog@2026');
+  const specialization = await screen.findByLabelText(/Specialization/);
+  await screen.findByRole('option', {name: 'Cardiology'});
+  await user.selectOptions(specialization, 'Cardiology');
 }
 
 describe('RegisterForm', () => {
@@ -68,7 +96,7 @@ describe('RegisterForm', () => {
     const radios = screen.getAllByRole('radio');
     expect(radios.map((radio) => radio.getAttribute('value'))).toEqual(['Doctor', 'Secretary']);
     expect(screen.getByRole('radio', {name: 'Doctor'})).toBeChecked();
-    expect(screen.getByLabelText('Specialization (optional)')).toBeInTheDocument();
+    expect(screen.getByLabelText(/Specialization/)).toBeInTheDocument();
   });
 
   it('hides the specialization when a secretary is chosen', async () => {
@@ -77,7 +105,7 @@ describe('RegisterForm', () => {
 
     await user.click(screen.getByRole('radio', {name: 'Secretary'}));
 
-    expect(screen.queryByLabelText('Specialization (optional)')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Specialization/)).not.toBeInTheDocument();
   });
 
   it('reports every missing mandatory field and sends nothing', async () => {
@@ -87,8 +115,14 @@ describe('RegisterForm', () => {
 
     await user.click(submit());
 
-    expect(await screen.findAllByText('This field is required.')).toHaveLength(4);
-    expect(fetch).not.toHaveBeenCalled();
+    expect(await screen.findAllByText('This field is required.')).toHaveLength(5);
+    expect(
+      (fetch as unknown as {mock: {calls: [string | URL | Request, ...unknown[]][]}}).mock.calls
+        .filter(([input]) => {
+          const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
+          return url.endsWith('/api/auth/register');
+        })
+    ).toHaveLength(0);
   });
 
   it('applies the password policy before sending', async () => {
@@ -108,7 +142,7 @@ describe('RegisterForm', () => {
         'Use 8 to 128 characters with an upper-case letter, a lower-case letter, a digit and a symbol.'
       )
     ).toBeInTheDocument();
-    expect(fetch).not.toHaveBeenCalled();
+    expect(authRegisterCalls()).toBe(0);
   });
 
   it('reports a confirmation that does not match', async () => {
@@ -122,7 +156,7 @@ describe('RegisterForm', () => {
     await user.click(submit());
 
     expect(await screen.findByText('The passwords do not match.')).toBeInTheDocument();
-    expect(fetch).not.toHaveBeenCalled();
+    expect(authRegisterCalls()).toBe(0);
   });
 
   it('registers, shows the check-email state and does not sign the user in', async () => {
@@ -141,15 +175,15 @@ describe('RegisterForm', () => {
     ).toBeInTheDocument();
     expect(getSessionState().status).toBe('anonymous');
 
-    const [url, init] = (fetch as unknown as {mock: {calls: [string, RequestInit][]}}).mock.calls[0];
-    expect(url).toBe('http://api.test/api/auth/register');
+    const [, init] = (fetch as unknown as {mock: {calls: [string, RequestInit][]}}).mock.calls
+      .find(([url]) => url.endsWith('/api/auth/register'))!;
     expect(JSON.parse(String(init.body))).toEqual({
       fullName: 'New Doctor',
       email: 'new.doctor@example.test',
       password: 'Medilog@2026',
       phone: null,
       role: 'Doctor',
-      specialization: null
+      specialization: 'Cardiology'
     });
   });
 
@@ -158,7 +192,13 @@ describe('RegisterForm', () => {
     let requestCount = 0;
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () => {
+      vi.fn(async (input: string | URL | Request) => {
+        const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
+        if (url.endsWith('/api/specializations')) {
+          return new Response(JSON.stringify([
+            {key: 'cardiology', nameEn: 'Cardiology', nameAr: 'أمراض القلب'}
+          ]), {status: 200, headers: {'content-type': 'application/json'}});
+        }
         requestCount += 1;
         return new Response(requestCount === 1 ? JSON.stringify(ACCOUNT) : null, {
           status: requestCount === 1 ? 201 : 204,
@@ -178,7 +218,8 @@ describe('RegisterForm', () => {
     expect(
       await screen.findByText('If the address has a pending account, a new link is on its way.')
     ).toBeInTheDocument();
-    const resent = (fetch as unknown as {mock: {calls: [string, RequestInit][]}}).mock.calls[1];
+    const resent = (fetch as unknown as {mock: {calls: [string, RequestInit][]}}).mock.calls
+      .find(([url]) => url.endsWith('/api/auth/resend-verification'))!;
     expect(resent[0]).toBe('http://api.test/api/auth/resend-verification');
     expect(JSON.parse(String(resent[1].body))).toEqual({email: 'new.doctor@example.test'});
   });
@@ -193,7 +234,8 @@ describe('RegisterForm', () => {
     await user.click(submit());
 
     await screen.findByRole('heading', {name: 'Check your inbox'});
-    const [, init] = (fetch as unknown as {mock: {calls: [string, RequestInit][]}}).mock.calls[0];
+    const [, init] = (fetch as unknown as {mock: {calls: [string, RequestInit][]}}).mock.calls
+      .find(([url]) => url.endsWith('/api/auth/register'))!;
     expect(JSON.parse(String(init.body))).toMatchObject({
       role: 'Secretary',
       specialization: null
@@ -253,7 +295,15 @@ describe('RegisterForm', () => {
     const user = userEvent.setup();
     vi.stubGlobal(
       'fetch',
-      vi.fn(() => new Promise<Response>(() => undefined))
+      vi.fn((input: string | URL | Request) => {
+        const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
+        if (url.endsWith('/api/specializations')) {
+          return Promise.resolve(new Response(JSON.stringify([
+            {key: 'cardiology', nameEn: 'Cardiology', nameAr: 'أمراض القلب'}
+          ]), {status: 200, headers: {'content-type': 'application/json'}}));
+        }
+        return new Promise<Response>(() => undefined);
+      })
     );
     renderWithIntl(<RegisterForm />);
 

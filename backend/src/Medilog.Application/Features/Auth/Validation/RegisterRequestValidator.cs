@@ -60,6 +60,11 @@ public sealed class RegisterRequestValidator : AbstractValidator<RegisterRequest
             .When(request => !string.IsNullOrWhiteSpace(request.Specialization));
 
         RuleFor(request => request.Specialization)
+            .NotEmpty()
+            .WithMessage("A specialization is required for a doctor.")
+            .When(request => request.Role == UserRole.Doctor);
+
+        RuleFor(request => request.Specialization)
             .Must(string.IsNullOrWhiteSpace)
             .WithMessage("A specialization can only be given for a doctor.")
             .When(request => request.Role == UserRole.Secretary);

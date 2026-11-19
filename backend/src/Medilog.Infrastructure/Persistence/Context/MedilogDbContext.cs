@@ -56,6 +56,8 @@ public sealed class MedilogDbContext : DbContext, IApplicationDbContext
 
     public DbSet<Payment> Payments => Set<Payment>();
 
+    public DbSet<Testimonial> Testimonials => Set<Testimonial>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(MedilogDbContext).Assembly);

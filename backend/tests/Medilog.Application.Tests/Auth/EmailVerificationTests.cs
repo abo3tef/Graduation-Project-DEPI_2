@@ -220,6 +220,6 @@ public sealed class EmailVerificationTests
 
     private static Task RegisterDoctorAsync(AuthFixture fixture) =>
         fixture.Service.RegisterAsync(
-            new RegisterRequest("New Doctor", EmailAddress, AuthFixture.Password, null, UserRole.Doctor, null),
+            new RegisterRequest("New Doctor", EmailAddress, AuthFixture.Password, null, UserRole.Doctor, "General Medicine"),
             CancellationToken.None);
 }

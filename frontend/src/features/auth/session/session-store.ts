@@ -24,6 +24,7 @@ export type SessionUser = {
   readonly role: SessionUserRole;
   /** Doctors only; equal to `id` (decision D-35). */
   readonly doctorId: string | null;
+  readonly specialization?: string | null;
 };
 
 export type AuthSession = {
@@ -128,7 +129,7 @@ function parseUser(value: unknown): SessionUser | null {
     return null;
   }
 
-  const {id, fullName, email, role, doctorId} = value;
+  const {id, fullName, email, role, doctorId, specialization} = value;
 
   if (typeof id !== 'string' || id.trim() === '' || !isSessionRole(role)) {
     return null;
@@ -143,7 +144,8 @@ function parseUser(value: unknown): SessionUser | null {
     fullName,
     email,
     role,
-    doctorId: typeof doctorId === 'string' && doctorId !== '' ? doctorId : null
+    doctorId: typeof doctorId === 'string' && doctorId !== '' ? doctorId : null,
+    specialization: typeof specialization === 'string' && specialization !== '' ? specialization : null
   };
 }
 

@@ -179,6 +179,11 @@ export function validateRegisterForm(
     return errors;
   }
 
+  if (values.specialization.trim() === '') {
+    errors.specialization = 'required';
+    return errors;
+  }
+
   const specialization = validateOptionalLength(
     values.specialization,
     SPECIALIZATION_MAX_LENGTH

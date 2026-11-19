@@ -20,7 +20,8 @@ const SIGN_IN = {
     fullName: 'Demo Doctor',
     email: 'doctor@medilog.local',
     role: 'Doctor',
-    doctorId: '0f8f6f0a-6d4c-4a54-9a5e-2f2b0c9d1a11'
+    doctorId: '0f8f6f0a-6d4c-4a54-9a5e-2f2b0c9d1a11',
+    specialization: 'General Medicine'
   }
 };
 
@@ -29,7 +30,8 @@ const ACCOUNT = {
   fullName: 'New Doctor',
   email: 'new.doctor@example.test',
   role: 'Doctor',
-  doctorId: '0f8f6f0a-6d4c-4a54-9a5e-2f2b0c9d1a11'
+  doctorId: '0f8f6f0a-6d4c-4a54-9a5e-2f2b0c9d1a11',
+  specialization: null
 };
 
 let calls: Recorded[];

@@ -168,7 +168,8 @@ public sealed class AuthService : IAuthService
             fullName,
             email,
             request.Role,
-            request.Role == UserRole.Doctor ? accountId : null);
+            request.Role == UserRole.Doctor ? accountId : null,
+            request.Role == UserRole.Doctor ? NormalizeOptional(request.Specialization) : null);
     }
 
     public async Task VerifyEmailAsync(VerifyEmailRequest request, CancellationToken cancellationToken)
@@ -332,7 +333,7 @@ public sealed class AuthService : IAuthService
         return new AuthResponse(
             token.Token,
             token.ExpiresAtUtc,
-            new AuthUserResponse(account.Id, account.FullName, account.Email, account.Role, account.DoctorId));
+            new AuthUserResponse(account.Id, account.FullName, account.Email, account.Role, account.DoctorId, account.Specialization));
     }
 
     private static string? NormalizeOptional(string? value)

@@ -21,7 +21,8 @@ internal sealed record AuthAccount(
     string Email,
     string PasswordHash,
     AccountStatus AccountStatus,
-    DateTimeOffset? EmailVerifiedAtUtc)
+    DateTimeOffset? EmailVerifiedAtUtc,
+    string? Specialization = null)
 {
     public bool IsActive => AccountStatus == AccountStatus.Active;
 
@@ -96,7 +97,8 @@ internal static class AuthRules
                 doctor.Email,
                 doctor.PasswordHash,
                 doctor.AccountStatus,
-                doctor.EmailVerifiedAtUtc);
+                doctor.EmailVerifiedAtUtc,
+                doctor.Specialization);
         }
 
         var secretary = await dbContext.Secretaries

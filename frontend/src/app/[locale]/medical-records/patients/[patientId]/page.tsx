@@ -7,11 +7,8 @@ type PatientMedicalHistoryPageProps = {
   params: Promise<{locale: string; patientId: string}>;
 };
 
-export async function generateMetadata({
-  params
-}: PatientMedicalHistoryPageProps): Promise<Metadata> {
-  const {locale} = await params;
-  const t = await getTranslations({locale, namespace: 'MedicalTimeline.profile'});
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('MedicalTimeline.profile');
 
   return {title: t('pageTitle')};
 }

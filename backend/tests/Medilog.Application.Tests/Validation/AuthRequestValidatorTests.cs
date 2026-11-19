@@ -88,6 +88,28 @@ public sealed class AuthRequestValidatorTests
         Assert.True(result.IsValid);
     }
 
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void Doctor_registration_requires_a_specialization(string? specialization)
+    {
+        var request = new RegisterRequest(
+            "New Doctor",
+            "new.doctor@medilog.test",
+            "Valid#Passw0rd",
+            null,
+            UserRole.Doctor,
+            specialization);
+
+        var result = _registerValidator.Validate(request);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(
+            result.Errors,
+            failure => failure.PropertyName == nameof(RegisterRequest.Specialization));
+    }
+
     [Fact]
     public void Email_longer_than_the_column_is_rejected()
     {
@@ -193,7 +215,7 @@ public sealed class AuthRequestValidatorTests
             "Valid#Passw0rd",
             null,
             UserRole.Doctor,
-            null);
+            "General Medicine");
 
         // Act
         var result = _registerValidator.Validate(request);
@@ -213,7 +235,7 @@ public sealed class AuthRequestValidatorTests
             "Valid#Passw0rd",
             new string('0', 31),
             UserRole.Doctor,
-            null);
+            "General Medicine");
 
         // Act
         var result = _registerValidator.Validate(request);
@@ -233,7 +255,7 @@ public sealed class AuthRequestValidatorTests
             "Aa1!" + new string('a', 125),
             null,
             UserRole.Doctor,
-            null);
+            "General Medicine");
 
         // Act
         var result = _registerValidator.Validate(request);

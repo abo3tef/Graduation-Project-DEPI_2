@@ -83,7 +83,8 @@ public sealed record AuthUserResponse(
     string FullName,
     string Email,
     UserRole Role,
-    Guid? DoctorId);
+    Guid? DoctorId,
+    string? Specialization);
 
 /// <summary>
 /// A successful sign-in: the access token, its expiry and the acting account.

@@ -87,8 +87,8 @@ export function AdminUsersTable({
                   <span
                     className={
                       user.status === 'Active'
-                        ? 'rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-bold text-emerald-600'
-                        : 'rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-bold text-amber-600'
+                        ? 'inline-flex whitespace-nowrap rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-bold text-emerald-600'
+                        : 'inline-flex whitespace-nowrap rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-bold text-amber-600'
                     }
                   >
                     {statusLabel(user.status)}

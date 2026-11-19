@@ -40,7 +40,10 @@ export function SessionBadge() {
 
   return (
     <span className="inline-flex min-h-9 items-center gap-2 rounded-full border border-border bg-surface px-2 ps-3 text-xs font-semibold text-foreground">
-      <span className="flex min-w-0 flex-col leading-tight">
+      <span className="grid size-7 shrink-0 place-items-center rounded-full bg-brand-soft text-brand" aria-hidden>
+        <FiUser className="size-3.5" />
+      </span>
+      <span className="flex min-w-0 flex-col leading-tight max-sm:hidden">
         <span className="max-w-32 truncate" title={user.fullName}>
           {user.fullName}
         </span>

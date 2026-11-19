@@ -17,6 +17,16 @@ import {
  */
 const BASE_PATH = '/api/auth';
 
+export type SpecializationOption = {
+  key: string;
+  nameEn: string;
+  nameAr: string;
+};
+
+export async function getSpecializations(): Promise<SpecializationOption[]> {
+  return apiRequest<SpecializationOption[]>('/api/specializations');
+}
+
 export async function login(input: LoginInput): Promise<SignInResult> {
   const data = await apiRequest<unknown>(`${BASE_PATH}/login`, {
     method: 'POST',

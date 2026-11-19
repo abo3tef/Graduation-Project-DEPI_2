@@ -41,7 +41,7 @@ export function AdminDialog({open, onClose, title, description, children}: Admin
           onClose();
         }
       }}
-      className="w-[min(520px,calc(100%-32px))] rounded-2xl border border-border bg-surface p-6 text-foreground shadow-xl backdrop:bg-black/40"
+      className="m-auto max-h-[calc(100dvh-2rem)] w-[min(520px,calc(100%-32px))] overflow-y-auto rounded-2xl border border-border bg-surface p-6 text-foreground shadow-2xl backdrop:bg-black/65 backdrop:backdrop-blur-md sm:p-7"
     >
       <h2 id={titleId} className="text-lg font-bold">
         {title}

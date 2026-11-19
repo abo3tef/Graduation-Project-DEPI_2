@@ -62,7 +62,7 @@ public sealed class RegistrationTests
 
         // Act
         await fixture.Service.RegisterAsync(
-            new RegisterRequest("New Doctor", "new.doctor@medilog.test", "Valid#Passw0rd", null, UserRole.Doctor, null),
+            new RegisterRequest("New Doctor", "new.doctor@medilog.test", "Valid#Passw0rd", null, UserRole.Doctor, "General Medicine"),
             CancellationToken.None);
 
         var rawToken = fixture.LastToken();
@@ -135,7 +135,7 @@ public sealed class RegistrationTests
         // Act
         var failure = await Assert.ThrowsAsync<ConflictException>(
             () => fixture.Service.RegisterAsync(
-                new RegisterRequest("Person", "secretary@medilog.test", "Valid#Passw0rd", null, UserRole.Doctor, null),
+                new RegisterRequest("Person", "secretary@medilog.test", "Valid#Passw0rd", null, UserRole.Doctor, "General Medicine"),
                 CancellationToken.None));
 
         // Assert
@@ -175,7 +175,7 @@ public sealed class RegistrationTests
         // Act
         var failure = await Assert.ThrowsAsync<RequestValidationException>(
             () => fixture.Service.RegisterAsync(
-                new RegisterRequest("New Doctor", "new.doctor@medilog.test", password, null, UserRole.Doctor, null),
+                new RegisterRequest("New Doctor", "new.doctor@medilog.test", password, null, UserRole.Doctor, "General Medicine"),
                 CancellationToken.None));
 
         // Assert
@@ -190,7 +190,7 @@ public sealed class RegistrationTests
         // Arrange
         using var fixture = new AuthFixture();
         await fixture.Service.RegisterAsync(
-            new RegisterRequest("New Doctor", "new.doctor@medilog.test", "Valid#Passw0rd", null, UserRole.Doctor, null),
+            new RegisterRequest("New Doctor", "new.doctor@medilog.test", "Valid#Passw0rd", null, UserRole.Doctor, "General Medicine"),
             CancellationToken.None);
 
         // Act

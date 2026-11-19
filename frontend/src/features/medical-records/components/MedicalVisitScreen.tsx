@@ -9,7 +9,7 @@ import {useMedicalVisit} from '../hooks/use-medical-visit';
 import {isGuid} from '../validation';
 import {LoadingPanel, StatePanel} from './AsyncState';
 import {DiagnosisSection} from './DiagnosisSection';
-import {MedicationSection} from './MedicationSection';
+import {PrescriptionSection} from './PrescriptionSection';
 import {VisitDetails} from './VisitDetails';
 import {VitalSignsSection} from './VitalSignsSection';
 
@@ -71,10 +71,7 @@ export function MedicalVisitScreen({visitId}: MedicalVisitScreenProps) {
       <VisitDetails visit={query.data} />
       <VitalSignsSection visitId={query.data.id} visitDoctorId={query.data.doctorId} />
       <DiagnosisSection visitId={query.data.id} diagnoses={query.data.diagnoses} />
-      <MedicationSection
-        visitId={query.data.id}
-        medications={query.data.medications}
-      />
+      <PrescriptionSection visit={query.data} />
     </div>
   );
 }

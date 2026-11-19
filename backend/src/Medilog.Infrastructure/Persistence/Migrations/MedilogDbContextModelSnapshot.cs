@@ -894,6 +894,73 @@ namespace Medilog.Infrastructure.Persistence.Migrations
                     MySQLEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
                 });
 
+            modelBuilder.Entity("Medilog.Domain.Entities.Testimonial", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetime");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int")
+                        .HasColumnName("display_order");
+
+                    b.Property<bool>("IsApproved")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_approved");
+
+                    b.Property<string>("NameAr")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("name_ar");
+
+                    b.Property<string>("NameEn")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("name_en");
+
+                    b.Property<string>("QuoteAr")
+                        .IsRequired()
+                        .HasMaxLength(800)
+                        .HasColumnType("varchar(800)")
+                        .HasColumnName("quote_ar");
+
+                    b.Property<string>("QuoteEn")
+                        .IsRequired()
+                        .HasMaxLength(800)
+                        .HasColumnType("varchar(800)")
+                        .HasColumnName("quote_en");
+
+                    b.Property<string>("RoleAr")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("role_ar");
+
+                    b.Property<string>("RoleEn")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("role_en");
+
+                    b.Property<DateTimeOffset?>("UpdatedAtUtc")
+                        .HasColumnType("datetime");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsApproved", "DisplayOrder");
+
+                    b.ToTable("testimonials", (string)null);
+
+                    b.HasAnnotation("MySQL:Collation", "utf8mb4_0900_ai_ci");
+
+                    MySQLEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                });
+
             modelBuilder.Entity("Medilog.Domain.Entities.VitalSigns", b =>
                 {
                     b.Property<Guid>("Id")

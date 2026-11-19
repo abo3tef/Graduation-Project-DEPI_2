@@ -3,8 +3,6 @@
 import {useState} from 'react';
 import {useTranslations} from 'next-intl';
 import {FiPlus} from 'react-icons/fi';
-import {ThemeToggle} from '@/components/layout/ThemeToggle';
-import {LocaleSwitcher} from '@/components/shared/LocaleSwitcher';
 import {usePaymentFilters} from '../hooks/usePaymentFilters';
 import {usePaymentErrorMessage, usePayments} from '../hooks/usePayments';
 import type {Payment} from '../types/payment.types';
@@ -48,8 +46,6 @@ export function PaymentsPreview() {
             <FiPlus aria-hidden="true" className="size-4" />
             {t('actions.record')}
           </button>
-          <LocaleSwitcher />
-          <ThemeToggle />
         </div>
       </header>
 

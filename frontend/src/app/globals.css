@@ -59,3 +59,52 @@
     @apply text-inherit no-underline;
   }
 }
+
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  body {
+    background: white !important;
+    color: #000 !important;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  [data-prescription-print='true'],
+  [data-prescription-print='true'] * {
+    visibility: visible !important;
+  }
+
+  [data-prescription-print='true'] {
+    position: absolute !important;
+    inset: 0 auto auto 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 2mm !important;
+    border: 0 !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    color: #000 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  [data-prescription-print='true'] table {
+    width: 100% !important;
+  }
+
+  [data-prescription-print='true'] tr,
+  [data-prescription-print='true'] td,
+  [data-prescription-print='true'] th,
+  .prescription-print-section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}

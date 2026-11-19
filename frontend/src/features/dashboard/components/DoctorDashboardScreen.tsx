@@ -1,65 +1,19 @@
 'use client';
 
 import {useTranslations} from 'next-intl';
-import {FiActivity, FiAlertCircle, FiRefreshCw, FiUserCheck} from 'react-icons/fi';
-import {ThemeToggle} from '@/components/layout/ThemeToggle';
-import {LocaleSwitcher} from '@/components/shared/LocaleSwitcher';
-import {SessionBadge} from '@/features/auth';
-import {Link} from '@/i18n/navigation';
+import {FiAlertCircle, FiRefreshCw, FiUserCheck} from 'react-icons/fi';
 import {useDoctorDashboard} from '../hooks/useDoctorDashboard';
 import {DashboardStatCards} from './DashboardStatCards';
 import {TodayAppointmentsTable} from './TodayAppointmentsTable';
+import {UpcomingAppointmentsPanel} from './UpcomingAppointmentsPanel';
 
 export function DoctorDashboardScreen() {
   const t = useTranslations('dashboard');
-  const nav = useTranslations('Navigation');
-  const {data, isLoading, isError, error, refetch, identity, isDoctor} =
+  const {data, isLoading, isError, error, refetch, identity, isDoctor, upcomingAppointments, upcomingIsLoading} =
     useDoctorDashboard();
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* Top App Bar matching Medilog style */}
-      <header className="sticky top-0 z-20 border-b border-border/60 bg-background/85 backdrop-blur-xl">
-        <div className="mx-auto flex min-h-16 w-[min(1180px,calc(100%-40px))] flex-wrap items-center justify-between gap-x-6 gap-y-2 py-2">
-          <div className="flex items-center gap-3">
-            <Link
-              href="/"
-              className="inline-flex items-center gap-2.5"
-              aria-label={nav('brand')}
-            >
-              <span className="grid size-9 place-items-center rounded-[10px] bg-brand text-[#06211f]">
-                <FiActivity className="size-5" aria-hidden />
-              </span>
-              <span className="text-base font-black">{nav('brand')}</span>
-            </Link>
-            <span className="hidden sm:inline-block h-4 w-px bg-border/80" />
-            <span className="hidden sm:inline-block text-xs font-bold text-muted">
-              {t('title')}
-            </span>
-            <nav aria-label={nav('appointments')} className="hidden items-center gap-1 lg:flex">
-              <Link href="/appointments" className="rounded-full px-3 py-2 text-xs font-bold text-muted transition-colors hover:text-foreground">
-                {nav('appointments')}
-              </Link>
-              <Link href="/patients" className="rounded-full px-3 py-2 text-xs font-bold text-muted transition-colors hover:text-foreground">
-                {nav('patients')}
-              </Link>
-              <Link href="/payments" className="rounded-full px-3 py-2 text-xs font-bold text-muted transition-colors hover:text-foreground">
-                {nav('payments')}
-              </Link>
-              <Link href="/medical-records" className="rounded-full px-3 py-2 text-xs font-bold text-muted transition-colors hover:text-foreground">
-                {nav('medicalRecords')}
-              </Link>
-            </nav>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <SessionBadge />
-            <ThemeToggle />
-            <LocaleSwitcher />
-          </div>
-        </div>
-      </header>
-
       {/* Main Content Area */}
       <main className="mx-auto w-[min(1180px,calc(100%-40px))] py-8">
         {/* State 1: Identity Loading */}
@@ -161,6 +115,10 @@ export function DoctorDashboardScreen() {
             <TodayAppointmentsTable
               appointments={data?.todayAppointments}
               isLoading={isLoading}
+            />
+            <UpcomingAppointmentsPanel
+              appointments={upcomingAppointments}
+              isLoading={upcomingIsLoading}
             />
           </div>
         )}

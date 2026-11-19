@@ -112,7 +112,8 @@ describe('validateRegisterForm', () => {
       fullName: 'required',
       email: 'required',
       password: 'required',
-      confirmPassword: 'required'
+      confirmPassword: 'required',
+      specialization: 'required'
     });
   });
 

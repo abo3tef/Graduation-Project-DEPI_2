@@ -7,11 +7,8 @@ type VisitPageProps = {
   params: Promise<{locale: string; visitId: string}>;
 };
 
-export async function generateMetadata({
-  params
-}: VisitPageProps): Promise<Metadata> {
-  const {locale} = await params;
-  const t = await getTranslations({locale, namespace: 'MedicalRecords.visit'});
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('MedicalRecords.visit');
 
   return {
     title: t('title')
